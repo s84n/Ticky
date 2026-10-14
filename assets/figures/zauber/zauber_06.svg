@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <title>Mini-Pony</title>
+  <ellipse cx="62" cy="124" rx="40" ry="4" fill="#6B2C7A" opacity=".15"/>
+  <g class="tail" stroke="#7A3E8E" stroke-width="3" stroke-linejoin="round"><path d="M28 66 Q4 60 8 90 Q12 104 22 100 Q14 86 30 76 Z" fill="#F472B6"/><path d="M22 74 Q10 80 14 94" stroke="#A78BFA" stroke-width="4" fill="none" stroke-linecap="round"/></g>
+  <g class="leg-b" stroke="#7A3E8E" stroke-width="3"><rect x="40" y="84" width="11" height="30" rx="5" fill="#F5D0FE"/><rect x="74" y="84" width="11" height="30" rx="5" fill="#F5D0FE"/></g>
+  <g class="body" stroke="#7A3E8E" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round">
+    <ellipse cx="58" cy="76" rx="34" ry="20" fill="#FDF4FF"/>
+    <path d="M78 66 Q80 44 92 36 L104 54 Q96 60 92 74 Z" fill="#FDF4FF"/>
+    <ellipse cx="104" cy="44" rx="18" ry="14" fill="#FDF4FF"/>
+    <path d="M94 26 L98 12 L104 28 Z" fill="#FDF4FF"/>
+    <path d="M90 28 Q78 30 76 48 Q74 62 80 70 Q84 54 92 46 Q88 40 96 32 Z" fill="#A78BFA"/>
+    <path d="M96 24 Q86 18 82 30" fill="#F472B6"/>
+    <circle cx="106" cy="40" r="4.5" fill="#4A1460" stroke="none"/>
+    <circle cx="107.5" cy="38.5" r="1.6" fill="#fff" stroke="none"/>
+    <circle cx="118" cy="50" r="1.6" fill="#7A3E8E" stroke="none"/>
+    <path d="M108 54 q4 2 7 -1" fill="none"/>
+    <circle cx="98" cy="50" r="4" fill="#FBCFE8" stroke="none"/>
+    <path d="M44 76 l3 6 6 2 -6 2 -3 6 -3 -6 -6 -2 6 -2z" fill="#FBBF24" stroke="none"/>
+  </g>
+  <g class="leg-a" stroke="#7A3E8E" stroke-width="3"><rect x="30" y="84" width="11" height="30" rx="5" fill="#FDF4FF"/><rect x="64" y="84" width="11" height="30" rx="5" fill="#FDF4FF"/></g>
+</svg>

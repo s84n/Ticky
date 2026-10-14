@@ -1,0 +1,15 @@
+# Niemals Nutzerdaten committen
+*.local.*
+.env
+.env.*
+backup*.json
+routinen-backup*.json
+
+# Entwicklung
+.dev/
+node_modules/
+.DS_Store
+Thumbs.db
+
+# Interner Projektplan (enthält Hinweise aufs Altprojekt) – nicht veröffentlichen
+plan.md

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <title>Wolken-Schäfchen</title>
+  <g class="wing" stroke="#7A3E8E" stroke-width="3" stroke-linejoin="round">
+    <path d="M60 46 Q50 18 34 24 Q26 30 36 40 Q24 42 30 52 Z" fill="#FDF4FF"/>
+  </g>
+  <g class="body" stroke="#7A3E8E" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M38 96 v14 M54 98 v14 M76 98 v14 M92 96 v14" stroke-width="6"/>
+    <path d="M24 78 Q14 62 30 56 Q34 40 52 46 Q62 34 76 44 Q94 38 98 56 Q112 62 104 78 Q110 94 92 96 Q82 106 66 100 Q50 108 40 98 Q20 98 24 78 Z" fill="#FFFFFF"/>
+    <path d="M40 60 q6 -6 12 -2 M70 54 q8 -4 12 2 M52 82 q6 -4 12 0" fill="none" stroke="#E9D5FF" stroke-width="3"/>
+    <ellipse cx="104" cy="66" rx="16" ry="18" fill="#C4B5FD"/>
+    <path d="M90 54 q-10 -6 -12 4" fill="#A78BFA"/>
+    <circle cx="100" cy="64" r="3" fill="#4A1460" stroke="none"/>
+    <circle cx="112" cy="64" r="3" fill="#4A1460" stroke="none"/>
+    <path d="M102 74 q4 3 8 0" fill="none"/>
+    <circle cx="96" cy="72" r="3" fill="#F9A8D4" stroke="none"/>
+    <path d="M94 50 Q100 40 112 46 Q116 52 108 52 Q100 46 94 50 Z" fill="#FFFFFF"/>
+  </g>
+  <g fill="#F0ABFC"><path d="M18 30 l2 4 4 2 -4 2 -2 4 -2 -4 -4 -2 4 -2z"/><circle cx="116" cy="30" r="2"/></g>
+</svg>

@@ -1,0 +1,85 @@
+/* =========================================================
+   Style „Pixel-Abenteuer“ – Blöcke, Pixelraster, XP-Leiste
+   ========================================================= */
+[data-theme="pixel"] {
+  --c-primary: #5D8C3E;
+  --c-primary-dark: #3E6B24;
+  --c-accent: #F5C542;
+  --c-stone: #7F7F7F;
+  --font-head: 'Pixelify Sans', 'Nunito', monospace;
+  --font-body: 'Nunito', system-ui, sans-serif;
+  --card-radius: 4px;
+  --tile-radius: 4px;
+  --check-radius: 2px;
+
+  --card-bg: #5D8C3E;
+  --card-fg: #FFFFFF;
+  --card-shadow: 0 0 0 4px #2B4A17, 6px 6px 0 4px rgba(20, 30, 10, .45);
+  --card-pattern:
+    linear-gradient(rgba(0, 0, 0, .07) 2px, transparent 2px) 0 0 / 16px 16px,
+    linear-gradient(90deg, rgba(0, 0, 0, .07) 2px, transparent 2px) 0 0 / 16px 16px,
+    linear-gradient(180deg, #6FA14A 0, #5D8C3E 70px, #4E7834 100%);
+  --avatar-bg: #3E6B24;
+  --count-bg: #2B4A17;
+
+  --tile-bg: #EFE8D6;
+  --tile-fg: #22301A;
+  --tile-border: 0;
+  --tile-shadow: inset 0 4px 0 rgba(255, 255, 255, .65), inset 0 -4px 0 rgba(0, 0, 0, .22), 0 0 0 3px #2B2B2B;
+  --tile-done-bg: #D9F0BE;
+  --tile-done-shadow: inset 0 4px 0 rgba(255, 255, 255, .7), inset 0 -4px 0 rgba(0, 0, 0, .2), 0 0 0 3px #2B2B2B, 0 0 0 6px #F5C542;
+  --check-border: #3E3E3E;
+  --check-bg: #FFFFFF;
+
+  --tab-bg: #5D8C3E;
+  --tab-fg: #FFFFFF;
+  --tab-accent: #F5C542;
+  --praise-bg: #F5C542;
+  --praise-fg: #2B2200;
+  --banner-bg: linear-gradient(180deg, #7DBA4E, #3E6B24);
+  --banner-fg: #FFFFFF;
+  --wheel-ring-1: #8B5A2B;
+  --wheel-ring-2: #6B4320;
+}
+.child-card[data-theme="pixel"] { border-radius: 4px; }
+.child-card[data-theme="pixel"]::before { animation: pixel-drift 30s linear infinite; }
+.child-card[data-theme="pixel"] .card-name,
+.child-card[data-theme="pixel"] .card-count { text-shadow: 2px 2px 0 rgba(0, 0, 0, .35); }
+.child-card[data-theme="pixel"] .card-avatar { box-shadow: inset 0 3px 0 rgba(255,255,255,.25), inset 0 -3px 0 rgba(0,0,0,.3); }
+.child-card[data-theme="pixel"] .task__check svg { image-rendering: pixelated; }
+.child-card[data-theme="pixel"] .spin-btn { border-radius: 4px; background: linear-gradient(180deg, #FFE27A, #F5C542 50%, #D9A21B); box-shadow: inset 0 4px 0 rgba(255,255,255,.6), inset 0 -4px 0 rgba(0,0,0,.25), 0 0 0 3px #2B2B2B, 6px 6px 0 3px rgba(0,0,0,.35); }
+[data-theme="pixel"].child-tab { border-radius: 4px; }
+
+/* XP-Leiste: ein Segment pro Aufgabe */
+.xp { display: grid; gap: 6px; }
+.xp__bar { display: flex; gap: 3px; height: 22px; padding: 3px; background: #2B2B2B; box-shadow: 0 0 0 2px #1A1A1A; }
+.xp__seg { flex: 1; position: relative; overflow: hidden; background: #3A3A3A; box-shadow: inset 0 2px 0 rgba(255,255,255,.08); transition: background-color .3s; }
+.xp__seg.is-on { background: #7CFC3C; box-shadow: inset 0 3px 0 rgba(255,255,255,.55), inset 0 -3px 0 rgba(0,0,0,.25); }
+.xp__seg.is-new::after { content: ''; position: absolute; inset: 0; background: linear-gradient(100deg, transparent 20%, rgba(255,255,255,.85) 50%, transparent 80%); animation: xp-sweep .7s ease-out forwards; }
+.xp__label { font-family: 'Pixelify Sans', monospace; font-size: 1.05rem; color: #C8FF7A; text-shadow: 2px 2px 0 #1A3A0A; text-align: right; font-variant-numeric: tabular-nums; }
+
+/* Abend: tiefes Waldgrün/Nachtblau, leuchtendes Raster, Glühwürmchen */
+body.evening [data-theme="pixel"] {
+  --card-bg: #17322A;
+  --card-pattern:
+    radial-gradient(circle at 18% 24%, rgba(230, 255, 120, .55) 0 2px, transparent 3px),
+    radial-gradient(circle at 78% 12%, rgba(230, 255, 120, .45) 0 2px, transparent 3px),
+    radial-gradient(circle at 88% 64%, rgba(230, 255, 120, .4) 0 2px, transparent 3px),
+    linear-gradient(rgba(120, 255, 170, .07) 2px, transparent 2px) 0 0 / 16px 16px,
+    linear-gradient(90deg, rgba(120, 255, 170, .07) 2px, transparent 2px) 0 0 / 16px 16px,
+    linear-gradient(180deg, #1E3A2E 0, #142A30 60%, #111D33 100%);
+  --card-shadow: 0 0 0 4px #0B1A12, 6px 6px 0 4px rgba(0, 0, 0, .5);
+  --avatar-bg: #0F2219;
+  --count-bg: #0B1A12;
+  --tile-bg: #2A4036;
+  --tile-fg: #EAF7DF;
+  --tile-shadow: inset 0 4px 0 rgba(255, 255, 255, .1), inset 0 -4px 0 rgba(0, 0, 0, .35), 0 0 0 3px #0B1A12;
+  --tile-done-bg: #31593C;
+  --tile-done-shadow: inset 0 4px 0 rgba(255, 255, 255, .12), inset 0 -4px 0 rgba(0, 0, 0, .3), 0 0 0 3px #0B1A12, 0 0 0 6px #F5C542, 0 0 18px rgba(245, 197, 66, .35);
+  --check-border: #9FD97A;
+  --check-bg: #17322A;
+  --tab-bg: #17322A;
+}
+
+@keyframes pixel-drift { to { background-position: 16px 16px, 16px 16px, 0 0; } }
+@keyframes xp-sweep { from { transform: translateX(-100%); } to { transform: translateX(100%); } }

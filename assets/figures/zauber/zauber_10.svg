@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <title>Sternen-Pegasus</title>
+  <defs>
+    <linearGradient id="peg-mane" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FBBF24"/><stop offset=".5" stop-color="#F472B6"/><stop offset="1" stop-color="#A78BFA"/></linearGradient>
+    <linearGradient id="peg-wing" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#FDE68A"/></linearGradient>
+  </defs>
+  <g class="tail" stroke="#7A3E8E" stroke-width="3" stroke-linejoin="round"><path d="M26 70 Q0 62 4 92 Q8 106 18 104 Q10 88 28 80 Z" fill="url(#peg-mane)"/></g>
+  <g class="leg-b" stroke="#7A3E8E" stroke-width="3"><path d="M42 86 l-6 22 8 2 6 -22 z M76 86 l8 20 8 -2 -6 -20 z" fill="#F1F5F9"/></g>
+  <g class="body" stroke="#7A3E8E" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round">
+    <ellipse cx="58" cy="76" rx="34" ry="18" fill="#FFFFFF"/>
+    <path d="M80 66 Q82 44 94 36 L106 54 Q98 60 94 74 Z" fill="#FFFFFF"/>
+    <ellipse cx="106" cy="44" rx="17" ry="13" fill="#FFFFFF"/>
+    <path d="M98 26 L102 12 L108 28 Z" fill="#FFFFFF"/>
+    <path d="M94 28 Q80 30 78 48 Q76 62 82 70 Q86 54 94 46 Q90 40 98 32 Z" fill="url(#peg-mane)"/>
+    <circle cx="108" cy="40" r="4.5" fill="#4A1460" stroke="none"/>
+    <circle cx="109.5" cy="38.5" r="1.6" fill="#fff" stroke="none"/>
+    <path d="M110 53 q4 2 7 -1" fill="none"/>
+    <circle cx="100" cy="50" r="3.5" fill="#FBCFE8" stroke="none"/>
+    <path d="M40 72 l3 6 6 2 -6 2 -3 6 -3 -6 -6 -2 6 -2z M58 82 l2 4 4 2 -4 2 -2 4 -2 -4 -4 -2 4 -2z" fill="#FBBF24" stroke="none"/>
+  </g>
+  <g class="leg-a" stroke="#7A3E8E" stroke-width="3"><path d="M32 86 l-2 24 8 0 2 -24 z M66 86 l4 24 8 -1 -4 -23 z" fill="#FFFFFF"/><path d="M30 108 h8 M70 108 h8" stroke="#FBBF24" stroke-width="4"/></g>
+  <g class="wing" stroke="#7A3E8E" stroke-width="3.5" stroke-linejoin="round">
+    <path d="M48 66 Q36 26 58 8 Q60 26 70 20 Q70 36 82 32 Q78 52 66 66 Z" fill="url(#peg-wing)"/>
+    <path d="M56 58 Q50 36 58 22 M64 60 Q64 42 72 34" stroke="#FBBF24" fill="none" stroke-width="2.5"/>
+  </g>
+  <g fill="#FBBF24"><path d="M18 30 l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2z"/><path d="M114 80 l2 4 4 2 -4 2 -2 4 -2 -4 -4 -2 4 -2z"/></g>
+</svg>

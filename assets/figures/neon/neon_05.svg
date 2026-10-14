@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <title>Arcade-Geist</title>
+  <ellipse cx="64" cy="124" rx="30" ry="3" fill="#000" opacity=".15"/>
+  <g class="tail"><path d="M24 92 Q16 104 6 102 Q14 96 14 88 Z" fill="#B86BFF" stroke="#0D0D12" stroke-width="4" stroke-linejoin="round"/></g>
+  <g class="body">
+    <path d="M22 100 L22 58 Q22 18 64 18 Q106 18 106 58 L106 100 Q98 92 90 102 Q82 112 74 102 Q66 92 58 102 Q50 112 42 102 Q32 92 22 100 Z" fill="#B86BFF" stroke="#0D0D12" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M34 50 Q38 32 56 28" stroke="#F1E3FF" stroke-width="6" fill="none" stroke-linecap="round" opacity=".7"/>
+    <ellipse cx="56" cy="58" rx="10" ry="12" fill="#fff" stroke="#0D0D12" stroke-width="3"/>
+    <ellipse cx="84" cy="58" rx="10" ry="12" fill="#fff" stroke="#0D0D12" stroke-width="3"/>
+    <circle cx="60" cy="60" r="5" fill="#0D0D12"/>
+    <circle cx="88" cy="60" r="5" fill="#0D0D12"/>
+    <path d="M62 78 Q70 86 78 78 L76 88 Q70 94 64 88 Z" fill="#FF5C8A" stroke="#0D0D12" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M100 22 l3 7 7 3 -7 3 -3 7 -3 -7 -7 -3 7 -3z" fill="#FFCC00"/>
+    <path d="M18 30 l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2z" fill="#00B2FF"/>
+  </g>
+</svg>

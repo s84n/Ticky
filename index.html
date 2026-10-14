@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Ticky – Routinen</title>
+  <meta name="description" content="Morgen- und Abendroutinen für Kinder zum Abhaken. Alle Daten bleiben auf diesem Gerät.">
+  <meta name="theme-color" content="#1F2440">
+  <meta name="color-scheme" content="light dark">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./assets/icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="./assets/icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Ticky">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="preload" href="./assets/fonts/nunito-latin-800-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="./css/base.css">
+  <link rel="stylesheet" href="./css/themes/pixel.css">
+  <link rel="stylesheet" href="./css/themes/neon.css">
+  <link rel="stylesheet" href="./css/themes/zauber.css">
+  <script type="module" src="./js/main.js"></script>
+</head>
+<body class="day">
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <defs>
+      <linearGradient id="magic-grad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FDE68A"/><stop offset=".5" stop-color="#FBBF24"/><stop offset="1" stop-color="#F472B6"/></linearGradient>
+    </defs>
+  </svg>
+  <div id="sky" class="sky" aria-hidden="true"></div>
+  <div id="ambient" class="ambient" aria-hidden="true"></div>
+
+  <div id="app">
+    <noscript><p class="noscript">Ticky braucht JavaScript.</p></noscript>
+
+    <!-- Ersteinrichtung -->
+    <section id="screen-onboarding" class="screen onboarding" hidden aria-labelledby="onb-title"></section>
+
+    <!-- Hauptansicht während einer Routine -->
+    <section id="screen-main" class="screen main-screen" hidden>
+      <header class="app-header">
+        <div class="app-header__title">
+          <h1 id="routine-title">Morgenroutine ☀️</h1>
+          <div class="global-progress" role="progressbar" aria-label="Fortschritt aller Kinder" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="global-progress">
+            <span class="global-progress__bar"><span class="global-progress__fill" id="global-fill"></span></span>
+            <span class="global-progress__count" id="global-count">0 / 0</span>
+          </div>
+        </div>
+        <div class="app-header__actions">
+          <button type="button" class="icon-btn" id="btn-end-manual" hidden aria-label="Routine beenden" title="Routine beenden">⏹️</button>
+          <button type="button" class="icon-btn trophy" id="btn-trophy" hidden aria-label="Gesamt-Feier anzeigen" title="Alle fertig!">🏆</button>
+          <button type="button" class="icon-btn" id="btn-settings" aria-label="Eltern-Bereich" title="Eltern-Bereich">⚙️</button>
+        </div>
+      </header>
+      <main id="children-grid" class="children-grid"></main>
+      <nav id="child-tabs" class="child-tabs" aria-label="Kinder"></nav>
+    </section>
+
+    <!-- Ruhe-Screen außerhalb der Routinezeiten -->
+    <section id="screen-rest" class="screen rest-screen" hidden>
+      <button type="button" class="icon-btn rest-settings" id="btn-settings-rest" aria-label="Eltern-Bereich" title="Eltern-Bereich">⚙️</button>
+      <div class="rest-scene" id="rest-scene" aria-hidden="true">☀️</div>
+      <p class="rest-next" id="rest-next"></p>
+      <div class="rest-actions">
+        <button type="button" class="btn btn--big" id="btn-start-morning">☀️ Morgenroutine jetzt starten</button>
+        <button type="button" class="btn btn--big btn--evening" id="btn-start-evening">🌙 Abendroutine jetzt starten</button>
+      </div>
+    </section>
+  </div>
+
+  <div id="overlays"></div>
+  <div id="fx-layer" class="fx-layer" aria-hidden="true"></div>
+  <div id="parade-layer" class="parade-layer" aria-hidden="true"></div>
+  <div id="toasts" class="toasts" role="status" aria-live="polite"></div>
+  <div id="install-banner" class="install-banner" hidden></div>
+</body>
+</html>

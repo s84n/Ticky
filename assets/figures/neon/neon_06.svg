@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <title>Skate-Pinguin</title>
+  <ellipse cx="64" cy="124" rx="44" ry="4" fill="#000" opacity=".2"/>
+  <g class="body">
+    <path d="M44 34 Q46 12 66 12 Q86 12 88 34 L94 88 Q94 104 66 104 Q38 104 38 88 Z" fill="#1E2A44" stroke="#0D0D12" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M54 46 Q56 34 70 34 Q84 36 84 52 L86 86 Q84 98 68 98 Q50 98 50 86 Z" fill="#F4F7FF"/>
+    <path d="M84 24 L102 30 L84 36 Z" fill="#FFCC00" stroke="#0D0D12" stroke-width="3" stroke-linejoin="round"/>
+    <circle cx="76" cy="24" r="5" fill="#fff"/><circle cx="78" cy="24" r="2.6" fill="#0D0D12"/>
+    <path d="M44 14 Q66 0 90 16 L86 22 Q66 12 46 22 Z" fill="#FF3B3B" stroke="#0D0D12" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M86 16 L100 14" stroke="#FF3B3B" stroke-width="5" stroke-linecap="round"/>
+    <path d="M42 54 Q28 66 30 82" stroke="#0D0D12" stroke-width="9" stroke-linecap="round" fill="none"/>
+    <path d="M42 54 Q28 66 30 82" stroke="#1E2A44" stroke-width="4" stroke-linecap="round" fill="none"/>
+    <path d="M56 100 h10 M74 100 h10" stroke="#FF8A00" stroke-width="7" stroke-linecap="round"/>
+    <rect x="22" y="104" width="90" height="8" rx="4" fill="#00B2FF" stroke="#0D0D12" stroke-width="4"/>
+    <path d="M22 108 Q14 106 14 98" stroke="#0D0D12" stroke-width="4" fill="none" stroke-linecap="round"/>
+    <path d="M30 92 L10 92 M26 84 L8 84" stroke="#FFCC00" stroke-width="4" stroke-linecap="round" opacity=".8"/>
+  </g>
+  <g class="leg-a"><circle cx="38" cy="117" r="6" fill="#FFCC00" stroke="#0D0D12" stroke-width="3"/></g>
+  <g class="leg-b"><circle cx="96" cy="117" r="6" fill="#FFCC00" stroke="#0D0D12" stroke-width="3"/></g>
+</svg>

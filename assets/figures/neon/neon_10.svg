@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <title>Goldener Mega-Mech</title>
+  <defs>
+    <linearGradient id="mech-gold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFF3A0"/><stop offset=".45" stop-color="#FFCC00"/><stop offset="1" stop-color="#C88A00"/></linearGradient>
+  </defs>
+  <ellipse cx="64" cy="124" rx="46" ry="4" fill="#000" opacity=".25"/>
+  <g class="leg-b"><path d="M70 84 h20 v22 h6 v12 h-32 v-12 h6 z" fill="#C88A00" stroke="#0D0D12" stroke-width="4" stroke-linejoin="round"/></g>
+  <g class="body">
+    <rect x="4" y="44" width="22" height="40" rx="8" fill="url(#mech-gold)" stroke="#0D0D12" stroke-width="4"/>
+    <rect x="102" y="44" width="22" height="40" rx="8" fill="url(#mech-gold)" stroke="#0D0D12" stroke-width="4"/>
+    <circle cx="15" cy="88" r="7" fill="#FF3B3B" stroke="#0D0D12" stroke-width="3"/>
+    <circle cx="113" cy="88" r="7" fill="#00B2FF" stroke="#0D0D12" stroke-width="3"/>
+    <path d="M22 40 L106 40 L100 90 L28 90 Z" fill="url(#mech-gold)" stroke="#0D0D12" stroke-width="5" stroke-linejoin="round"/>
+    <circle cx="64" cy="66" r="12" fill="#0D0D12"/>
+    <circle cx="64" cy="66" r="7" fill="#00E1FF"/>
+    <path d="M36 50 h14 M78 50 h14" stroke="#C88A00" stroke-width="4" stroke-linecap="round"/>
+    <rect x="40" y="8" width="48" height="34" rx="8" fill="url(#mech-gold)" stroke="#0D0D12" stroke-width="5"/>
+    <path d="M44 4 L50 12 M84 4 L78 12" stroke="#0D0D12" stroke-width="4" stroke-linecap="round"/>
+    <rect x="46" y="18" width="36" height="12" rx="4" fill="#0D0D12"/>
+    <rect x="50" y="21" width="28" height="6" rx="3" fill="#FF3B3B"/>
+    <path d="M48 12 h12" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".7"/>
+    <path d="M30 44 l4 8 M98 44 l-4 8" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".6"/>
+  </g>
+  <g class="leg-a"><path d="M38 84 h20 v22 h6 v12 h-32 v-12 h6 z" fill="url(#mech-gold)" stroke="#0D0D12" stroke-width="4" stroke-linejoin="round"/></g>
+</svg>

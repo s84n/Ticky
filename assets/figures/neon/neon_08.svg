@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <title>Laser-Katze</title>
+  <ellipse cx="62" cy="124" rx="40" ry="4" fill="#000" opacity=".2"/>
+  <g class="tail"><path d="M28 86 Q8 80 10 58 Q12 44 22 46" stroke="#0D0D12" stroke-width="12" fill="none" stroke-linecap="round"/><path d="M28 86 Q8 80 10 58 Q12 44 22 46" stroke="#FF5CF0" stroke-width="6" fill="none" stroke-linecap="round"/></g>
+  <g class="leg-b"><rect x="40" y="96" width="12" height="20" rx="6" fill="#C93DB8" stroke="#0D0D12" stroke-width="4"/><rect x="76" y="96" width="12" height="20" rx="6" fill="#C93DB8" stroke="#0D0D12" stroke-width="4"/></g>
+  <g class="body">
+    <path d="M26 76 Q26 62 44 60 L84 60 Q98 62 98 78 L98 92 Q98 104 84 104 L40 104 Q26 104 26 92 Z" fill="#FF5CF0" stroke="#0D0D12" stroke-width="5"/>
+    <path d="M72 30 L78 8 L90 26 Z M104 26 L116 8 L120 32 Z" fill="#FF5CF0" stroke="#0D0D12" stroke-width="4" stroke-linejoin="round"/>
+    <circle cx="98" cy="46" r="26" fill="#FF5CF0" stroke="#0D0D12" stroke-width="5"/>
+    <rect x="80" y="36" width="44" height="14" rx="7" fill="#0D0D12"/>
+    <rect x="86" y="40" width="34" height="6" rx="3" fill="#FF3B3B"/>
+    <path d="M124 43 L160 43" stroke="#FF3B3B" stroke-width="3" stroke-linecap="round" opacity=".85"/>
+    <path d="M104 58 q4 4 8 0" stroke="#0D0D12" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <path d="M114 54 l12 -2 M114 58 l12 2" stroke="#0D0D12" stroke-width="2" stroke-linecap="round"/>
+    <path d="M40 70 Q50 66 58 72" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round" opacity=".6"/>
+  </g>
+  <g class="leg-a"><rect x="30" y="96" width="12" height="20" rx="6" fill="#FF5CF0" stroke="#0D0D12" stroke-width="4"/><rect x="66" y="96" width="12" height="20" rx="6" fill="#FF5CF0" stroke="#0D0D12" stroke-width="4"/></g>
+</svg>

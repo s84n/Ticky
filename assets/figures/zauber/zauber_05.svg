@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <title>Pilz-Kobold</title>
+  <ellipse cx="64" cy="124" rx="30" ry="4" fill="#6B2C7A" opacity=".15"/>
+  <g class="body" stroke="#7A3E8E" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M42 60 Q38 104 48 112 L80 112 Q90 104 86 60 Z" fill="#FFF7ED"/>
+    <circle cx="54" cy="80" r="4" fill="#4A1460" stroke="none"/>
+    <circle cx="74" cy="80" r="4" fill="#4A1460" stroke="none"/>
+    <circle cx="55.5" cy="78.5" r="1.4" fill="#fff" stroke="none"/>
+    <circle cx="75.5" cy="78.5" r="1.4" fill="#fff" stroke="none"/>
+    <path d="M58 90 q6 6 12 0" fill="#F472B6"/>
+    <circle cx="48" cy="90" r="4" fill="#FBCFE8" stroke="none"/>
+    <circle cx="80" cy="90" r="4" fill="#FBCFE8" stroke="none"/>
+    <path d="M12 62 Q12 18 64 16 Q116 18 116 62 Q100 68 64 66 Q28 68 12 62 Z" fill="#C084FC"/>
+    <path d="M24 46 Q30 28 48 24" stroke="#F3E8FF" stroke-width="5" fill="none"/>
+    <circle cx="42" cy="44" r="7" fill="#FDF4FF" stroke="none"/>
+    <circle cx="70" cy="32" r="6" fill="#FDF4FF" stroke="none"/>
+    <circle cx="92" cy="48" r="8" fill="#FDF4FF" stroke="none"/>
+    <circle cx="60" cy="54" r="4" fill="#FDF4FF" stroke="none"/>
+    <path d="M44 112 q-2 8 8 8 h8 M84 112 q2 8 -8 8 h-8" fill="#A78BFA"/>
+  </g>
+  <g fill="#FBBF24"><path d="M106 18 l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2z"/></g>
+</svg>

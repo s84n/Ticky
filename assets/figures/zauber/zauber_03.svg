@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <title>Glitzer-Marienkäfer</title>
+  <g class="wing" stroke="#7A3E8E" stroke-width="3" stroke-linejoin="round">
+    <path d="M56 44 Q30 10 20 30 Q16 50 54 56 Z" fill="#E0F2FE" fill-opacity=".85"/>
+    <path d="M72 44 Q98 10 108 30 Q112 50 74 56 Z" fill="#E0F2FE" fill-opacity=".85"/>
+  </g>
+  <g class="body" stroke="#7A3E8E" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M40 104 l-8 10 M88 104 l8 10 M36 88 l-12 4 M92 88 l12 4" />
+    <ellipse cx="64" cy="82" rx="36" ry="32" fill="#F472B6"/>
+    <path d="M64 50 L64 114" />
+    <circle cx="48" cy="72" r="6" fill="#A21CAF" stroke="none"/>
+    <circle cx="80" cy="72" r="6" fill="#A21CAF" stroke="none"/>
+    <circle cx="44" cy="94" r="5" fill="#A21CAF" stroke="none"/>
+    <circle cx="84" cy="94" r="5" fill="#A21CAF" stroke="none"/>
+    <circle cx="56" cy="104" r="3" fill="#A21CAF" stroke="none"/>
+    <circle cx="72" cy="104" r="3" fill="#A21CAF" stroke="none"/>
+    <path d="M40 66 q6 -10 14 -12" stroke="#FFFFFF" stroke-width="4" fill="none" opacity=".8"/>
+    <circle cx="64" cy="48" r="16" fill="#4A1460"/>
+    <circle cx="58" cy="46" r="4" fill="#fff" stroke="none"/><circle cx="70" cy="46" r="4" fill="#fff" stroke="none"/>
+    <circle cx="59" cy="46" r="2" fill="#4A1460" stroke="none"/><circle cx="71" cy="46" r="2" fill="#4A1460" stroke="none"/>
+    <path d="M60 54 q4 3 8 0" stroke="#F9A8D4" fill="none"/>
+    <path d="M56 34 Q50 20 44 22 M72 34 Q78 20 84 22" fill="none"/>
+    <circle cx="44" cy="22" r="4" fill="#FBBF24"/><circle cx="84" cy="22" r="4" fill="#FBBF24"/>
+  </g>
+  <g fill="#FFFFFF"><path d="M30 60 l2 4 4 2 -4 2 -2 4 -2 -4 -4 -2 4 -2z"/><path d="M98 104 l2 4 4 2 -4 2 -2 4 -2 -4 -4 -2 4 -2z"/><circle cx="72" cy="84" r="1.8"/><circle cx="52" cy="84" r="1.5"/></g>
+</svg>

@@ -1,0 +1,9 @@
+{
+  "name": "ticky",
+  "private": true,
+  "type": "module",
+  "description": "Kinder-Routinen-PWA – keine Abhängigkeiten, kein Build. package.json nur für die Tests.",
+  "scripts": {
+    "test": "node --test tests/*.test.mjs"
+  }
+}

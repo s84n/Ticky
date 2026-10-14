@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <title>Zauber-Häschen</title>
+  <ellipse cx="64" cy="124" rx="34" ry="4" fill="#6B2C7A" opacity=".15"/>
+  <g class="body" stroke="#7A3E8E" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M52 40 Q40 6 50 4 Q60 4 62 38 Z" fill="#FFFFFF"/>
+    <path d="M53 34 Q46 12 51 10 Q56 12 58 34 Z" fill="#F9A8D4" stroke="none"/>
+    <path d="M70 38 Q78 4 88 8 Q96 14 78 42 Z" fill="#FFFFFF"/>
+    <path d="M73 34 Q80 14 85 14 Q88 18 77 38 Z" fill="#F9A8D4" stroke="none"/>
+    <ellipse cx="64" cy="92" rx="30" ry="26" fill="#FFFFFF"/>
+    <circle cx="34" cy="98" r="9" fill="#FFFFFF"/>
+    <circle cx="66" cy="58" r="26" fill="#FFFFFF"/>
+    <circle cx="56" cy="56" r="4.5" fill="#4A1460" stroke="none"/>
+    <circle cx="78" cy="56" r="4.5" fill="#4A1460" stroke="none"/>
+    <circle cx="57.5" cy="54.5" r="1.6" fill="#fff" stroke="none"/>
+    <circle cx="79.5" cy="54.5" r="1.6" fill="#fff" stroke="none"/>
+    <path d="M64 64 l4 0 l-2 3 z" fill="#F472B6"/>
+    <path d="M62 70 q4 4 8 0" fill="none"/>
+    <circle cx="50" cy="66" r="5" fill="#FBCFE8" stroke="none"/>
+    <circle cx="84" cy="66" r="5" fill="#FBCFE8" stroke="none"/>
+    <path d="M90 88 L112 62" stroke="#FBBF24" stroke-width="4"/>
+    <path d="M112 50 l4 8 9 1 -7 6 2 9 -8 -5 -8 5 2 -9 -7 -6 9 -1z" fill="#FDE68A" stroke="#F59E0B" stroke-width="2.5"/>
+    <ellipse cx="50" cy="116" rx="11" ry="6" fill="#FFFFFF"/>
+    <ellipse cx="80" cy="116" rx="11" ry="6" fill="#FFFFFF"/>
+  </g>
+  <g fill="#F0ABFC"><circle cx="20" cy="40" r="2.5"/><circle cx="104" cy="30" r="2"/><circle cx="28" cy="70" r="1.8"/></g>
+</svg>

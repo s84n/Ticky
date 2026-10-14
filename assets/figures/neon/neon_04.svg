@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <title>Pixel-Hund</title>
+  <ellipse cx="62" cy="124" rx="42" ry="4" fill="#000" opacity=".2"/>
+  <g class="tail"><path d="M24 64 L10 46 L16 42 L30 58 Z" fill="#FFCC00" stroke="#0D0D12" stroke-width="4" stroke-linejoin="round"/></g>
+  <g class="leg-b"><rect x="38" y="84" width="12" height="30" rx="3" fill="#D99A00" stroke="#0D0D12" stroke-width="4"/><rect x="76" y="84" width="12" height="30" rx="3" fill="#D99A00" stroke="#0D0D12" stroke-width="4"/></g>
+  <g class="body">
+    <rect x="22" y="56" width="74" height="36" rx="6" fill="#FFCC00" stroke="#0D0D12" stroke-width="5"/>
+    <rect x="30" y="62" width="22" height="16" rx="3" fill="#FF8A00" opacity=".8"/>
+    <rect x="80" y="26" width="42" height="40" rx="6" fill="#FFCC00" stroke="#0D0D12" stroke-width="5"/>
+    <rect x="76" y="22" width="14" height="28" rx="4" fill="#FF8A00" stroke="#0D0D12" stroke-width="4"/>
+    <rect x="110" y="44" width="16" height="16" rx="4" fill="#FFE680" stroke="#0D0D12" stroke-width="4"/>
+    <rect x="118" y="44" width="8" height="7" rx="2" fill="#0D0D12"/>
+    <rect x="98" y="34" width="8" height="10" rx="2" fill="#0D0D12"/>
+    <rect x="100" y="35" width="3" height="3" fill="#fff"/>
+    <rect x="80" y="60" width="26" height="8" rx="3" fill="#FF3B3B" stroke="#0D0D12" stroke-width="3"/>
+    <circle cx="94" cy="72" r="5" fill="#00B2FF" stroke="#0D0D12" stroke-width="3"/>
+  </g>
+  <g class="leg-a"><rect x="28" y="84" width="12" height="30" rx="3" fill="#FFCC00" stroke="#0D0D12" stroke-width="4"/><rect x="66" y="84" width="12" height="30" rx="3" fill="#FFCC00" stroke="#0D0D12" stroke-width="4"/></g>
+</svg>

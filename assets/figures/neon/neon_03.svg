@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <title>Hüpf-Slime</title>
+  <ellipse cx="64" cy="124" rx="44" ry="4" fill="#000" opacity=".2"/>
+  <g class="body">
+    <path d="M14 112 Q8 70 34 46 Q52 28 70 30 Q100 32 112 62 Q122 88 114 112 Q90 120 64 118 Q36 120 14 112 Z" fill="#39FF8A" stroke="#0D0D12" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M28 64 Q36 44 56 40" stroke="#E0FFF0" stroke-width="7" fill="none" stroke-linecap="round" opacity=".8"/>
+    <circle cx="34" cy="96" r="5" fill="#17C964" opacity=".7"/>
+    <circle cx="96" cy="100" r="4" fill="#17C964" opacity=".7"/>
+    <ellipse cx="54" cy="74" rx="10" ry="13" fill="#fff" stroke="#0D0D12" stroke-width="3"/>
+    <ellipse cx="84" cy="74" rx="10" ry="13" fill="#fff" stroke="#0D0D12" stroke-width="3"/>
+    <circle cx="57" cy="77" r="5.5" fill="#0D0D12"/>
+    <circle cx="87" cy="77" r="5.5" fill="#0D0D12"/>
+    <circle cx="59" cy="74" r="2" fill="#fff"/>
+    <circle cx="89" cy="74" r="2" fill="#fff"/>
+    <path d="M60 94 Q70 102 80 94" stroke="#0D0D12" stroke-width="4" fill="#FF5C8A" stroke-linecap="round"/>
+    <circle cx="42" cy="90" r="5" fill="#FF5C8A" opacity=".5"/>
+    <circle cx="98" cy="90" r="5" fill="#FF5C8A" opacity=".5"/>
+  </g>
+</svg>
