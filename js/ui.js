@@ -40,6 +40,9 @@ export function clear(node) {
 
 export const $ = (sel, root = document) => root.querySelector(sel);
 
+/** Ein-Kind-Modus mit Tab-Leiste: schmale ODER niedrige Fenster (z. B. Handy quer). Muss zu base.css passen. */
+export const isSingleCard = () => window.matchMedia('(max-width: 699.98px), (max-height: 499.98px)').matches;
+
 /** Erzeugt SVG-Elemente (für Rad, Sterne, Häkchen). */
 export function svg(tag, attrs = {}, ...children) {
   const node = document.createElementNS('http://www.w3.org/2000/svg', tag);

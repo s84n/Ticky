@@ -1,8 +1,8 @@
 // Bootstrapping und Router zwischen Onboarding, Hauptansicht und Ruhe-Screen.
-import { $, el, clear, confirmDialog, vibrate } from './ui.js';
+import { $, el, clear, confirmDialog, vibrate, isSingleCard } from './ui.js';
 import { state, load, save, saveNow, ensureToday, requestPersistence } from './store.js';
 import { currentRoutine, isNight, toggleTask, toggleAll } from './routine.js';
-import { renderMain, updateChild, setActiveChild, renderRest } from './render.js';
+import { renderMain, updateChild, setActiveChild, renderRest, layoutGrid } from './render.js';
 import { startOnboarding } from './onboarding.js';
 import { parentLock, openSettings } from './settings.js';
 import { initCelebrate, childCompleted, requestSpin, openAllCelebration } from './celebrate.js';
@@ -48,7 +48,7 @@ function renderSky(on) {
 function renderAmbient() {
   const amb = clear($('#ambient'));
   if (!current || reducedMotion()) return;
-  const mobile = window.matchMedia('(max-width: 699.98px)').matches;
+  const mobile = isSingleCard();
   let emojis = [];
   if (mobile) {
     const active = state.children.find(c => c.id === state.ui.activeChildId) ?? state.children[0];
@@ -174,7 +174,7 @@ const handlers = {
     state.ui.activeChildId = childId;
     save();
     setActiveChild(childId);
-    if (window.matchMedia('(max-width: 699.98px)').matches) renderAmbient();
+    if (isSingleCard()) renderAmbient();
   },
 };
 
@@ -235,7 +235,7 @@ function wireStatic() {
   const grid = $('#children-grid');
   grid.addEventListener('touchstart', e => { const t = e.touches[0]; sx = t.clientX; sy = t.clientY; }, { passive: true });
   grid.addEventListener('touchend', e => {
-    if (sx === null || !window.matchMedia('(max-width: 699.98px)').matches) return;
+    if (sx === null || !isSingleCard()) return;
     const t = e.changedTouches[0];
     const dx = t.clientX - sx, dy = t.clientY - sy;
     sx = sy = null;
@@ -247,7 +247,7 @@ function wireStatic() {
   window.addEventListener('pagehide', saveNow);
   motionQuery.addEventListener?.('change', () => { applySettings(); tick(true); });
   let resizeTimer = null;
-  window.addEventListener('resize', () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(() => { if (current) renderAmbient(); }, 300); });
+  window.addEventListener('resize', () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(() => { if (current) renderAmbient(); }, 300); layoutGrid(); });
 }
 
 function boot() {

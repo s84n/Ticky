@@ -45,10 +45,10 @@
 }
 .child-card[data-theme="zauber"] { backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
 .child-card[data-theme="zauber"]::before { background-size: 90px 90px, 200% 200%, 200% 200%, 200% 200%; animation: aurora 24s ease-in-out infinite alternate; }
-.child-card[data-theme="zauber"] .task { padding-left: 16px; padding-right: 12px; }
-.child-card[data-theme="zauber"] .task__label { font-weight: 600; font-size: 1.22rem; }
+.child-card[data-theme="zauber"] .task { padding-left: clamp(10px, 3.5vw, 16px); padding-right: clamp(8px, 3vw, 12px); }
+.child-card[data-theme="zauber"] .task__label { font-weight: 600; --label-max: 1.22rem; }
 .child-card[data-theme="zauber"] .task.is-done .task__check::before {
-  content: ''; position: absolute; width: 54px; height: 54px; border-radius: 50%;
+  content: ''; position: absolute; width: 124%; height: 124%; border-radius: 50%;
   background: radial-gradient(circle, transparent 52%, rgba(251, 191, 36, .0) 53%), conic-gradient(from 0deg, #FBBF24, #F472B6, #A78BFA, #7DD3FC, #FBBF24);
   mask: radial-gradient(circle, transparent 58%, #000 60%, #000 64%, transparent 66%);
   -webkit-mask: radial-gradient(circle, transparent 58%, #000 60%, #000 64%, transparent 66%);

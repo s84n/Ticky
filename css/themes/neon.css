@@ -42,7 +42,7 @@
 }
 .child-card[data-theme="neon"] .task { backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
 .child-card[data-theme="neon"] .card-name { letter-spacing: .01em; text-shadow: 0 0 14px rgba(0, 178, 255, .55); }
-.child-card[data-theme="neon"] .task__label { font-weight: 800; font-size: 1.22rem; }
+.child-card[data-theme="neon"] .task__label { font-weight: 800; --label-max: 1.22rem; }
 .child-card[data-theme="neon"] .spin-btn { background: linear-gradient(135deg, #FFCC00, #FF3B3B); color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,.4); box-shadow: 0 0 0 2px #FFCC00, 0 0 24px rgba(255, 204, 0, .6); }
 .praise[data-theme="neon"] { box-shadow: 0 0 0 2px #FFCC00, 0 0 18px rgba(255, 204, 0, .6); }
 

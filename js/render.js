@@ -1,5 +1,5 @@
 // Rendering der Hauptansicht: Kinder-Cards, Task-Listen, Fortschrittsanzeigen, Tabs, Header, Ruhe-Screen.
-import { el, svg, clear, $, starIcon } from './ui.js';
+import { el, svg, clear, $, starIcon, isSingleCard } from './ui.js';
 import { TASK_CATALOG, ROUTINE_META } from './data/task-catalog.js';
 import { childStats, overallStats, doneOf, spinStatus, nextRoutine, isNight } from './routine.js';
 import { formatDuration } from './util.js';
@@ -15,6 +15,34 @@ export function taskInfo(id, state) {
 }
 
 const cards = new Map();
+
+// ---------- Aufgabenliste an die verfügbare Höhe anpassen ----------
+
+const MIN_ROW = 48;   // darunter lieber eine weitere Spalte
+const MAX_ROW = 76;
+const MIN_COL = 130;  // Mindestbreite einer Aufgaben-Spalte
+
+/** Wählt 1–3 Spalten, sodass Zeilen möglichst ≥ MIN_ROW hoch sind und nichts scrollt. */
+function fitList(list) {
+  const n = Number(list.dataset.n) || 0;
+  const H = list.clientHeight, W = list.clientWidth;
+  if (!n || !H || !W) return;
+  const gap = parseFloat(getComputedStyle(list).rowGap) || 0;
+  const rowH = cols => { const rows = Math.ceil(n / cols); return (H - gap * (rows - 1)) / rows; };
+  let best = 1;
+  for (let c = 1; c <= 3; c++) {
+    if (c > 1 && (W - gap * (c - 1)) / c < MIN_COL) break;
+    best = c;
+    if (rowH(c) >= MIN_ROW) break;
+  }
+  list.style.setProperty('--tcols', best);
+  list.style.setProperty('--n', Math.ceil(n / best));
+  list.classList.toggle('is-multi', best > 1);
+}
+
+const listObserver = typeof ResizeObserver === 'function'
+  ? new ResizeObserver(entries => { for (const e of entries) fitList(e.target); })
+  : null;
 
 // ---------- Fortschrittsanzeigen je Style ----------
 
@@ -86,6 +114,7 @@ export function renderMain(state, current, h) {
   $('#routine-title').textContent = `${meta.title} ${meta.emoji}`;
   $('#btn-end-manual').hidden = !current.manual;
 
+  listObserver?.disconnect();
   const grid = clear($('#children-grid'));
   grid.classList.toggle('single', state.children.length === 1);
   cards.clear();
@@ -93,7 +122,8 @@ export function renderMain(state, current, h) {
   for (const child of state.children) {
     const tasks = child.tasks[routine];
     const rows = new Map();
-    const list = el('ul', { class: 'task-list' });
+    const list = el('ul', { class: 'task-list', 'data-n': tasks.length, style: { '--n': Math.max(1, tasks.length) } });
+    listObserver?.observe(list);
     for (const id of tasks) {
       const info = taskInfo(id, state);
       const btn = el('button', {
@@ -136,6 +166,7 @@ export function renderMain(state, current, h) {
 
   for (const child of state.children) updateChild(state, child.id, false);
   setActiveChild(state.ui.activeChildId ?? state.children[0]?.id);
+  layoutGrid();
   updateHeader(state, routine);
 }
 
@@ -181,6 +212,16 @@ export function updateHeader(state, routine) {
   $('#global-count').textContent = `${s.done} / ${s.total}`;
   $('#global-progress').setAttribute('aria-valuenow', pct);
   $('#btn-trophy').hidden = !s.allComplete;
+}
+
+/** Verteilt die Cards so, dass alles ohne Scrollen ins Fenster passt (Spalten × Zeilen). */
+export function layoutGrid() {
+  const grid = $('#children-grid');
+  const n = Math.max(1, cards.size);
+  const width = grid.clientWidth || innerWidth;
+  const cols = isSingleCard() ? 1 : Math.max(1, Math.min(n, Math.floor(width / 240)));
+  grid.style.setProperty('--cols', cols);
+  grid.style.setProperty('--rows', Math.ceil(n / cols));
 }
 
 export function setActiveChild(childId) {
