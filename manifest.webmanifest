@@ -1,6 +1,6 @@
 {
-  "name": "Ticky – Routinen",
-  "short_name": "Routinen",
+  "name": "Ticky",
+  "short_name": "Ticky",
   "description": "Morgen- und Abendroutinen für Kinder zum Abhaken. Alle Daten bleiben auf dem Gerät.",
   "id": "./",
   "start_url": "./",
