@@ -1,6 +1,6 @@
 // Service Worker: Offline-Betrieb. Bei jedem Release CACHE_VERSION (und VERSION in js/config.js) erhöhen.
 // Die Dateiliste kann mit `node tools/update-sw-assets.mjs` aktualisiert werden.
-const CACHE_VERSION = 'ticky-v1.0.2';
+const CACHE_VERSION = 'ticky-v1.0.3';
 const NETWORK_TIMEOUT_MS = 3000; // danach App-Shell aus dem Cache (schlechtes WLAN)
 
 const ASSETS = [
@@ -80,7 +80,8 @@ const ASSETS = [
 ];
 
 self.addEventListener('install', event => {
-  event.waitUntil(caches.open(CACHE_VERSION).then(cache => cache.addAll(ASSETS)));
+  // cache: 'reload' umgeht den HTTP-Cache, sonst landen evtl. noch alte Dateien im neuen Cache
+  event.waitUntil(caches.open(CACHE_VERSION).then(cache => cache.addAll(ASSETS.map(url => new Request(url, { cache: 'reload' })))));
 });
 
 self.addEventListener('activate', event => {
@@ -101,18 +102,20 @@ self.addEventListener('fetch', event => {
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
 
-  // App-Shell: Network-First mit Cache-Fallback, damit Updates ankommen
-  if (req.mode === 'navigate' || url.pathname.endsWith('/index.html')) {
+  // App-Shell und Manifest: Network-First mit Cache-Fallback, damit Updates (z. B. App-Name) ankommen
+  const isManifest = url.pathname.endsWith('/manifest.webmanifest');
+  if (req.mode === 'navigate' || url.pathname.endsWith('/index.html') || isManifest) {
     event.respondWith((async () => {
       try {
         const res = await Promise.race([
-          fetch(req),
+          fetch(req.url, { cache: 'no-cache', credentials: 'same-origin' }),
           new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), NETWORK_TIMEOUT_MS)),
         ]);
         const cache = await caches.open(CACHE_VERSION);
-        cache.put('./index.html', res.clone());
+        if (res.ok) event.waitUntil(cache.put(isManifest ? './manifest.webmanifest' : './index.html', res.clone()));
         return res;
       } catch {
+        if (isManifest) return (await caches.match('./manifest.webmanifest')) ?? Response.error();
         return (await caches.match('./index.html')) ?? (await caches.match('./')) ?? Response.error();
       }
     })());
