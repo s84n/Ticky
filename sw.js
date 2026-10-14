@@ -1,6 +1,7 @@
 // Service Worker: Offline-Betrieb. Bei jedem Release CACHE_VERSION (und VERSION in js/config.js) erhöhen.
 // Die Dateiliste kann mit `node tools/update-sw-assets.mjs` aktualisiert werden.
-const CACHE_VERSION = 'ticky-v1.0.0';
+const CACHE_VERSION = 'ticky-v1.0.1';
+const NETWORK_TIMEOUT_MS = 3000; // danach App-Shell aus dem Cache (schlechtes WLAN)
 
 const ASSETS = [
   './',
@@ -104,7 +105,10 @@ self.addEventListener('fetch', event => {
   if (req.mode === 'navigate' || url.pathname.endsWith('/index.html')) {
     event.respondWith((async () => {
       try {
-        const res = await fetch(req);
+        const res = await Promise.race([
+          fetch(req),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), NETWORK_TIMEOUT_MS)),
+        ]);
         const cache = await caches.open(CACHE_VERSION);
         cache.put('./index.html', res.clone());
         return res;
