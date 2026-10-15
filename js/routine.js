@@ -2,6 +2,7 @@
 import { parseTime, minutesOfDay, localDate } from './util.js';
 import { ROUTINES } from './data/task-catalog.js';
 import { ensureToday, spinKey } from './store.js';
+import { awardRoutine } from './data/progression.js';
 
 function inWindow(min, start, end) {
   return start <= end ? min >= start && min < end : min >= start || min < end;
@@ -99,7 +100,8 @@ export function overallStats(state, routine) {
 
 /**
  * Schaltet eine Aufgabe um. Gibt zurück, was passiert ist:
- * { checked, remaining, completedNow, newSpin }
+ * { checked, remaining, completedNow, newSpin, reward }
+ * reward ({ xp, levelBefore, levelAfter, dust }) gibt es nur beim ersten Abschluss der Routine am Tag.
  */
 export function toggleTask(state, routine, childId, taskId, today = localDate()) {
   ensureToday(state, today);
@@ -128,11 +130,16 @@ function afterChange(state, routine, child, before, today) {
   const stats = childStats(state, routine, child);
   const completedNow = !before && stats.complete;
   let newSpin = false;
+  let reward = null;
   if (completedNow) {
     const key = spinKey(today, routine, child.id);
-    if (!(key in state.spins)) { state.spins[key] = 'pending'; newSpin = true; }
+    if (!(key in state.spins)) {
+      state.spins[key] = 'pending';
+      newSpin = true;
+      reward = awardRoutine(child, stats.total); // Farm-Schutz: nur zusammen mit dem neuen Rad
+    }
   }
-  return { remaining: stats.total - stats.done, completedNow, newSpin };
+  return { remaining: stats.total - stats.done, completedNow, newSpin, reward };
 }
 
 export function spinStatus(state, routine, childId, today = localDate()) {

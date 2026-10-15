@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <title>Baby-Triceratops</title>
+  <ellipse cx="62" cy="122" rx="42" ry="4" fill="#000" opacity=".18"/>
+  <g class="tail" stroke="#3A2A0E" stroke-width="3.5" stroke-linejoin="round"><path d="M28 78 Q10 82 4 70 Q16 72 28 66 Z" fill="#5BBF8A"/></g>
+  <g class="leg-b" stroke="#3A2A0E" stroke-width="3.5"><rect x="40" y="92" width="14" height="22" rx="6" fill="#3E9A6C"/><rect x="72" y="92" width="14" height="22" rx="6" fill="#3E9A6C"/></g>
+  <g class="body" stroke="#3A2A0E" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round">
+    <ellipse cx="56" cy="80" rx="34" ry="24" fill="#5BBF8A"/>
+    <circle cx="44" cy="70" r="4" fill="#3E9A6C" stroke="none"/><circle cx="58" cy="64" r="3" fill="#3E9A6C" stroke="none"/><circle cx="36" cy="84" r="3" fill="#3E9A6C" stroke="none"/>
+    <path d="M70 30 Q94 22 112 40 Q118 60 104 72 L80 72 Q66 52 70 30 Z" fill="#F59E0B"/>
+    <path d="M78 36 q4 -4 8 0 M92 32 q4 -4 8 0 M104 40 q4 -2 6 2" stroke="#B45309" fill="none"/>
+    <ellipse cx="96" cy="70" rx="22" ry="17" fill="#5BBF8A"/>
+    <path d="M114 66 L126 72 L114 80 Z" fill="#FFF3D6"/>
+    <path d="M90 54 L94 34 L100 54 Z M104 56 L112 40 L114 58 Z" fill="#FFF3D6"/>
+    <path d="M114 62 L120 54 L118 66 Z" fill="#FFF3D6"/>
+    <circle cx="100" cy="64" r="4.5" fill="#3A2A0E" stroke="none"/><circle cx="101.5" cy="62.5" r="1.6" fill="#fff" stroke="none"/>
+    <circle cx="94" cy="76" r="4" fill="#FCA5A5" stroke="none"/>
+    <path d="M104 80 q4 3 8 0" fill="none"/>
+  </g>
+  <g class="leg-a" stroke="#3A2A0E" stroke-width="3.5"><rect x="30" y="94" width="14" height="22" rx="6" fill="#5BBF8A"/><rect x="62" y="94" width="14" height="22" rx="6" fill="#5BBF8A"/></g>
+</svg>

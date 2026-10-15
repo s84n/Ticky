@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <title>Vulkan-Spinosaurus</title>
+  <defs>
+    <linearGradient id="dino11-sail" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FDE047"/><stop offset=".45" stop-color="#F97316"/><stop offset="1" stop-color="#7C2D12"/></linearGradient>
+  </defs>
+  <ellipse cx="60" cy="122" rx="48" ry="4" fill="#000" opacity=".25"/>
+  <g class="tail" stroke="#1C1917" stroke-width="3.5" stroke-linejoin="round"><path d="M30 80 Q10 78 2 62 Q12 92 34 94 Z" fill="#44403C"/></g>
+  <g class="leg-b" stroke="#1C1917" stroke-width="3.5" stroke-linejoin="round"><path d="M70 90 L72 110 L64 116 L84 116 L82 90 Z" fill="#292524"/></g>
+  <g class="body" stroke="#1C1917" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M30 70 Q34 30 48 20 Q60 30 64 14 Q74 30 84 22 Q92 40 90 70 Z" fill="url(#dino11-sail)"/>
+    <path d="M44 66 L46 30 M58 66 L62 22 M74 66 L80 30" stroke="#7C2D12" stroke-width="2.5"/>
+    <path d="M28 82 Q30 64 56 62 Q86 62 92 72 L100 56 Q108 44 120 50 Q126 56 120 62 L106 66 Q98 92 64 96 Q32 96 28 82 Z" fill="#44403C"/>
+    <path d="M38 76 L46 86 L54 74 L62 88 L70 74 L78 86" stroke="#F97316" stroke-width="3" fill="none"/>
+    <circle cx="110" cy="52" r="3.8" fill="#F97316" stroke="none"/><circle cx="111" cy="51" r="1.5" fill="#FDE047" stroke="none"/>
+    <path d="M108 62 l3 3 l3 -3 l3 3" stroke="#fff" stroke-width="2" fill="none"/>
+  </g>
+  <g class="leg-a" stroke="#1C1917" stroke-width="3.5" stroke-linejoin="round"><path d="M42 90 L42 110 L34 116 L54 116 L54 90 Z" fill="#44403C"/></g>
+  <g fill="#F97316"><circle cx="16" cy="30" r="3"/><circle cx="24" cy="18" r="2"/><circle cx="110" cy="20" r="2.5"/><circle cx="118" cy="30" r="1.8"/></g>
+</svg>

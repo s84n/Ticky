@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <title>Seeschlangen-König</title>
+  <defs><linearGradient id="s11-scale" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2DD4BF"/><stop offset=".6" stop-color="#6366F1"/><stop offset="1" stop-color="#9333EA"/></linearGradient></defs>
+  <ellipse cx="64" cy="124" rx="44" ry="3" fill="#000" opacity=".15"/>
+  <g class="tail" stroke="#1E1B4B" stroke-width="3.5" stroke-linejoin="round"><path d="M18 100 L2 90 L6 108 Z" fill="#9333EA"/></g>
+  <g class="body" stroke="#1E1B4B" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M16 100 Q24 78 40 92 Q54 106 64 84 Q74 62 88 76 Q96 84 98 64 L98 42" stroke-width="20" fill="none"/>
+    <path d="M16 100 Q24 78 40 92 Q54 106 64 84 Q74 62 88 76 Q96 84 98 64 L98 42" stroke="url(#s11-scale)" stroke-width="13" fill="none"/>
+    <path d="M30 88 l4 -4 M48 96 l4 -4 M66 76 l4 -4 M86 72 l4 -4" stroke="#FEF08A" stroke-width="2.5"/>
+    <path d="M82 40 Q82 22 100 22 Q120 22 122 38 Q122 50 110 52 L92 52 Q82 50 82 40 Z" fill="#2DD4BF"/>
+    <path d="M86 24 L88 8 L94 18 L100 4 L106 18 L112 8 L114 24 Z" fill="#FACC15"/>
+    <circle cx="100" cy="14" r="2.5" fill="#EF4444" stroke="none"/>
+    <circle cx="104" cy="34" r="4.2" fill="#1C1917" stroke="none"/><circle cx="105.4" cy="32.6" r="1.5" fill="#fff" stroke="none"/>
+    <path d="M110 46 q4 3 9 0" fill="none"/>
+    <path d="M120 44 L126 48 M120 44 L126 40" stroke="#F472B6" stroke-width="2.5"/>
+    <path d="M82 36 L72 28 L80 44 Z" fill="#A78BFA"/>
+  </g>
+  <g fill="none" stroke="#7DD3FC" stroke-width="2"><circle cx="24" cy="30" r="5"/><circle cx="36" cy="18" r="3"/><circle cx="58" cy="40" r="2.5"/></g>
+</svg>

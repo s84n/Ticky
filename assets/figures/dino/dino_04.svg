@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <title>Flugsaurier</title>
+  <ellipse cx="64" cy="124" rx="30" ry="3" fill="#000" opacity=".12"/>
+  <g class="wing-b" stroke="#3A2A0E" stroke-width="3.5" stroke-linejoin="round"><path d="M58 60 L20 30 Q14 52 26 70 Q40 64 58 70 Z" fill="#5BA3C9"/></g>
+  <g class="body" stroke="#3A2A0E" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M40 72 Q46 56 66 56 Q86 58 88 72 Q84 86 64 88 Q46 86 40 72 Z" fill="#7EC4E6"/>
+    <path d="M40 72 L22 80 L40 78 Z" fill="#7EC4E6"/>
+    <path d="M78 52 Q84 40 96 42 Q106 46 104 56 Q100 62 88 62 Z" fill="#7EC4E6"/>
+    <path d="M84 44 L66 32 L88 40 Z" fill="#F59E0B"/>
+    <path d="M102 50 L124 56 L102 60 Z" fill="#FCD34D"/>
+    <circle cx="94" cy="50" r="3.8" fill="#3A2A0E" stroke="none"/><circle cx="95.3" cy="48.8" r="1.4" fill="#fff" stroke="none"/>
+    <path d="M56 90 l-4 10 M70 90 l4 10" fill="none"/>
+    <path d="M50 70 Q64 78 80 70" stroke="#C9E8F7" stroke-width="5" fill="none"/>
+  </g>
+  <g class="wing" stroke="#3A2A0E" stroke-width="3.5" stroke-linejoin="round"><path d="M64 64 L100 18 Q112 40 98 62 Q84 60 70 72 Z" fill="#9AD3EE"/><path d="M80 52 L98 26" stroke="#5BA3C9" stroke-width="2.5"/></g>
+</svg>

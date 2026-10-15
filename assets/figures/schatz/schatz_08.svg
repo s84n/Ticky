@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <title>Gold-Hai</title>
+  <defs><linearGradient id="s08-gold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FEF08A"/><stop offset=".5" stop-color="#FACC15"/><stop offset="1" stop-color="#CA8A04"/></linearGradient></defs>
+  <ellipse cx="64" cy="124" rx="34" ry="3" fill="#000" opacity=".12"/>
+  <g class="tail" stroke="#4A2C0A" stroke-width="3.5" stroke-linejoin="round"><path d="M24 64 L4 40 Q10 62 4 88 Z" fill="url(#s08-gold)"/></g>
+  <g class="body" stroke="#4A2C0A" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M56 46 L66 20 L80 46 Z" fill="url(#s08-gold)"/>
+    <path d="M20 64 Q48 40 88 44 Q118 48 124 66 Q116 84 88 86 Q50 88 20 64 Z" fill="url(#s08-gold)"/>
+    <path d="M40 70 Q80 92 120 70 Q110 84 88 86 Q56 88 40 70 Z" fill="#FFFBEB"/>
+    <path d="M96 74 l4 5 l4 -5 l4 5 l4 -5" stroke="#4A2C0A" stroke-width="2.5" fill="none"/>
+    <circle cx="104" cy="58" r="4.2" fill="#1C1917" stroke="none"/><circle cx="105.4" cy="56.6" r="1.5" fill="#fff" stroke="none"/>
+    <path d="M78 64 l-4 4 M84 64 l-4 4 M90 64 l-4 4" stroke="#A16207" stroke-width="2.5"/>
+    <path d="M60 74 L52 96 L72 80 Z" fill="url(#s08-gold)"/>
+    <path d="M44 52 l3 6 6 2 -6 2 -3 6 -3 -6 -6 -2 6 -2z" fill="#fff" stroke="none"/>
+  </g>
+  <g fill="none" stroke="#7DD3FC" stroke-width="2"><circle cx="112" cy="30" r="4"/><circle cx="120" cy="20" r="2.5"/></g>
+</svg>

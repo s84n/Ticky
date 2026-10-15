@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <title>Mini-Stegosaurus</title>
+  <ellipse cx="62" cy="122" rx="44" ry="4" fill="#000" opacity=".18"/>
+  <g class="tail" stroke="#3A2A0E" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"><path d="M28 82 Q12 80 4 64 Q18 70 30 70 Z" fill="#F4A261"/><path d="M8 66 L2 56 M14 70 L10 60" stroke="#3A2A0E"/></g>
+  <g class="leg-b" stroke="#3A2A0E" stroke-width="3.5"><rect x="42" y="92" width="13" height="22" rx="6" fill="#D9824A"/><rect x="76" y="92" width="13" height="22" rx="6" fill="#D9824A"/></g>
+  <g class="body" stroke="#3A2A0E" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M30 56 L36 38 L44 54 Z M44 48 L52 26 L60 46 Z M60 44 L70 24 L76 46 Z M76 48 L86 32 L90 54 Z" fill="#E76F51"/>
+    <path d="M24 84 Q24 52 60 50 Q94 50 98 76 Q98 96 60 98 Q24 98 24 84 Z" fill="#F4A261"/>
+    <path d="M30 86 Q60 96 94 84" stroke="#FCD5B5" stroke-width="5" fill="none"/>
+    <path d="M94 70 Q104 60 116 64 Q124 70 118 80 Q110 86 96 82 Z" fill="#F4A261"/>
+    <circle cx="111" cy="69" r="3.8" fill="#3A2A0E" stroke="none"/><circle cx="112.3" cy="67.8" r="1.4" fill="#fff" stroke="none"/>
+    <path d="M112 78 q3 2 6 -1" fill="none"/>
+    <circle cx="104" cy="77" r="3" fill="#F9A8A8" stroke="none"/>
+    <circle cx="48" cy="68" r="3.5" fill="#E9C46A" stroke="none"/><circle cx="66" cy="64" r="3" fill="#E9C46A" stroke="none"/><circle cx="80" cy="72" r="3" fill="#E9C46A" stroke="none"/>
+  </g>
+  <g class="leg-a" stroke="#3A2A0E" stroke-width="3.5"><rect x="32" y="94" width="13" height="22" rx="6" fill="#F4A261"/><rect x="66" y="94" width="13" height="22" rx="6" fill="#F4A261"/></g>
+</svg>

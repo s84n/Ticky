@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <title>Kokos-Äffchen</title>
+  <ellipse cx="64" cy="122" rx="32" ry="4" fill="#000" opacity=".18"/>
+  <g class="tail" stroke="#4A2C0A" stroke-width="9" stroke-linecap="round" fill="none"><path d="M88 100 Q116 98 112 74 Q110 64 102 66"/><path d="M88 100 Q116 98 112 74 Q110 64 102 66" stroke="#A16207" stroke-width="3.5"/></g>
+  <g class="body" stroke="#4A2C0A" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round">
+    <ellipse cx="64" cy="94" rx="26" ry="22" fill="#A16207"/>
+    <ellipse cx="64" cy="98" rx="15" ry="13" fill="#FDE68A"/>
+    <circle cx="34" cy="52" r="10" fill="#A16207"/><circle cx="94" cy="52" r="10" fill="#A16207"/>
+    <circle cx="34" cy="52" r="5" fill="#FBBF24" stroke="none"/><circle cx="94" cy="52" r="5" fill="#FBBF24" stroke="none"/>
+    <circle cx="64" cy="52" r="26" fill="#A16207"/>
+    <path d="M44 56 Q44 40 56 42 Q64 46 72 42 Q84 40 84 56 Q84 72 64 72 Q44 72 44 56 Z" fill="#FDE68A"/>
+    <path d="M38 38 Q64 18 90 38 L88 30 Q64 12 40 30 Z" fill="#DC2626"/>
+    <path d="M88 32 L100 26 L96 38 Z" fill="#DC2626"/>
+    <circle cx="44" cy="30" r="2" fill="#fff" stroke="none"/><circle cx="60" cy="24" r="2" fill="#fff" stroke="none"/><circle cx="76" cy="26" r="2" fill="#fff" stroke="none"/>
+    <circle cx="56" cy="52" r="4" fill="#1C1917" stroke="none"/><circle cx="72" cy="52" r="4" fill="#1C1917" stroke="none"/>
+    <circle cx="57.3" cy="50.8" r="1.4" fill="#fff" stroke="none"/><circle cx="73.3" cy="50.8" r="1.4" fill="#fff" stroke="none"/>
+    <path d="M58 62 q6 6 12 0" fill="none"/>
+    <circle cx="36" cy="94" r="12" fill="#78350F"/>
+    <circle cx="32" cy="90" r="2" fill="#4A2C0A" stroke="none"/><circle cx="38" cy="88" r="2" fill="#4A2C0A" stroke="none"/><circle cx="35" cy="95" r="2" fill="#4A2C0A" stroke="none"/>
+    <ellipse cx="50" cy="116" rx="10" ry="5" fill="#A16207"/><ellipse cx="78" cy="116" rx="10" ry="5" fill="#A16207"/>
+  </g>
+</svg>

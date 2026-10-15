@@ -256,7 +256,7 @@ h1, h2, h3, p { margin: 0; }
 }
 .children-grid.single { grid-template-columns: minmax(0, 520px); }
 .child-card { display: flex; flex-direction: column; min-height: 0; gap: clamp(6px, 1.3dvh, 14px); padding: clamp(10px, 1.8dvh, 18px); }
-.card-head, .card-footer, .child-card > .xp, .child-card > .neon-progress, .child-card > .magic-progress { flex: none; }
+.card-head, .card-footer, .child-card > .xp, .child-card > .neon-progress, .child-card > .magic-progress, .child-card > .track { flex: none; }
 .card-avatar { width: clamp(38px, 6.5dvh, 56px); height: clamp(38px, 6.5dvh, 56px); font-size: clamp(1.5rem, 4.2dvh, 2.4rem); }
 .card-name { font-size: clamp(1.15rem, 3.2dvh, 1.6rem); }
 .task-list {
@@ -283,7 +283,8 @@ h1, h2, h3, p { margin: 0; }
 .spin-btn { min-height: clamp(42px, 7dvh, 60px); font-size: clamp(1rem, 2.6dvh, 1.25rem); }
 .card-done-note { font-size: clamp(.9rem, 2.2dvh, 1.1rem); }
 @media (max-height: 640px) {
-  .level__label, .xp__label { display: none; }
+  .level__label, .xp__label, .track__label, .card-level__bar { display: none; }
+  .track__lane { height: 26px; }
   .neon-stars, .magic-stars { --star: 22px !important; }
 }
 /* Niedrige Fenster (Handy quer): alles drumherum kompakt, damit die Aufgaben Platz haben */
@@ -299,6 +300,10 @@ h1, h2, h3, p { margin: 0; }
   .xp__bar { height: 14px; padding: 2px; }
   .level, .rainbow { height: 10px; }
   .neon-progress, .magic-progress { gap: 4px; }
+  .track__lane { height: 22px; }
+  .track__marker, .track__goal { font-size: 1.1rem; }
+  .card-buddy { width: 34px; height: 34px; }
+  .card-level { display: none; }
   .child-tabs.has-tabs { padding-top: 4px; padding-bottom: calc(4px + var(--safe-b)); }
   .child-tabs .child-tab { min-height: 40px; flex-direction: row; gap: 6px; }
 }
@@ -335,7 +340,7 @@ h1, h2, h3, p { margin: 0; }
 /* ---------- Ruhe-Screen ---------- */
 .rest-screen { position: relative; display: grid; place-content: center; justify-items: center; gap: 28px; padding: 32px var(--gutter) calc(32px + var(--safe-b)); text-align: center; }
 .rest-settings { position: absolute; top: calc(12px + var(--safe-t)); right: var(--gutter); }
-.rest-scene { font-family: var(--emoji); font-size: clamp(7rem, 30vw, 11rem); line-height: 1; animation: float 6s ease-in-out infinite; filter: drop-shadow(0 12px 30px rgba(255, 190, 60, .45)); }
+.rest-scene { font-family: var(--emoji); font-size: clamp(5rem, 24vw, 9rem); line-height: 1; animation: float 6s ease-in-out infinite; filter: drop-shadow(0 12px 30px rgba(255, 190, 60, .45)); }
 body.night .rest-scene { filter: drop-shadow(0 10px 30px rgba(160, 170, 255, .45)); }
 .rest-next { font-size: 1.3rem; max-width: 26ch; }
 .rest-next strong { font-weight: 800; color: var(--ui-accent); }
@@ -515,6 +520,14 @@ body.shake #app, body.shake .overlay { animation: shake .5s; }
 .reveal__title[data-rarity="magisch"] { color: #E9D5FF; text-shadow: 0 0 20px #A855F7, 0 0 40px #14B8A6; }
 .reveal__name { font-size: 1.5rem; }
 .reveal__count { font-family: var(--font-ui); font-size: 1.05rem; opacity: .9; }
+.reveal__dust { font-family: var(--font-ui); font-weight: 800; padding: .3em 1em; border-radius: 99px; background: rgba(255,255,255,.14); color: #FDE68A; animation: pop-in .4s .4s both; }
+.reveal__badge[data-rarity="mythisch"] { background: linear-gradient(135deg, #DC2626, #7C3AED); border-color: #FCA5A5; }
+.reveal__badge[data-rarity="geheim"] { background: linear-gradient(#111827, #111827) padding-box, linear-gradient(90deg, #F87171, #FBBF24, #A3E635, #38BDF8, #A78BFA, #F472B6) border-box; border-color: transparent; }
+.reveal__title[data-rarity="mythisch"] { color: #FEE2E2; text-shadow: 0 0 18px #EF4444, 0 0 42px #7C3AED; }
+.reveal__title[data-rarity="geheim"] { background: linear-gradient(90deg, #F87171, #FBBF24, #A3E635, #38BDF8, #A78BFA, #F472B6, #F87171) 0 0 / 200% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: rainbow-text 2s linear infinite; filter: drop-shadow(0 3px 10px rgba(167, 139, 250, .7)); }
+.reveal__figure-wrap[data-rarity="mythisch"] .reveal__rays { background: repeating-conic-gradient(from 0deg, rgba(239, 68, 68, .55) 0 10deg, transparent 10deg 20deg); }
+.reveal__figure-wrap[data-rarity="geheim"] .reveal__rays { background: repeating-conic-gradient(from 0deg, #F87171 0 8deg, transparent 8deg 15deg, #FBBF24 15deg 23deg, transparent 23deg 30deg, #38BDF8 30deg 38deg, transparent 38deg 45deg, #A78BFA 45deg 53deg, transparent 53deg 60deg); opacity: .7; animation-duration: 6s; }
+.wheel-rare-sym { font-family: var(--emoji); pointer-events: none; }
 .reveal .btn { margin-top: 8px; }
 
 /* ---------- Siegesparade ---------- */
@@ -530,7 +543,7 @@ body.shake #app, body.shake .overlay { animation: shake .5s; }
 .parade-actor .wing { transform-origin: 50% 100%; animation: flap .22s ease-in-out infinite alternate; }
 .parade-actor .wing-b { transform-origin: 50% 100%; animation: flap .22s ease-in-out infinite alternate-reverse; }
 .parade-actor .tail { transform-origin: 0 50%; animation: wag .4s ease-in-out infinite alternate; }
-.parade-bow { position: fixed; left: 50%; top: 50%; width: min(50vw, 240px); aspect-ratio: 1; transform: translate(-50%, -50%); }
+.parade-bow, .parade-bow.fig { position: fixed; left: 50%; top: 50%; width: min(50vw, 240px); aspect-ratio: 1; transform: translate(-50%, -50%); }
 
 /* ---------- Gesamt-Feier ---------- */
 .celebration { text-align: center; color: #fff; display: grid; gap: 18px; justify-items: center; }
@@ -544,6 +557,96 @@ body.shake #app, body.shake .overlay { animation: shake .5s; }
 .install-banner__icon { width: 48px; height: 48px; border-radius: 12px; flex: none; }
 .install-banner__text { flex: 1; font-size: .95rem; }
 .install-banner__text strong { display: block; font-size: 1.05rem; }
+
+/* ---------- Spieler-Level & Buddy auf der Card ---------- */
+.card-who { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.card-who .card-name { overflow-wrap: normal; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Schmale Cards: zuerst das Avatar-Emoji (der Buddy steht ja daneben), dann der Zähler weichen */
+.child-card { container: card / inline-size; }
+@container card (max-width: 360px) { .card-avatar { display: none; } }
+@container card (max-width: 280px) { .card-count { display: none; } .card-head { gap: 8px; } }
+.card-level { display: grid; gap: 3px; font-family: var(--font-ui); font-size: clamp(.68rem, 1.7dvh, .82rem); font-weight: 800; opacity: .9; }
+.card-level__text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.card-level__bar { display: block; height: 4px; max-width: 140px; border-radius: 99px; background: var(--count-bg, rgba(0,0,0,.15)); overflow: hidden; }
+.card-level__fill { display: block; height: 100%; width: 0; border-radius: inherit; background: linear-gradient(90deg, #FFD34D, #FF9F1C); transition: width .6s cubic-bezier(.2,.8,.2,1); }
+.card-buddy {
+  flex: none; position: relative; display: grid; place-items: center;
+  width: clamp(40px, 7dvh, 58px); height: clamp(40px, 7dvh, 58px); padding: 0;
+  border: 0; border-radius: var(--tile-radius); background: transparent; color: inherit;
+}
+.card-buddy.is-empty { background: var(--count-bg, rgba(0,0,0,.15)); font-size: clamp(1.2rem, 3.4dvh, 1.7rem); }
+.card-buddy .fig { width: 100%; }
+.card-buddy:active { transform: scale(.94); }
+.buddy { animation: buddy-idle 3.2s ease-in-out infinite; transform-origin: 50% 100%; }
+.buddy.is-cheer { animation: buddy-cheer .7s cubic-bezier(.3,1.6,.5,1); }
+.buddy.is-party { animation: buddy-party 1.5s cubic-bezier(.3,1.4,.5,1); }
+body.evening .card-buddy .buddy:not(.is-cheer):not(.is-party) { animation: buddy-sleepy 5s ease-in-out infinite; }
+body.evening .card-buddy:not(.is-empty)::after { content: '🥱'; position: absolute; right: -6px; top: -8px; font-family: var(--emoji); font-size: .95rem; opacity: 0; animation: yawn 9s ease-in-out infinite; }
+
+/* ---------- Figuren-Darstellung (Aufwertung + Accessoire) ---------- */
+.fig { position: relative; aspect-ratio: 1; container-type: inline-size; }
+.fig > .fig__img, .fig > svg { display: block; width: 100%; height: 100%; }
+.fig.is-silhouette > .fig__img { filter: brightness(0) opacity(.4); }
+.fig__acc { position: absolute; left: var(--hx, 50%); top: var(--hy, 10%); transform: translate(-50%, -70%); font-family: var(--emoji); font-size: 30cqw; line-height: 1; pointer-events: none; filter: drop-shadow(0 2px 2px rgba(0,0,0,.3)); z-index: 2; }
+.fig[data-tier="1"] > .fig__img, .fig[data-tier="1"] > svg { filter: drop-shadow(0 0 1.5px #A0612A) drop-shadow(0 0 5px rgba(205, 127, 50, .85)); }
+.fig[data-tier="2"] > .fig__img, .fig[data-tier="2"] > svg { filter: drop-shadow(0 0 1.5px #94A3B8) drop-shadow(0 0 7px rgba(226, 232, 240, .95)); }
+.fig[data-tier="3"] > .fig__img, .fig[data-tier="3"] > svg { filter: drop-shadow(0 0 2px #E0A21A) drop-shadow(0 0 10px rgba(255, 205, 60, .95)); }
+.fig[data-tier="3"]::before {
+  content: ''; position: absolute; inset: -12%; z-index: -1; border-radius: 50%; pointer-events: none;
+  background: repeating-conic-gradient(from 0deg, rgba(255, 214, 90, .5) 0 12deg, transparent 12deg 30deg);
+  mask: radial-gradient(circle, #000 25%, transparent 70%); -webkit-mask: radial-gradient(circle, #000 25%, transparent 70%);
+  animation: spin 10s linear infinite;
+}
+.parade-actor.is-flipped .fig__acc { left: calc(100% - var(--hx, 50%)); }
+.rarity-badge { display: inline-block; padding: .2em .8em; border-radius: 99px; font-weight: 800; font-size: .85rem; background: var(--surface-2); color: var(--text); }
+.rarity-badge[data-rarity="magisch"] { background: linear-gradient(135deg, #8B5CF6, #14B8A6); color: #fff; }
+.rarity-badge[data-rarity="legendaer"] { background: linear-gradient(135deg, #FFD34D, #FF9F1C); color: #3B2300; }
+.rarity-badge[data-rarity="mythisch"] { background: linear-gradient(135deg, #DC2626, #7C3AED); color: #fff; }
+.rarity-badge[data-rarity="geheim"] { background: linear-gradient(#111827, #111827) padding-box, linear-gradient(90deg, #F87171, #FBBF24, #A3E635, #38BDF8, #A78BFA, #F472B6) border-box; border: 2px solid transparent; color: #fff; }
+
+/* ---------- Fortschritts-Weg (Dino, Sternenreise, Schatzinsel) ---------- */
+.track { display: grid; gap: 4px; }
+.track__lane { position: relative; height: 34px; display: flex; align-items: center; padding: 0 2rem 0 4px; }
+.track__path { position: relative; flex: 1; min-width: 0; height: 100%; display: flex; align-items: center; justify-content: space-between; gap: 2px; }
+.track__path::before { content: ''; position: absolute; left: 0; right: -1.4rem; top: 50%; border-top: 3px dashed var(--track-line, rgba(0,0,0,.25)); transform: translateY(-50%); }
+.track__node { position: relative; flex: 0 1 auto; min-width: 0; width: var(--node, 16px); height: var(--node, 16px); border-radius: 50%; background: var(--node-off, rgba(0,0,0,.15)); transition: background-color .3s, box-shadow .3s, fill .3s; }
+.track__node.is-on { background: var(--node-on, #FFD34D); box-shadow: var(--node-glow, none); }
+.track__node.is-new { animation: neon-star-pop .5s cubic-bezier(.3,1.8,.5,1); }
+.track__goal { position: absolute; right: 0; top: 50%; transform: translateY(-50%); font-size: 1.5rem; transition: transform .3s; }
+.track.is-complete .track__goal { animation: pulse 1.2s ease-in-out infinite; }
+.track__marker { position: absolute; z-index: 2; top: 50%; left: calc(4px + (100% - 2rem - 1.1rem) * var(--p, 0)); transform: translateY(-62%) var(--marker-flip, ); font-size: 1.45rem; transition: left .7s cubic-bezier(.3,1.4,.5,1); filter: drop-shadow(0 3px 3px rgba(0,0,0,.3)); pointer-events: none; }
+.track__label { font-family: var(--font-head); font-size: .95rem; text-align: center; opacity: .9; }
+
+/* ---------- Ruhe-Screen: Buddys ---------- */
+.rest-buddies { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; max-width: 760px; }
+.rest-buddies:empty { display: none; }
+.rest-buddy {
+  position: relative; isolation: isolate; overflow: hidden;
+  display: grid; justify-items: center; gap: 2px; min-width: 120px; padding: 10px 14px;
+  border: 0; border-radius: var(--card-radius, 18px);
+  background: var(--card-bg, var(--surface)); color: var(--card-fg, var(--text)); box-shadow: var(--card-shadow, var(--shadow));
+  font-family: var(--font-head, var(--font-ui)); transition: transform .15s;
+}
+.rest-buddy::before { content: ''; position: absolute; inset: 0; z-index: -1; background: var(--card-pattern, none); }
+.rest-buddy:active { transform: scale(.96); }
+.rest-buddy__stage { position: relative; width: 78px; height: 78px; display: grid; place-items: center; }
+.rest-buddy__stage .fig { width: 100%; }
+.rest-buddy__avatar { font-size: 3rem; }
+.rest-buddy__name { font-size: 1.1rem; max-width: 12ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rest-buddy__level { font-family: var(--font-ui); font-size: .78rem; opacity: .85; }
+.rest-buddies.is-night .buddy { animation: buddy-sleep 4.5s ease-in-out infinite; filter: brightness(.85); }
+.rest-buddy__zzz { position: absolute; right: -2px; top: -4px; font-weight: 800; color: #C7D2FE; text-shadow: 0 0 6px rgba(99, 102, 241, .8); animation: zzz 3s ease-in-out infinite; }
+.rest-buddy__zzz span { display: inline-block; animation: zzz 3s ease-in-out infinite; }
+.rest-buddy__zzz span:nth-child(1) { font-size: 1.15em; animation-delay: .5s; }
+.rest-buddy__zzz span:nth-child(2) { font-size: 1.35em; animation-delay: 1s; }
+
+/* ---------- Level-Aufstieg ---------- */
+.levelup { text-align: center; color: #fff; display: grid; gap: 14px; justify-items: center; font-family: var(--font-head, var(--font-ui)); }
+.levelup__badge { display: grid; place-items: center; width: 120px; height: 120px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #FFF6C8, #FFC93C 55%, #E08A00); color: #5A3500; font-size: 3.4rem; font-weight: 800; box-shadow: 0 0 0 6px rgba(255,255,255,.35), 0 0 50px rgba(255, 200, 60, .8); animation: reveal-pop .7s cubic-bezier(.3,1.6,.5,1) both; }
+.levelup__title { font-size: clamp(2rem, 8vw, 3rem); text-shadow: 0 4px 18px rgba(0,0,0,.5); }
+.levelup__text { font-size: 1.35rem; }
+.levelup__rank { font-size: 1.15rem; padding: .3em 1em; border-radius: 99px; background: rgba(255,255,255,.15); }
+.levelup__gift { color: #FDE68A; font-size: 1.1rem; }
 
 /* ---------- Keyframes ---------- */
 @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
@@ -566,6 +669,14 @@ body.shake #app, body.shake .overlay { animation: shake .5s; }
 @keyframes leg-swing { from { transform: rotate(-18deg); } to { transform: rotate(18deg); } }
 @keyframes flap { from { transform: scaleY(1); } to { transform: scaleY(-.35); } }
 @keyframes wag { from { transform: rotate(-12deg); } to { transform: rotate(12deg); } }
+@keyframes buddy-idle { 0%, 100% { transform: translateY(0) scale(1, 1); } 50% { transform: translateY(-3px) scale(.98, 1.02); } }
+@keyframes buddy-cheer { 0% { transform: translateY(0) scale(1.1, .9); } 35% { transform: translateY(-14px) scale(.95, 1.08) rotate(-6deg); } 70% { transform: translateY(0) scale(1.08, .92); } 100% { transform: none; } }
+@keyframes buddy-party { 0% { transform: scale(1.1, .9); } 25% { transform: translateY(-20px) rotate(-180deg) scale(1.1); } 50% { transform: translateY(-26px) rotate(-360deg) scale(1.15); } 75% { transform: translateY(0) scale(1.1, .9); } 88% { transform: translateY(-8px); } 100% { transform: none; } }
+@keyframes buddy-sleepy { 0%, 100% { transform: rotate(0) scale(1, 1); } 40% { transform: rotate(-4deg) scale(1.02, .97); } 55% { transform: rotate(-6deg) scale(1.04, .95); } }
+@keyframes buddy-sleep { 0%, 100% { transform: rotate(-10deg) translateY(4px) scale(1.03, .94); } 50% { transform: rotate(-10deg) translateY(4px) scale(.99, 1); } }
+@keyframes yawn { 0%, 72%, 100% { opacity: 0; transform: scale(.4); } 78%, 92% { opacity: 1; transform: scale(1); } }
+@keyframes zzz { 0% { opacity: 0; transform: translate(0, 6px); } 30%, 70% { opacity: 1; } 100% { opacity: 0; transform: translate(6px, -14px); } }
+@keyframes rainbow-text { to { background-position: 200% 0; } }
 
 /* ---------- Reduzierte Bewegung ---------- */
 body.reduce-motion *, body.reduce-motion *::before, body.reduce-motion *::after {

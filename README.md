@@ -1,11 +1,15 @@
 # Ticky ✅
 
-Ticky ist eine installierbare Web-App (PWA), mit der Kinder ihre Morgen- und Abendroutine abhaken. Jede erledigte Aufgabe gibt Effekte und Sounds. Wer fertig ist, dreht am **Glücksrad**, gewinnt eine von 10 Figuren und schaut ihr bei der **Siegesparade** zu.
+Ticky ist eine installierbare Web-App (PWA), mit der Kinder ihre Morgen- und Abendroutine abhaken. Jede erledigte Aufgabe gibt Effekte und Sounds. Wer fertig ist, dreht am **Glücksrad**, gewinnt eine von 12 Figuren und schaut ihr bei der **Siegesparade** zu.
 
-- 1–5 Kinder, jedes mit eigenem Style: **Pixel-Abenteuer**, **Neon-Arcade** oder **Einhorn-Zauber**
+- 1–5 Kinder, jedes mit eigenem Style: **Pixel-Abenteuer**, **Neon-Arcade**, **Einhorn-Zauber**, **Dino-Expedition**, **Sternenreise** oder **Schatzinsel**
 - Aufgaben aus einem Katalog wählen, eigene Aufgaben anlegen, Reihenfolge festlegen
 - Morgen- und Abendroutine starten automatisch nach Uhrzeit. Außerhalb der Zeiten erscheint ein Ruhe-Bildschirm mit Countdown
-- 30 eigene Figuren in drei Raritäten (Standard 70 %, Magisch 25 %, Legendär 5 %)
+- 72 eigene Figuren in fünf Raritäten (Standard 68 %, Magisch 25 %, Legendär 5 %, Mythisch 1,5 %, Geheim 0,5 %)
+- **Figurenwelt:** Alle gewonnenen Figuren laufen in einer Landschaft passend zum Style herum und reagieren beim Antippen
+- **Sternenstaub:** Doppelte Figuren werden zu Sternenstaub. Damit lassen sich Figuren auf Bronze, Silber und Gold aufwerten und Accessoires (Krone, Zylinder …) freischalten
+- **Spieler-Level:** Jede fertige Routine bringt XP. Das Level bleibt dauerhaft, mit Titeln je Style und Sternenstaub als Geschenk beim Aufstieg
+- **Buddy:** Eine Lieblingsfigur begleitet die Routine, jubelt beim Abhaken, gähnt abends und schläft nachts auf dem Ruhe-Bildschirm
 - Eltern-Bereich mit Rechen-Sperre, Backup-Export und -Import
 - Funktioniert vollständig offline
 
@@ -38,7 +42,7 @@ node --test tests/*.test.mjs
 Hilfsskripte (nur für die Entwicklung):
 
 - `node tools/update-sw-assets.mjs` aktualisiert die Offline-Dateiliste in `sw.js`
-- `node tools/gen-pixel-figures.mjs` erzeugt die Pixel-Figuren aus ASCII-Rastern
+- `node tools/gen-pixel-figures.mjs` erzeugt die Pixel-Figuren aus ASCII-Rastern (die übrigen Figuren sind handgezeichnete SVGs)
 
 ## Deployment auf GitHub Pages
 

@@ -1,0 +1,81 @@
+/* =========================================================
+   Style „Schatzinsel“ – Pergament, Holz, Gold, Schatzkarte
+   ========================================================= */
+[data-theme="schatz"] {
+  --c-primary: #B45309;
+  --c-accent: #FACC15;
+  --font-head: 'Baloo 2', 'Nunito', system-ui, sans-serif;
+  --font-body: 'Nunito', system-ui, sans-serif;
+  --card-radius: 10px;
+  --tile-radius: 10px;
+  --check-radius: 50%;
+
+  --card-bg: linear-gradient(160deg, #F8EBCB 0%, #EED9A6 100%);
+  --card-fg: #4A2C0A;
+  --card-shadow: 0 0 0 4px #7C4A1A, 0 0 0 7px #C9A267, 0 14px 34px rgba(74, 44, 10, .35);
+  --card-pattern:
+    radial-gradient(120% 80% at 0% 0%, rgba(160, 110, 40, .22), transparent 50%),
+    radial-gradient(120% 80% at 100% 100%, rgba(160, 110, 40, .25), transparent 50%),
+    repeating-linear-gradient(115deg, transparent 0 22px, rgba(124, 74, 26, .04) 22px 24px);
+  --avatar-bg: #E3C68A;
+  --count-bg: rgba(124, 74, 26, .16);
+
+  --tile-bg: #FFF8E6;
+  --tile-fg: #4A2C0A;
+  --tile-border: 2px dashed #C9A267;
+  --tile-shadow: none;
+  --tile-done-bg: linear-gradient(90deg, #FEF3C7, #FDE68A);
+  --tile-done-shadow: 0 0 0 3px #CA8A04, 0 0 16px rgba(250, 204, 21, .55);
+  --check-border: #7C4A1A;
+  --check-bg: #FFFFFF;
+
+  --tab-bg: #F8EBCB;
+  --tab-fg: #4A2C0A;
+  --tab-accent: #B45309;
+  --praise-bg: linear-gradient(135deg, #FACC15, #CA8A04);
+  --praise-fg: #3B2300;
+  --banner-bg: linear-gradient(135deg, #7C4A1A, #B45309 50%, #FACC15);
+  --banner-fg: #FFFFFF;
+  --wheel-ring-1: #7C4A1A;
+  --wheel-ring-2: #FACC15;
+
+  --track-line: rgba(124, 74, 26, .45);
+}
+.child-card[data-theme="schatz"] .card-name { color: #7C2D12; }
+.child-card[data-theme="schatz"] .task__label { --label-max: 1.2rem; }
+.child-card[data-theme="schatz"] .task.is-done { border-style: solid; border-color: #CA8A04; }
+.child-card[data-theme="schatz"] .spin-btn { border-radius: 10px; background: linear-gradient(180deg, #FDE047, #EAB308 55%, #A16207); color: #3B2300; box-shadow: 0 0 0 3px #7C4A1A, 0 6px 0 3px #4A2C0A, 0 12px 24px rgba(74, 44, 10, .4); }
+.praise[data-theme="schatz"] { box-shadow: 0 0 0 2px #7C4A1A, 0 6px 18px rgba(202, 138, 4, .5); }
+
+/* Schatzkarte: gestrichelter Weg, Fußstapfen-Punkte, X markiert den Schatz */
+.track[data-kind="schatz"] .track__node { --node: 10px; background: rgba(124, 74, 26, .25); }
+.track[data-kind="schatz"] .track__node.is-on { background: #B91C1C; box-shadow: 0 0 0 2px #FDE68A; }
+.track[data-kind="schatz"] .track__goal { font-size: 1.3rem; }
+.track[data-kind="schatz"] .track__label { color: #7C2D12; }
+
+/* Abend: Nacht auf See, Laternenlicht */
+body.evening [data-theme="schatz"] {
+  --card-bg: linear-gradient(170deg, #0F2742 0%, #0A1A2E 100%);
+  --card-fg: #FDF2D6;
+  --card-shadow: 0 0 0 4px #3B2A14, 0 0 0 7px #7C5A2A, 0 14px 40px rgba(0, 0, 0, .55);
+  --card-pattern:
+    radial-gradient(60% 40% at 90% 10%, rgba(250, 204, 21, .18), transparent 70%),
+    radial-gradient(1.5px 1.5px at 20% 20%, #fff 50%, transparent 51%),
+    radial-gradient(1px 1px at 60% 12%, #fff 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 40% 30%, #fff 50%, transparent 51%);
+  --avatar-bg: rgba(250, 204, 21, .12);
+  --count-bg: rgba(250, 204, 21, .14);
+  --tile-bg: rgba(255, 255, 255, .06);
+  --tile-fg: #FDF2D6;
+  --tile-border: 2px dashed rgba(201, 162, 103, .5);
+  --tile-done-bg: rgba(250, 204, 21, .16);
+  --tile-done-shadow: 0 0 0 2px #FACC15, 0 0 16px rgba(250, 204, 21, .35);
+  --check-border: #C9A267;
+  --check-bg: rgba(0, 0, 0, .25);
+  --tab-bg: #0F2742;
+  --tab-fg: #FDF2D6;
+  --track-line: rgba(253, 242, 214, .35);
+}
+body.evening .child-card[data-theme="schatz"] .card-name { color: #FDE68A; }
+body.evening .track[data-kind="schatz"] .track__node { background: rgba(253, 242, 214, .2); }
+body.evening .track[data-kind="schatz"] .track__label { color: #FDE68A; }

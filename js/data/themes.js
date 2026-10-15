@@ -1,4 +1,6 @@
 // Style-Definitionen. Farben, die JS braucht (Partikel, Flash, Rad); alles Visuelle sonst in css/themes/*.css.
+// progress: Art der Fortschrittsanzeige auf der Card (xp | neon | magic | track).
+// world: Name und Deko der Figurenwelt. levelTitles: Titel fürs Spieler-Level (alle 4 Level ein neuer).
 export const THEMES = {
   pixel: {
     id: 'pixel',
@@ -13,6 +15,9 @@ export const THEMES = {
     ambient: ['🌲', '🪨', '🌿', '🪵', '💎', '⚡', '🏔️'],
     avatars: ['⛏️', '🧱', '🌲', '🐷', '💎', '🗡️'],
     wheel: { standard: ['#5D8C3E', '#4A7A30'], magisch: ['#7C5CD6', '#2BB3B1'], legendaer: ['#F5C542', '#E0A21A'] },
+    progress: 'xp',
+    world: { name: 'Pixel-Wiese', props: ['🌲', '🪨', '🌼', '🌲', '🍄', '🪵'] },
+    levelTitles: ['Neuling', 'Sammler', 'Baumeister', 'Entdecker', 'Höhlenforscher', 'Meisterbauer', 'Pixel-Held', 'Block-Legende'],
   },
   neon: {
     id: 'neon',
@@ -27,6 +32,9 @@ export const THEMES = {
     ambient: ['⭐', '💫', '🎮', '💥', '🔶', '🔷', '🎯', '🌀'],
     avatars: ['🎮', '🤖', '🕹️', '🚀', '👾', '🦖'],
     wheel: { standard: ['#1B2A4A', '#13203A'], magisch: ['#8B3DFF', '#00C2B8'], legendaer: ['#FFCC00', '#F0A500'] },
+    progress: 'neon',
+    world: { name: 'Arcade-Halle', props: ['🕹️', '🎰', '💡', '🕹️', '🎯', '💎'] },
+    levelTitles: ['Rookie', 'Player', 'Combo-Profi', 'Highscorer', 'Arcade-Ass', 'Champion', 'Neon-Star', 'Arcade-Legende'],
   },
   zauber: {
     id: 'zauber',
@@ -41,10 +49,70 @@ export const THEMES = {
     ambient: ['✨', '⭐', '💫', '🌸', '💖', '🌟', '🦋', '🌈'],
     avatars: ['🦄', '🧚', '🌈', '🦋', '🐱', '🌸'],
     wheel: { standard: ['#F9A8D4', '#F0ABFC'], magisch: ['#8B5CF6', '#2DD4BF'], legendaer: ['#FBBF24', '#F59E0B'] },
+    progress: 'magic',
+    world: { name: 'Zauberwald', props: ['🌳', '🍄', '🌷', '🌸', '🌳', '🦋'] },
+    levelTitles: ['Zauberlehrling', 'Feenfreund', 'Glitzerfee', 'Sternenfänger', 'Regenbogen-Magier', 'Einhorn-Reiter', 'Zaubermeister', 'Märchen-Legende'],
+  },
+  dino: {
+    id: 'dino',
+    name: 'Dino-Expedition',
+    tagline: 'Dschungel, Spuren, Vulkan',
+    primary: '#4D8B1F',
+    primaryDark: '#2F5D12',
+    accent: '#F97316',
+    flash: 'rgba(249, 115, 22, .35)',
+    particles: { kind: 'emoji', colors: ['#4D8B1F', '#F97316', '#FACC15'], emojis: ['🦴', '🌿', '🥚', '🍃', '🌋', '🦕'] },
+    praise: ['Rooaar! 🦖', 'Dino-stark! 🦕', 'Fossil gefunden! 🦴', 'Spur entdeckt! 🐾', 'Ur-gut! 🌋'],
+    ambient: ['🌿', '🍃', '🌴', '🦴', '🥚', '🪨', '🌋'],
+    avatars: ['🦖', '🦕', '🥚', '🌋', '🦴', '🌴'],
+    wheel: { standard: ['#6B9E3A', '#558A2A'], magisch: ['#0EA5A4', '#7C5CD6'], legendaer: ['#FB923C', '#EA580C'] },
+    progress: 'track',
+    track: { marker: '🦖', goal: '🌋', done: 'Vulkan erreicht! 🌋', label: (d, t) => `${d} / ${t} Spuren` },
+    world: { name: 'Dino-Dschungel', props: ['🌴', '🌿', '🪨', '🌴', '🥚', '🌋'] },
+    levelTitles: ['Eierfinder', 'Spurenleser', 'Fossiliensucher', 'Dino-Forscher', 'Dschungel-Ranger', 'Vulkan-Bezwinger', 'Dino-Meister', 'Ur-Legende'],
+  },
+  weltraum: {
+    id: 'weltraum',
+    name: 'Sternenreise',
+    tagline: 'Raketen, Planeten, Sterne',
+    primary: '#6366F1',
+    primaryDark: '#1E1B4B',
+    accent: '#FF8A3D',
+    flash: 'rgba(99, 102, 241, .4)',
+    particles: { kind: 'emoji', colors: ['#6366F1', '#22D3EE', '#FF8A3D', '#FDE047'], emojis: ['⭐', '🪐', '☄️', '🌟', '🚀', '✨'] },
+    praise: ['Abheben! 🚀', 'Sternklasse! 🌟', 'Neuer Planet! 🪐', 'Volle Schubkraft! ☄️', 'Kosmisch! ✨'],
+    ambient: ['⭐', '🪐', '☄️', '🌟', '✨', '🛰️', '🌙'],
+    avatars: ['🚀', '👽', '🪐', '🌙', '👩‍🚀', '🛸'],
+    wheel: { standard: ['#312E81', '#1E3A8A'], magisch: ['#0891B2', '#7C3AED'], legendaer: ['#FDE047', '#F59E0B'] },
+    progress: 'track',
+    track: { marker: '🚀', goal: '🌟', done: 'Ziel erreicht! 🌟', label: (d, t) => `Planet ${Math.min(d + 1, t)} von ${t}` },
+    world: { name: 'Mondbasis', props: ['🛰️', '🪐', '🌑', '🛸', '🪨', '📡'] },
+    levelTitles: ['Kadett', 'Raketenbauer', 'Astronaut', 'Mondläufer', 'Planetenforscher', 'Raumkapitän', 'Kommandant', 'Sternen-Legende'],
+  },
+  schatz: {
+    id: 'schatz',
+    name: 'Schatzinsel',
+    tagline: 'Piraten, Karte, Gold',
+    primary: '#B45309',
+    primaryDark: '#78350F',
+    accent: '#FACC15',
+    flash: 'rgba(250, 204, 21, .35)',
+    particles: { kind: 'emoji', colors: ['#B45309', '#FACC15', '#0EA5E9'], emojis: ['🪙', '💰', '🦜', '⚓', '💎', '🐚'] },
+    praise: ['Ahoi! 🏴‍☠️', 'Goldrichtig! 🪙', 'Land in Sicht! 🏝️', 'Schatz gefunden! 💰', 'Volle Fahrt! ⛵'],
+    ambient: ['🪙', '🐚', '⚓', '🦜', '🌊', '💎', '🗺️'],
+    avatars: ['🏴‍☠️', '🦜', '⚓', '🗺️', '🦀', '⛵'],
+    wheel: { standard: ['#D6A866', '#C4914B'], magisch: ['#0E7490', '#7C3AED'], legendaer: ['#FACC15', '#CA8A04'] },
+    progress: 'track',
+    track: { marker: '⛵', goal: '❌', doneGoal: '💰', done: 'Schatz gefunden! 💰', label: (d, t) => `Noch ${t - d} bis zum Schatz` },
+    world: { name: 'Pirateninsel', props: ['🌴', '🐚', '⚓', '🌴', '🪨', '🦀'] },
+    levelTitles: ['Schiffsjunge', 'Matrose', 'Kartenleser', 'Steuermann', 'Schatzsucher', 'Kapitän', 'Admiral', 'Piraten-Legende'],
   },
 };
 
 export const THEME_IDS = Object.keys(THEMES);
+
+/** Rad-Farben der neuen Raritäten (für alle Styles gleich). */
+export const RARE_WHEEL = { mythisch: ['#DC2626', '#7C3AED'], geheim: ['#111827', '#4C1D95'] };
 
 export const GENERIC_PRAISE = ['Super! 🌟', 'Toll gemacht! 👍', 'Klasse! 🎉', 'Weiter so! 💪', 'Prima! ✨', 'Bravo! 👏'];
 

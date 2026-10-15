@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <title>Seestern</title>
+  <ellipse cx="64" cy="122" rx="34" ry="4" fill="#000" opacity=".18"/>
+  <g class="body" stroke="#4A2C0A" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M64 14 Q72 14 74 40 Q98 34 112 46 Q114 54 88 66 Q100 92 98 110 Q90 116 70 94 Q50 116 38 112 Q32 104 46 70 Q16 58 16 48 Q24 36 54 40 Q56 14 64 14 Z" fill="#FB7185"/>
+    <g fill="#FECDD3" stroke="none"><circle cx="64" cy="28" r="2.5"/><circle cx="96" cy="48" r="2.5"/><circle cx="88" cy="96" r="2.5"/><circle cx="44" cy="98" r="2.5"/><circle cx="30" cy="50" r="2.5"/></g>
+    <circle cx="56" cy="58" r="4.2" fill="#1C1917" stroke="none"/><circle cx="74" cy="58" r="4.2" fill="#1C1917" stroke="none"/>
+    <circle cx="57.4" cy="56.6" r="1.5" fill="#fff" stroke="none"/><circle cx="75.4" cy="56.6" r="1.5" fill="#fff" stroke="none"/>
+    <path d="M58 68 q7 6 14 0" fill="none"/>
+    <circle cx="50" cy="66" r="4" fill="#FDA4AF" stroke="none"/><circle cx="80" cy="66" r="4" fill="#FDA4AF" stroke="none"/>
+  </g>
+  <g fill="#7DD3FC"><circle cx="106" cy="20" r="4" fill="none" stroke="#7DD3FC" stroke-width="2"/><circle cx="114" cy="30" r="2.5" fill="none" stroke="#7DD3FC" stroke-width="2"/></g>
+</svg>

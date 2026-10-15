@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <title>Kompass-Eule</title>
+  <ellipse cx="64" cy="124" rx="26" ry="3" fill="#000" opacity=".12"/>
+  <g class="wing-b" stroke="#4A2C0A" stroke-width="3.5" stroke-linejoin="round"><path d="M38 60 Q14 52 8 70 Q20 84 40 84 Z" fill="#78350F"/></g>
+  <g class="body" stroke="#4A2C0A" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M36 24 L44 40 L52 30 Z M92 24 L84 40 L76 30 Z" fill="#92400E"/>
+    <path d="M34 72 Q32 30 64 28 Q96 30 94 72 Q94 112 64 112 Q34 112 34 72 Z" fill="#B45309"/>
+    <circle cx="51" cy="50" r="12" fill="#FEF3C7"/><circle cx="77" cy="50" r="12" fill="#FEF3C7"/>
+    <circle cx="52" cy="50" r="5.5" fill="#1C1917" stroke="none"/><circle cx="76" cy="50" r="5.5" fill="#1C1917" stroke="none"/>
+    <circle cx="54" cy="48" r="2" fill="#fff" stroke="none"/><circle cx="78" cy="48" r="2" fill="#fff" stroke="none"/>
+    <path d="M60 60 L68 60 L64 68 Z" fill="#FACC15"/>
+    <circle cx="64" cy="88" r="15" fill="#FDE68A"/>
+    <circle cx="64" cy="88" r="10" fill="#FFFBEB" stroke-width="2"/>
+    <path d="M64 79 L67 88 L64 97 L61 88 Z" fill="#DC2626" stroke-width="1.5"/>
+    <path d="M64 88 L61 88 L64 97 Z" fill="#E5E7EB" stroke="none"/>
+    <path d="M54 112 l-2 6 M60 112 v6 M68 112 v6 M74 112 l2 6" stroke="#F59E0B" fill="none"/>
+  </g>
+  <g class="wing" stroke="#4A2C0A" stroke-width="3.5" stroke-linejoin="round"><path d="M90 60 Q114 52 120 70 Q108 84 88 84 Z" fill="#92400E"/></g>
+</svg>

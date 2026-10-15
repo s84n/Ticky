@@ -1,6 +1,7 @@
 // Siegesparade: die gewonnene Figur läuft/hüpft/fliegt über den Bildschirm (pointer-events: none).
 import { el, $ } from '../ui.js';
 import { sparkle, dust, confetti, isReduced } from '../fx.js';
+import { decorateFigure } from '../figure-view.js';
 
 const svgCache = new Map();
 
@@ -22,8 +23,10 @@ export async function loadFigureSvg(fig) {
 
 const wait = ms => new Promise(r => setTimeout(r, ms));
 
-/** Startet die Parade. Promise wird erfüllt, wenn sie vorbei ist. */
-export async function runParade(fig) {
+const RAINBOW = ['#F87171', '#FBBF24', '#A3E635', '#38BDF8', '#A78BFA', '#F472B6'];
+
+/** Startet die Parade. child (optional) bringt Aufwertung und Accessoire mit. Promise wird erfüllt, wenn sie vorbei ist. */
+export async function runParade(fig, child = null) {
   const layer = $('#parade-layer');
   let svgNode;
   try {
@@ -31,11 +34,12 @@ export async function runParade(fig) {
   } catch {
     svgNode = el('img', { src: fig.svg, alt: '' });
   }
-  const legendary = fig.rarity === 'legendaer';
-  const magic = fig.rarity === 'magisch';
+  const rare = fig.rarity === 'mythisch' || fig.rarity === 'geheim';
+  const legendary = fig.rarity === 'legendaer' || rare;
+  const magic = fig.rarity === 'magisch' || rare;
 
   if (isReduced()) {
-    const node = el('div', { class: 'parade-bow' }, svgNode);
+    const node = decorateFigure(el('div', { class: 'parade-bow fig' }, svgNode), fig, child);
     layer.append(node);
     const a = node.animate([
       { opacity: 0, transform: 'translate(-50%, -50%) scale(.9)' },
@@ -50,22 +54,23 @@ export async function runParade(fig) {
   }
 
   const base = Math.min(innerWidth * 0.3, 170);
-  const size = Math.round(base * (legendary ? 1.5 : 1));
-  const passes = legendary ? 2 : 1;
+  const size = Math.round(base * (rare ? 1.7 : legendary ? 1.5 : 1));
+  const passes = fig.rarity === 'geheim' ? 3 : legendary ? 2 : 1;
   let ltr = Math.random() < 0.5;
-  if (legendary) confetti(110);
+  if (legendary) confetti(rare ? 150 : 110);
 
   for (let p = 0; p < passes; p++) {
-    const tasks = [runPass(layer, svgNode.cloneNode(true), fig, size, ltr, { legendary, magic, echo: false })];
-    if (magic) tasks.push(runPass(layer, svgNode.cloneNode(true), fig, size, ltr, { legendary, magic, echo: true, delay: 180 }));
+    const opts = { legendary, magic, rainbow: fig.rarity === 'geheim', fire: fig.rarity === 'mythisch', child };
+    const tasks = [runPass(layer, svgNode.cloneNode(true), fig, size, ltr, { ...opts, echo: false })];
+    if (magic) tasks.push(runPass(layer, svgNode.cloneNode(true), fig, size, ltr, { ...opts, echo: true, delay: 180 }));
     await Promise.all(tasks);
     ltr = !ltr;
   }
 }
 
-async function runPass(layer, svgNode, fig, size, ltr, { legendary, magic, echo, delay = 0 }) {
+async function runPass(layer, svgNode, fig, size, ltr, { legendary, magic, rainbow, fire, child, echo, delay = 0 }) {
   if (delay) await wait(delay);
-  const inner = el('div', { class: 'parade-inner' }, svgNode);
+  const inner = decorateFigure(el('div', { class: 'parade-inner fig' }, svgNode), fig, echo ? null : child);
   const actor = el('div', { class: `parade-actor${ltr ? '' : ' is-flipped'}${echo ? ' is-echo' : ''}`, 'data-motion': fig.motion, style: { '--size': `${size}px` } }, inner);
   layer.append(actor);
 
@@ -116,12 +121,13 @@ async function runPass(layer, svgNode, fig, size, ltr, { legendary, magic, echo,
 
   // Spuren
   let trail = true;
-  const trailColor = legendary ? '#FFD34D' : magic ? '#C084FC' : '#FFFFFF';
-  let last = 0;
+  const baseColor = fire ? '#FF5A36' : legendary ? '#FFD34D' : magic ? '#C084FC' : '#FFFFFF';
+  let last = 0, k = 0;
   const loop = (ts) => {
     if (!trail) return;
     if (!echo && ts - last > (legendary || magic ? 45 : 90)) {
       last = ts;
+      const trailColor = rainbow ? RAINBOW[k++ % RAINBOW.length] : fire && k++ % 2 ? '#FFB020' : baseColor;
       const r = inner.getBoundingClientRect();
       const tailX = ltr ? r.left + r.width * 0.2 : r.right - r.width * 0.2;
       if (fig.motion === 'walk' && !legendary && !magic) dust(tailX, r.bottom - 8);

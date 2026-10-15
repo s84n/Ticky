@@ -3,9 +3,10 @@
 import { localDate, daysBetween, parseTime } from './util.js';
 import { THEME_IDS, THEMES } from './data/themes.js';
 import { TASK_CATALOG, ROUTINES } from './data/task-catalog.js';
+import { ACCESSORY_IDS, MAX_TIER } from './data/progression.js';
 
 export const STORAGE_KEY = 'ticky_v1';
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
 export const MAX_CHILDREN = 5;
 export const NAME_MAX = 20;
 export const TASK_LABEL_MAX = 30;
@@ -91,7 +92,20 @@ export function normalizeState(raw, today = localDate()) {
         }
       }
       const sinceLegendary = Number.isInteger(c.sinceLegendary) && c.sinceLegendary >= 0 ? c.sinceLegendary : 0;
-      out.children.push({ id: c.id, name, theme, avatar, tasks, figures, sinceLegendary });
+      const xp = nonNegInt(c.xp, 99_999_999);
+      const stardust = nonNegInt(c.stardust, 9_999_999);
+      const wardrobe = Array.isArray(c.wardrobe) ? [...new Set(c.wardrobe.filter(a => ACCESSORY_IDS.includes(a)))] : [];
+      const upgrades = {};
+      if (isObj(c.upgrades)) {
+        for (const [fid, u] of Object.entries(c.upgrades)) {
+          if (!figures[fid] || !isObj(u)) continue;
+          const tier = Number.isInteger(u.tier) ? Math.min(MAX_TIER, Math.max(0, u.tier)) : 0;
+          const acc = wardrobe.includes(u.acc) ? u.acc : null;
+          if (tier || acc) upgrades[fid] = { tier, acc };
+        }
+      }
+      const buddy = typeof c.buddy === 'string' && figures[c.buddy] ? c.buddy : null;
+      out.children.push({ id: c.id, name, theme, avatar, tasks, figures, sinceLegendary, xp, stardust, wardrobe, upgrades, buddy });
     }
   }
 
@@ -132,12 +146,16 @@ export function normalizeState(raw, today = localDate()) {
   return out;
 }
 
+function nonNegInt(v, max) {
+  return Number.isInteger(v) && v > 0 ? Math.min(v, max) : 0;
+}
+
 function normTime(t) {
   const m = parseTime(t);
   return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
 }
 
-/** Schema-Migrationen. Aktuell nur Version 1. */
+/** Schema-Migrationen. v1 → v2: Level, Sternenstaub, Aufwertungen und Buddy kommen dazu (Defaults aus normalizeState). */
 function migrate(raw) {
   const v = Number(raw.schemaVersion) || 1;
   if (v > SCHEMA_VERSION) return raw; // Neuere Version: so gut wie möglich lesen

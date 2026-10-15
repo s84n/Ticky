@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <title>Raketen-Pinguin</title>
+  <ellipse cx="64" cy="124" rx="26" ry="3" fill="#000" opacity=".12"/>
+  <g class="tail" stroke="#1E1B4B" stroke-width="3" stroke-linejoin="round"><path d="M28 98 Q18 112 26 124 Q32 112 38 104 Z" fill="#FB923C"/><path d="M30 104 Q26 112 29 118 Q32 112 34 106 Z" fill="#FDE047" stroke="none"/></g>
+  <g class="body" stroke="#1E1B4B" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round">
+    <rect x="22" y="56" width="20" height="44" rx="9" fill="#E5E7EB"/>
+    <path d="M22 64 h20 M22 90 h20" stroke="#9CA3AF" stroke-width="2.5"/>
+    <path d="M38 76 Q36 30 70 28 Q100 30 100 76 Q100 112 70 112 Q38 112 38 76 Z" fill="#1F2937"/>
+    <path d="M48 82 Q48 48 70 46 Q92 48 92 82 Q92 106 70 106 Q48 106 48 82 Z" fill="#FFFFFF"/>
+    <circle cx="62" cy="54" r="4.2" fill="#1E1B4B" stroke="none"/><circle cx="80" cy="54" r="4.2" fill="#1E1B4B" stroke="none"/>
+    <circle cx="63.4" cy="52.6" r="1.5" fill="#fff" stroke="none"/><circle cx="81.4" cy="52.6" r="1.5" fill="#fff" stroke="none"/>
+    <path d="M66 60 L76 60 L71 68 Z" fill="#FB923C"/>
+    <path d="M52 30 Q70 16 90 30" stroke="#22D3EE" stroke-width="6" fill="none"/>
+    <path d="M98 70 Q114 66 118 54" fill="none" stroke-width="7"/><path d="M98 70 Q114 66 118 54" fill="none" stroke="#1F2937" stroke-width="3"/>
+    <path d="M58 112 l-4 6 h10 z M80 112 l4 6 h-10 z" fill="#FB923C"/>
+  </g>
+  <g fill="#FDE047"><path d="M108 30 l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2z"/><circle cx="14" cy="40" r="2"/></g>
+</svg>

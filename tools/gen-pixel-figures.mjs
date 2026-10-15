@@ -1,4 +1,4 @@
-// Entwicklungswerkzeug (nicht zur Laufzeit nötig): erzeugt die 10 Pixel-Figuren aus 16×16-ASCII-Rastern.
+// Entwicklungswerkzeug (nicht zur Laufzeit nötig): erzeugt die 12 Pixel-Figuren aus 16×16-ASCII-Rastern.
 // Aufruf: node tools/gen-pixel-figures.mjs
 // Jede Zeichen-Farbe kann einer animierbaren Gruppe zugeordnet werden (leg-a, leg-b, wing, tail).
 import { writeFileSync, mkdirSync } from 'node:fs';
@@ -231,6 +231,44 @@ const FIGS = {
     '................',
     '................',
   ], { D: '#38D9F5', L: '#FFE68A', d: '#1BA9C9', K: '#0B2A33', Y: '#FFD34D', S: '#FFC21A', w: ['#7DE8FF', 'wing'], W: ['#C9F6FF', 'wing'], t: ['#1BA9C9', 'tail'], a: ['#1BA9C9', 'leg-a'], b: ['#168AA5', 'leg-b'] }],
+
+  pixel_11: ['Obsidian-Phönix', [
+    '.......FF.......',
+    '......FffF......',
+    '.......KK.......',
+    'w.....KKKK.....w',
+    'ww...KEKKEK...ww',
+    'wWw..KKBBKK..wWw',
+    'wWWw.KkBBkK.wWWw',
+    'wWyWwKKKKKKwWyWw',
+    '.wWyWKKkkKKWyWw.',
+    '..wWWKKkkKKWWw..',
+    '...wwKKKKKKww...',
+    '.....KKKKKK.....',
+    '......a..b......',
+    '.....TtTtTt.....',
+    '......TtTt......',
+    '.......tt.......',
+  ], { K: '#2A1B3D', k: '#4B2E6B', E: '#FF4FD8', B: '#FFB020', F: '#B14CFF', f: '#FF8AE6', w: ['#6B21A8', 'wing'], W: ['#A855F7', 'wing'], y: ['#F0ABFC', 'wing'], T: ['#B14CFF', 'tail'], t: ['#FF4FD8', 'tail'], a: ['#FFB020', 'leg-a'], b: ['#E08A00', 'leg-b'] }],
+
+  pixel_12: ['Sternen-Axolotl', [
+    '................',
+    '................',
+    '................',
+    '..........G.G...',
+    '.........GgGgG..',
+    '........NNNNNNG.',
+    '.......NNNNKNNNg',
+    'tt....NNYNNNNNN.',
+    'tTt.NNNNNNNNMNN.',
+    '.tTNNNYNNNNNNN..',
+    '..TNNNNNNNYNNN..',
+    '...NNNNNNNNNN...',
+    '...nnnnnnnnnn...',
+    '....aa..bb.aa.bb',
+    '....AA..BB.AA.BB',
+    '................',
+  ], { N: '#2B3A9E', n: '#5B6CE0', Y: '#FFE14D', K: '#0B0F2E', M: '#FF6FD8', G: '#FF6FD8', g: '#FFC2F1', t: ['#5B6CE0', 'tail'], T: ['#2B3A9E', 'tail'], a: ['#2B3A9E', 'leg-a'], A: ['#FF6FD8', 'leg-a'], b: ['#1F2B80', 'leg-b'], B: ['#E055BE', 'leg-b'] }],
 };
 
 mkdirSync(OUT, { recursive: true });

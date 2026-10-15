@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <title>Kometen-Wal</title>
+  <defs>
+    <linearGradient id="w10-body" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#60A5FA"/><stop offset="1" stop-color="#4338CA"/></linearGradient>
+    <linearGradient id="w10-tail" x1="1" y1="0" x2="0" y2="0"><stop offset="0" stop-color="#FDE047"/><stop offset=".5" stop-color="#F472B6"/><stop offset="1" stop-color="#A78BFA" stop-opacity="0"/></linearGradient>
+  </defs>
+  <ellipse cx="70" cy="124" rx="40" ry="4" fill="#000" opacity=".15"/>
+  <g class="tail"><path d="M30 60 Q14 40 0 46 Q10 62 0 80 Q16 82 30 70 Z" fill="url(#w10-tail)"/><g fill="#FFF"><circle cx="8" cy="54" r="2"/><circle cx="14" cy="72" r="1.6"/></g></g>
+  <g class="body" stroke="#1E1B4B" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M26 60 L36 50 Q40 64 30 72 Z" fill="#4338CA"/>
+    <path d="M30 66 Q34 34 76 32 Q120 32 122 66 Q122 96 82 98 Q40 98 30 66 Z" fill="url(#w10-body)"/>
+    <path d="M44 80 Q80 102 118 78 Q114 94 82 96 Q54 96 44 80 Z" fill="#E0E7FF"/>
+    <path d="M60 86 v8 M72 88 v8 M84 88 v8 M96 86 v8" stroke="#A5B4FC" stroke-width="2.5"/>
+    <circle cx="100" cy="60" r="5" fill="#1E1B4B" stroke="none"/><circle cx="101.6" cy="58.4" r="1.8" fill="#fff" stroke="none"/>
+    <path d="M108 72 q4 3 8 0" fill="none"/>
+    <path d="M70 70 Q76 82 62 90 Q60 78 70 70 Z" fill="#4338CA"/>
+    <path d="M78 32 Q76 14 70 8 M78 32 Q84 16 92 12" fill="none" stroke="#A5F3FC"/>
+    <g fill="#FEF9C3" stroke="none"><circle cx="52" cy="50" r="2.4"/><circle cx="66" cy="44" r="1.8"/><circle cx="84" cy="48" r="2.2"/><circle cx="62" cy="58" r="1.5"/></g>
+  </g>
+  <g fill="#FDE047"><path d="M110 14 l3 7 7 3 -7 3 -3 7 -3 -7 -7 -3 7 -3z"/><path d="M40 16 l2 4 4 2 -4 2 -2 4 -2 -4 -4 -2 4 -2z"/></g>
+</svg>

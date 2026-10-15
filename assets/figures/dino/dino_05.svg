@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <title>Tröten-Saurier</title>
+  <ellipse cx="60" cy="122" rx="40" ry="4" fill="#000" opacity=".18"/>
+  <g class="tail" stroke="#3A2A0E" stroke-width="3.5" stroke-linejoin="round"><path d="M30 80 Q8 84 4 96 Q22 92 36 90 Z" fill="#B794F4"/></g>
+  <g class="leg-b" stroke="#3A2A0E" stroke-width="3.5"><path d="M64 92 l2 22 12 0 -2 -22 z" fill="#9061D8"/></g>
+  <g class="body" stroke="#3A2A0E" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round">
+    <ellipse cx="56" cy="80" rx="30" ry="20" fill="#B794F4"/>
+    <path d="M72 66 Q78 46 88 38 L102 46 Q92 58 88 74 Z" fill="#B794F4"/>
+    <path d="M86 40 Q76 18 60 10 Q74 30 82 46" fill="#F472B6"/>
+    <ellipse cx="98" cy="44" rx="16" ry="12" fill="#B794F4"/>
+    <path d="M110 44 Q122 46 120 52 Q114 56 106 52 Z" fill="#B794F4"/>
+    <circle cx="98" cy="40" r="3.8" fill="#3A2A0E" stroke="none"/><circle cx="99.3" cy="38.8" r="1.4" fill="#fff" stroke="none"/>
+    <circle cx="92" cy="50" r="3" fill="#F9A8D4" stroke="none"/>
+    <path d="M44 70 Q56 64 68 70" stroke="#D6BCFA" stroke-width="5" fill="none"/>
+    <path d="M86 92 L104 84 M86 96 L104 98" stroke="#F472B6" stroke-width="2.5"/>
+  </g>
+  <g class="leg-a" stroke="#3A2A0E" stroke-width="3.5"><path d="M40 92 l-2 22 12 0 2 -22 z" fill="#B794F4"/><path d="M80 66 l10 14" stroke="#3A2A0E"/></g>
+  <g fill="#F472B6"><circle cx="112" cy="22" r="2.5"/><circle cx="120" cy="30" r="1.8"/><circle cx="108" cy="12" r="1.5"/></g>
+</svg>

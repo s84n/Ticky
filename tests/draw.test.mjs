@@ -1,7 +1,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { wheelOrder, figureWeights, drawIndex, segments, targetRotation, segmentAt, hasLuckBonus } from '../js/rewards/draw.js';
-import { LUCK_THRESHOLD } from '../js/data/figures.js';
+import { LUCK_THRESHOLD, RARITIES, RARITY_ORDER, FIGURES } from '../js/data/figures.js';
+import { THEME_IDS } from '../js/data/themes.js';
+import { existsSync } from 'node:fs';
 
 // Reproduzierbarer Zufall (mulberry32)
 function seeded(seed) {
@@ -13,27 +15,41 @@ function seeded(seed) {
   };
 }
 
-for (const theme of ['pixel', 'neon', 'zauber']) {
-  test(`${theme}: 100.000 Ziehungen ≈ 70/25/5 % und jede Figur wird erreicht`, () => {
+for (const theme of THEME_IDS) {
+  test(`${theme}: 200.000 Ziehungen ≈ 68/25/5/1,5/0,5 % und jede Figur wird erreicht`, () => {
     const figs = wheelOrder(theme);
-    assert.equal(figs.length, 10);
+    assert.equal(figs.length, 12);
+    assert.deepEqual(RARITY_ORDER.map(r => figs.filter(f => f.rarity === r).length), [6, 3, 1, 1, 1]);
     const w = figureWeights(figs);
     assert.ok(Math.abs(w.reduce((a, b) => a + b, 0) - 1) < 1e-9);
     const rnd = seeded(42);
-    const N = 100000;
-    const byRarity = { standard: 0, magisch: 0, legendaer: 0 };
+    const N = 200000;
+    const byRarity = Object.fromEntries(RARITY_ORDER.map(r => [r, 0]));
     const hits = new Array(figs.length).fill(0);
     for (let i = 0; i < N; i++) {
       const idx = drawIndex(w, rnd);
       hits[idx]++;
       byRarity[figs[idx].rarity]++;
     }
-    assert.ok(Math.abs(byRarity.standard / N - 0.70) < 0.01, `standard ${byRarity.standard / N}`);
-    assert.ok(Math.abs(byRarity.magisch / N - 0.25) < 0.01, `magisch ${byRarity.magisch / N}`);
-    assert.ok(Math.abs(byRarity.legendaer / N - 0.05) < 0.01, `legendaer ${byRarity.legendaer / N}`);
+    for (const r of RARITY_ORDER) {
+      const want = RARITIES[r].chance / 100;
+      assert.ok(Math.abs(byRarity[r] / N - want) < Math.max(0.0015, want * 0.04), `${r} ${byRarity[r] / N}`);
+    }
     assert.ok(hits.every(h => h > 0));
   });
 }
+
+test('Jede Figur hat eine SVG-Datei, eindeutige ID und eine Hut-Position', () => {
+  const ids = new Set();
+  for (const f of FIGURES) {
+    assert.ok(!ids.has(f.id), f.id);
+    ids.add(f.id);
+    assert.ok(existsSync(new URL(`../${f.svg}`, import.meta.url)), f.svg);
+    assert.ok(['walk', 'hop', 'fly'].includes(f.motion));
+    assert.ok(f.head.every(v => v >= 0 && v <= 100));
+  }
+  assert.equal(FIGURES.length, THEME_IDS.length * 12);
+});
 
 test('Glücksbonus verdoppelt Legendär-Chance nach 15 Fehlversuchen', () => {
   assert.equal(hasLuckBonus(LUCK_THRESHOLD - 1), false);
@@ -56,6 +72,8 @@ test('Segmente sind proportional zur Wahrscheinlichkeit und decken 360° ab', ()
   assert.equal(segs.at(-1).end, 360);
   const li = figs.findIndex(f => f.rarity === 'legendaer');
   assert.ok(Math.abs(segs[li].end - segs[li].start - 18) < 1e-9); // 5 % von 360°
+  const gi = figs.findIndex(f => f.rarity === 'geheim');
+  assert.ok(Math.abs(segs[gi].end - segs[gi].start - 1.8) < 1e-9); // 0,5 % von 360°
 });
 
 test('Zielwinkel landet immer im gezogenen Segment', () => {

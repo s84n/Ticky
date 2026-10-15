@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <title>Der Glitch</title>
+  <ellipse cx="64" cy="122" rx="34" ry="4" fill="#000" opacity=".25"/>
+  <g class="body">
+    <path d="M30 34 h68 v20 h8 v34 h-8 v22 h-68 v-22 h-8 v-34 h8 z" fill="#FF00E5" opacity=".55" transform="translate(-5 2)"/>
+    <path d="M30 34 h68 v20 h8 v34 h-8 v22 h-68 v-22 h-8 v-34 h8 z" fill="#00F0FF" opacity=".55" transform="translate(5 -2)"/>
+    <path d="M30 34 h68 v20 h8 v34 h-8 v22 h-68 v-22 h-8 v-34 h8 z" fill="#14131F" stroke="#0D0D12" stroke-width="4" stroke-linejoin="round"/>
+    <rect x="30" y="58" width="76" height="6" fill="#7CFF6B" opacity=".8"/>
+    <rect x="22" y="84" width="40" height="4" fill="#FF00E5" opacity=".8"/>
+    <rect x="66" y="44" width="30" height="3" fill="#00F0FF" opacity=".8"/>
+    <rect x="42" y="66" width="14" height="14" fill="#FFFFFF"/><rect x="72" y="66" width="14" height="14" fill="#FFFFFF"/>
+    <rect x="48" y="70" width="6" height="8" fill="#0D0D12"/><rect x="78" y="70" width="6" height="8" fill="#0D0D12"/>
+    <path d="M52 92 h6 v4 h6 v-4 h6 v4 h6" stroke="#7CFF6B" stroke-width="3" fill="none"/>
+    <path d="M30 34 v-10 h10 v10 M88 34 v-10 h10 v10" fill="#14131F" stroke="#0D0D12" stroke-width="4"/>
+    <rect x="34" y="110" width="14" height="8" fill="#14131F" stroke="#0D0D12" stroke-width="3"/><rect x="80" y="110" width="14" height="8" fill="#14131F" stroke="#0D0D12" stroke-width="3"/>
+  </g>
+  <g><rect x="104" y="22" width="8" height="8" fill="#00F0FF"/><rect x="112" y="30" width="5" height="5" fill="#FF00E5"/><rect x="10" y="40" width="7" height="7" fill="#7CFF6B"/><rect x="16" y="100" width="5" height="5" fill="#FFCC00"/><text x="96" y="16" font-family="monospace" font-size="10" font-weight="700" fill="#7CFF6B">?!</text></g>
+</svg>

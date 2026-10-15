@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <title>Papagei</title>
+  <ellipse cx="64" cy="124" rx="24" ry="3" fill="#000" opacity=".12"/>
+  <g class="tail" stroke="#4A2C0A" stroke-width="3.5" stroke-linejoin="round"><path d="M46 90 L24 116 L36 114 L34 122 L54 98 Z" fill="#2563EB"/><path d="M48 96 L38 114 L46 108 Z" fill="#FACC15" stroke="none"/></g>
+  <g class="wing-b" stroke="#4A2C0A" stroke-width="3.5" stroke-linejoin="round"><path d="M60 60 Q40 40 30 18 Q54 26 66 52 Z" fill="#16A34A"/></g>
+  <g class="body" stroke="#4A2C0A" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M44 96 Q36 66 52 48 Q60 22 82 20 Q104 22 104 44 Q102 66 86 80 Q74 98 44 96 Z" fill="#EF4444"/>
+    <path d="M94 34 Q112 30 118 44 Q116 58 104 56 Q108 46 98 44 Z" fill="#FDE68A"/>
+    <path d="M100 50 Q106 54 104 56" fill="none"/>
+    <circle cx="84" cy="36" r="9" fill="#FFFFFF"/>
+    <circle cx="86" cy="36" r="4.2" fill="#1C1917" stroke="none"/><circle cx="87.4" cy="34.6" r="1.5" fill="#fff" stroke="none"/>
+    <path d="M58 62 Q68 74 84 70" stroke="#FCA5A5" stroke-width="4" fill="none"/>
+    <path d="M70 18 Q72 6 82 4 Q78 12 82 20" fill="#FACC15"/>
+  </g>
+  <g class="wing" stroke="#4A2C0A" stroke-width="3.5" stroke-linejoin="round"><path d="M56 62 Q50 82 64 94 Q78 84 80 64 Q70 54 56 62 Z" fill="#22C55E"/><path d="M62 70 Q66 80 70 86" stroke="#2563EB" stroke-width="3" fill="none"/></g>
+</svg>

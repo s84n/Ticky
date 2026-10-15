@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <title>Möwe</title>
+  <ellipse cx="64" cy="124" rx="24" ry="3" fill="#000" opacity=".12"/>
+  <g class="wing-b" stroke="#4A2C0A" stroke-width="3.5" stroke-linejoin="round"><path d="M58 64 Q36 30 10 34 Q26 46 34 62 Q46 64 58 72 Z" fill="#CBD5E1"/></g>
+  <g class="body" stroke="#4A2C0A" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M24 78 L36 70 L40 82 Z" fill="#94A3B8"/>
+    <path d="M34 76 Q40 58 66 58 Q86 58 92 70 Q90 88 66 92 Q42 92 34 76 Z" fill="#FFFFFF"/>
+    <circle cx="90" cy="56" r="14" fill="#FFFFFF"/>
+    <path d="M102 54 L122 58 L102 64 Z" fill="#FACC15"/>
+    <circle cx="117" cy="59" r="2" fill="#EF4444" stroke="none"/>
+    <circle cx="94" cy="52" r="3.8" fill="#1C1917" stroke="none"/><circle cx="95.3" cy="50.8" r="1.4" fill="#fff" stroke="none"/>
+    <path d="M58 92 l-2 10 M72 92 l2 10" stroke="#F59E0B" fill="none"/>
+  </g>
+  <g class="wing" stroke="#4A2C0A" stroke-width="3.5" stroke-linejoin="round"><path d="M62 66 Q76 26 108 22 Q96 38 92 56 Q78 62 70 74 Z" fill="#E2E8F0"/><path d="M98 26 Q96 36 92 44" stroke="#64748B" stroke-width="5" fill="none"/></g>
+</svg>

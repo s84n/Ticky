@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <title>Planeten-Schnecke</title>
+  <ellipse cx="64" cy="122" rx="48" ry="4" fill="#000" opacity=".18"/>
+  <g class="body" stroke="#1E1B4B" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M14 116 Q16 102 40 102 L96 102 Q104 90 102 70 Q100 54 108 48 Q122 48 122 64 Q122 84 112 104 Q106 116 92 116 Z" fill="#5EEAD4"/>
+    <path d="M108 50 L104 32 M116 50 L120 32" fill="none"/><circle cx="104" cy="30" r="4" fill="#F472B6"/><circle cx="120" cy="30" r="4" fill="#F472B6"/>
+    <circle cx="110" cy="62" r="4" fill="#1E1B4B" stroke="none"/><circle cx="111.3" cy="60.8" r="1.4" fill="#fff" stroke="none"/>
+    <path d="M112 74 q4 3 7 -1" fill="none"/>
+    <circle cx="56" cy="70" r="30" fill="#FB923C"/>
+    <path d="M30 62 Q56 56 82 62 M28 76 Q56 70 84 78" stroke="#EA580C" stroke-width="3" fill="none"/>
+    <circle cx="66" cy="56" r="5" fill="#FDBA74" stroke="none"/>
+    <path d="M18 80 Q56 52 98 62" stroke="#FDE68A" stroke-width="6" fill="none"/>
+    <path d="M18 80 Q56 52 98 62" stroke="#1E1B4B" stroke-width="2" fill="none" opacity=".4"/>
+  </g>
+  <g fill="#FDE047"><path d="M20 30 l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2z"/><circle cx="40" cy="20" r="2"/></g>
+</svg>

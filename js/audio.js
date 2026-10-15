@@ -75,6 +75,9 @@ export function tapSound(theme) {
   if (!ready()) return;
   if (theme === 'pixel') seq(['C5', 'E5', 'G5', 'C6'], 0.055, { type: 'square', dur: 0.08, gain: 0.09 });
   else if (theme === 'neon') { tone(600, { dur: 0.12, slideTo: 1200, gain: 0.2 }); tone(1200, { at: 0.1, dur: 0.18, gain: 0.14 }); }
+  else if (theme === 'dino') { tone(150, { dur: 0.16, slideTo: 80, type: 'triangle', gain: 0.35 }); noise({ dur: 0.06, gain: 0.12, freq: 400 }); seq(['G4', 'C5'], 0.08, { at: 0.08, type: 'triangle', dur: 0.15, gain: 0.12 }); }
+  else if (theme === 'weltraum') { tone(300, { dur: 0.25, slideTo: 1400, gain: 0.12 }); tone(NOTE.E6, { at: 0.18, dur: 0.2, gain: 0.08, type: 'triangle' }); }
+  else if (theme === 'schatz') { tone(NOTE.B5, { dur: 0.07, type: 'square', gain: 0.07 }); tone(NOTE.E6, { at: 0.07, dur: 0.3, type: 'square', gain: 0.07 }); }
   else seq(['C5', 'E5', 'G5', 'C6'], 0.07, { type: 'triangle', dur: 0.35, gain: 0.16 });
 }
 
@@ -91,6 +94,15 @@ export function completeSound(theme) {
   } else if (theme === 'neon') {
     [0, 0.12, 0.24, 0.36].forEach((at, i) => tone(700 + i * 180, { at, dur: 0.15, slideTo: 1400 + i * 200, gain: 0.15 }));
     tone(NOTE.C6, { at: 0.55, dur: 0.5, gain: 0.16, type: 'triangle' });
+  } else if (theme === 'dino') {
+    for (const at of [0, 0.22, 0.44]) tone(120, { at, dur: 0.2, slideTo: 60, type: 'triangle', gain: 0.4 });
+    seq(['C4', 'G4', 'C5', 'E5', 'G5'], 0.1, { at: 0.5, type: 'sawtooth', dur: 0.3, gain: 0.05, filter: 1800 });
+  } else if (theme === 'weltraum') {
+    tone(200, { dur: 0.9, slideTo: 1600, type: 'sawtooth', gain: 0.04, filter: 2000 });
+    seq(['C5', 'G5', 'C6', 'E6', 'G6'], 0.09, { at: 0.5, type: 'sine', dur: 0.5, gain: 0.1 });
+  } else if (theme === 'schatz') {
+    seq(['B5', 'E6', 'B5', 'E6', 'G6'], 0.08, { type: 'square', dur: 0.12, gain: 0.06 });
+    seq(['C5', 'E5', 'G5', 'C6'], 0.12, { at: 0.45, type: 'triangle', dur: 0.4, gain: 0.12 });
   } else {
     seq(['C5', 'E5', 'G5', 'C6', 'E6', 'G6', 'C7'], 0.06, { type: 'sine', dur: 0.6, gain: 0.12 });
     seq(['G5', 'C6'], 0.15, { at: 0.5, type: 'triangle', dur: 0.8, gain: 0.12 });
@@ -139,9 +151,25 @@ export function introJingle(routine) {
   }
 }
 
+/** Geheimnisvoller Klang (Ganztonleiter abwärts, dann hell). */
+export function mysterySound() {
+  if (!ready()) return;
+  seq(['C6', 'B5', 'A5', 'G5', 'F5', 'E5'], 0.09, { type: 'sine', dur: 0.5, gain: 0.08 });
+  tone(55, { dur: 1.2, type: 'triangle', gain: 0.2 });
+  seq(['C6', 'E6', 'G6', 'C7'], 0.08, { at: 0.75, type: 'triangle', dur: 0.8, gain: 0.08 });
+}
+
+export function levelUpSound() {
+  if (!ready()) return;
+  seq(['C5', 'E5', 'G5', 'C6', 'E6', 'G6'], 0.07, { type: 'square', dur: 0.12, gain: 0.05 });
+  seq(['C6', 'G6', 'C7'], 0.14, { at: 0.5, type: 'triangle', dur: 0.6, gain: 0.1 });
+}
+
 export function revealSound(rarity, theme) {
   if (!ready()) return;
-  if (rarity === 'legendaer') fanfareSound();
+  if (rarity === 'geheim') { mysterySound(); setTimeout(fanfareSound, 1300); }
+  else if (rarity === 'mythisch') { fanfareSound(); setTimeout(magicSound, 1900); }
+  else if (rarity === 'legendaer') fanfareSound();
   else if (rarity === 'magisch') { magicSound(); setTimeout(() => completeSound(theme), 450); }
   else completeSound(theme);
 }

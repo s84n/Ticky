@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <title>Schlüpfling</title>
+  <ellipse cx="64" cy="122" rx="34" ry="4" fill="#000" opacity=".18"/>
+  <g class="body" stroke="#3A2A0E" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M40 46 Q42 22 64 20 Q86 22 88 46 Z" fill="#8BD17C"/>
+    <circle cx="56" cy="36" r="4.5" fill="#3A2A0E" stroke="none"/><circle cx="74" cy="36" r="4.5" fill="#3A2A0E" stroke="none"/>
+    <circle cx="57.5" cy="34.5" r="1.6" fill="#fff" stroke="none"/><circle cx="75.5" cy="34.5" r="1.6" fill="#fff" stroke="none"/>
+    <path d="M60 44 q5 4 10 0" fill="none"/>
+    <path d="M58 20 L62 12 L66 20 M68 22 L74 15 L75 24" fill="#5FA84F"/>
+    <path d="M30 76 Q30 40 64 40 Q98 40 98 76 Q98 118 64 118 Q30 118 30 76 Z" fill="#FFF8E7"/>
+    <path d="M30 62 L40 52 L50 62 L60 50 L70 62 L80 50 L90 62 L98 54" fill="none"/>
+    <circle cx="48" cy="86" r="5" fill="#F9C784" stroke="none"/><circle cx="76" cy="98" r="6" fill="#F9C784" stroke="none"/><circle cx="82" cy="76" r="3.5" fill="#F9C784" stroke="none"/>
+  </g>
+  <g fill="#FACC15"><path d="M18 44 l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2z"/><path d="M110 30 l2 4 4 2 -4 2 -2 4 -2 -4 -4 -2 4 -2z"/></g>
+</svg>

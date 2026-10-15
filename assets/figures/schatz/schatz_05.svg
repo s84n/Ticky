@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <title>Piraten-Schildkröte</title>
+  <ellipse cx="62" cy="122" rx="46" ry="4" fill="#000" opacity=".18"/>
+  <g class="tail" stroke="#4A2C0A" stroke-width="3.5" stroke-linejoin="round"><path d="M20 90 L6 92 L18 82 Z" fill="#84CC16"/></g>
+  <g class="leg-b" stroke="#4A2C0A" stroke-width="3.5"><rect x="36" y="94" width="16" height="18" rx="7" fill="#65A30D"/><rect x="72" y="94" width="16" height="18" rx="7" fill="#65A30D"/></g>
+  <g class="body" stroke="#4A2C0A" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M16 94 Q16 52 58 50 Q98 52 100 94 Z" fill="#B45309"/>
+    <path d="M36 92 L44 66 L72 66 L80 92 M58 52 L58 66 M30 70 L44 66 M86 70 L72 66" stroke="#78350F" fill="none"/>
+    <path d="M16 94 h84" stroke-width="5"/>
+    <g transform="translate(-8 0)">
+    <path d="M98 74 Q102 58 114 60 Q126 64 124 78 Q120 92 104 90 Z" fill="#84CC16"/>
+    <path d="M98 64 Q110 48 124 62 L122 66 Q110 58 100 70 Z" fill="#DC2626"/>
+    <path d="M124 62 L128 54 M124 62 L128 68" stroke-width="3"/>
+    <circle cx="106" cy="54" r="1.8" fill="#fff" stroke="none"/>
+    <path d="M104 70 L124 80" stroke-width="2.5"/>
+    <circle cx="117" cy="74" r="5" fill="#1C1917"/>
+    <circle cx="108" cy="74" r="3.8" fill="#1C1917" stroke="none"/><circle cx="109.2" cy="72.8" r="1.3" fill="#fff" stroke="none"/>
+    <path d="M110 84 q4 3 8 0" fill="none"/>
+    </g>
+  </g>
+  <g class="leg-a" stroke="#4A2C0A" stroke-width="3.5"><rect x="26" y="96" width="16" height="18" rx="7" fill="#84CC16"/><rect x="62" y="96" width="16" height="18" rx="7" fill="#84CC16"/></g>
+</svg>

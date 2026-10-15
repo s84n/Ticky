@@ -5,28 +5,56 @@ import { THEMES } from './data/themes.js';
 import { overallStats, spinStatus } from './routine.js';
 import { localDate } from './util.js';
 import { toast, flash, shower, banner, fireworks, confetti } from './fx.js';
-import { completeSound, fanfareSound } from './audio.js';
+import { completeSound, fanfareSound, levelUpSound } from './audio.js';
 import { openWheel } from './rewards/wheel.js';
 import { runParade } from './rewards/parade.js';
+import { isEpic } from './data/figures.js';
+import { addFigure, levelTitle } from './data/progression.js';
 
 let hooks = { getRoutine: () => null, refreshChild: () => {} };
 const queue = [];
 let busy = false;
 const celebratedAll = new Set();
+const pendingLevelUps = new Map(); // childId → reward (Level-Aufstieg wird nach Rad und Parade gefeiert)
 
 export function initCelebrate(h) { hooks = { ...hooks, ...h }; }
 
-/** Sofort-Feedback, wenn ein Kind alle Aufgaben erledigt hat. */
-export function childCompleted(child, routine) {
+/** Sofort-Feedback, wenn ein Kind alle Aufgaben erledigt hat. reward: XP-Gewinn (nur beim ersten Abschluss am Tag). */
+export function childCompleted(child, routine, reward = null) {
   const t = THEMES[child.theme];
-  toast('Alles fertig! 🎉');
+  toast(reward ? `Alles fertig! 🎉 +${reward.xp} XP` : 'Alles fertig! 🎉');
+  if (reward && reward.levelAfter > reward.levelBefore) pendingLevelUps.set(child.id, reward);
   flash(t.flash);
   shower(child.theme, 80);
   setTimeout(() => shower(child.theme, 80), 650);
   banner(`🏆 ${child.name} ist fertig! 🏆`, child.theme);
   completeSound(child.theme);
   if (spinStatus(state, routine, child.id) === 'pending') setTimeout(() => requestSpin(child.id), 1500);
-  else maybeCelebrateAll();
+  else setTimeout(async () => { await showLevelUp(child.id); maybeCelebrateAll(); }, 1500);
+}
+
+/** Feiert einen anstehenden Level-Aufstieg. Promise wird erfüllt, wenn der Dialog zu ist. */
+function showLevelUp(childId) {
+  const reward = pendingLevelUps.get(childId);
+  pendingLevelUps.delete(childId);
+  const child = state.children.find(c => c.id === childId);
+  if (!reward || !child) return Promise.resolve();
+  const titles = THEMES[child.theme].levelTitles;
+  const oldTitle = levelTitle(titles, reward.levelBefore);
+  const newTitle = levelTitle(titles, reward.levelAfter);
+  return new Promise(resolve => {
+    const box = el('div', { class: 'levelup', 'data-theme': child.theme },
+      el('div', { class: 'levelup__badge', 'aria-hidden': 'true' }, String(reward.levelAfter)),
+      el('h2', { class: 'levelup__title' }, '⭐ LEVEL UP! ⭐'),
+      el('p', { class: 'levelup__text' }, `${child.name} ist jetzt Level ${reward.levelAfter}!`),
+      newTitle !== oldTitle ? el('p', { class: 'levelup__rank' }, `Neuer Titel: ${newTitle}`) : null,
+      reward.dust ? el('p', { class: 'levelup__gift' }, `Geschenk: +${reward.dust} ✨ Sternenstaub`) : null,
+      el('button', { type: 'button', class: 'btn btn--primary btn--big', autofocus: true, onclick: () => close() }, 'Juhu! 🎉'));
+    levelUpSound();
+    fireworks(2);
+    confetti(60);
+    const { close } = openOverlay(box, { label: 'Level-Aufstieg', className: 'celebration-overlay', theme: child.theme, onClose: () => { hooks.refreshChild(childId); resolve(); } });
+  });
 }
 
 /** Stellt ein Glücksrad für ein Kind in die Warteschlange (immer nur ein Rad gleichzeitig). */
@@ -61,19 +89,21 @@ function spinFlow(child, routine) {
       commit(fig) {
         // Ergebnis sofort speichern: Neustart während der Animation ergibt kein zweites Rad.
         const c = state.children.find(x => x.id === child.id);
-        if (!c) return;
-        c.figures[fig.id] = (c.figures[fig.id] ?? 0) + 1;
-        c.sinceLegendary = fig.rarity === 'legendaer' ? 0 : (c.sinceLegendary ?? 0) + 1;
+        if (!c) return null;
+        const res = addFigure(c, fig);
+        c.sinceLegendary = isEpic(fig.rarity) ? 0 : (c.sinceLegendary ?? 0) + 1;
         state.spins[spinKey(localDate(), routine, c.id)] = 'done';
         save();
         saveNow();
+        return res;
       },
       async onFinish(fig) {
         hooks.refreshChild(child.id);
-        if (fig) await runParade(fig);
+        if (fig) await runParade(fig, state.children.find(x => x.id === child.id));
+        await showLevelUp(child.id);
         resolve();
       },
-      onCancel() { resolve(); },
+      async onCancel() { await showLevelUp(child.id); resolve(); },
     });
   });
 }

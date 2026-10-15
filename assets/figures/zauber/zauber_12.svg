@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <title>Polarlicht-Einhorn</title>
+  <defs>
+    <linearGradient id="zb12-aurora" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#34D399"/><stop offset=".35" stop-color="#22D3EE"/><stop offset=".7" stop-color="#818CF8"/><stop offset="1" stop-color="#F472B6"/></linearGradient>
+    <linearGradient id="zb12-body" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#E0F2FE"/></linearGradient>
+  </defs>
+  <ellipse cx="62" cy="124" rx="40" ry="4" fill="#6B2C7A" opacity=".15"/>
+  <g class="tail" stroke="#7A3E8E" stroke-width="3" stroke-linejoin="round"><path d="M28 70 Q2 60 6 92 Q10 108 22 104 Q12 88 30 80 Z" fill="url(#zb12-aurora)"/></g>
+  <g class="leg-b" stroke="#7A3E8E" stroke-width="3"><path d="M42 86 l-6 22 8 2 6 -22 z M76 86 l8 20 8 -2 -6 -20 z" fill="#E0F2FE"/></g>
+  <g class="body" stroke="#7A3E8E" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round">
+    <ellipse cx="58" cy="76" rx="34" ry="18" fill="url(#zb12-body)"/>
+    <path d="M80 66 Q82 44 94 36 L106 54 Q98 60 94 74 Z" fill="url(#zb12-body)"/>
+    <ellipse cx="106" cy="44" rx="17" ry="13" fill="url(#zb12-body)"/>
+    <path d="M100 30 L108 4 L112 32 Z" fill="#FDE68A"/>
+    <path d="M102 24 l8 -2 M104 16 l6 -2" stroke="#F59E0B" stroke-width="2"/>
+    <path d="M94 28 Q78 30 76 48 Q74 62 80 70 Q84 54 92 46 Q88 40 96 32 Z" fill="url(#zb12-aurora)"/>
+    <circle cx="108" cy="42" r="4.5" fill="#4A1460" stroke="none"/><circle cx="109.5" cy="40.5" r="1.6" fill="#fff" stroke="none"/>
+    <path d="M110 53 q4 2 7 -1" fill="none"/>
+    <circle cx="100" cy="50" r="3.5" fill="#FBCFE8" stroke="none"/>
+    <path d="M36 72 Q58 62 82 72" stroke="url(#zb12-aurora)" stroke-width="5" fill="none" opacity=".7"/>
+  </g>
+  <g class="leg-a" stroke="#7A3E8E" stroke-width="3"><path d="M32 86 l-2 24 8 0 2 -24 z M66 86 l4 24 8 -1 -4 -23 z" fill="#FFFFFF"/><path d="M30 108 h8 M70 108 h8" stroke="#22D3EE" stroke-width="4"/></g>
+  <g fill="#A7F3D0"><path d="M18 24 l3 7 7 3 -7 3 -3 7 -3 -7 -7 -3 7 -3z"/><path d="M60 22 l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2z" fill="#C4B5FD"/><circle cx="120" cy="80" r="2.5" fill="#F9A8D4"/></g>
+</svg>

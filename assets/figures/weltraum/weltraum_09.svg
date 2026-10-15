@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <title>Nebel-Fuchs</title>
+  <defs><linearGradient id="w09-fur" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#818CF8"/><stop offset="1" stop-color="#C084FC"/></linearGradient></defs>
+  <ellipse cx="60" cy="122" rx="40" ry="4" fill="#000" opacity=".18"/>
+  <g class="tail" stroke="#1E1B4B" stroke-width="3.5" stroke-linejoin="round"><path d="M32 76 Q4 76 4 48 Q12 58 22 54 Q18 66 36 66 Z" fill="url(#w09-fur)"/><path d="M6 50 Q10 56 16 55" stroke="#fff" stroke-width="3" fill="none"/></g>
+  <g class="leg-b" stroke="#1E1B4B" stroke-width="3.5"><rect x="42" y="92" width="11" height="22" rx="5" fill="#6366F1"/><rect x="72" y="92" width="11" height="22" rx="5" fill="#6366F1"/></g>
+  <g class="body" stroke="#1E1B4B" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M30 80 Q30 62 50 62 L80 62 Q94 64 94 80 Q94 96 78 96 L46 96 Q30 96 30 80 Z" fill="url(#w09-fur)"/>
+    <path d="M80 66 Q76 46 90 40 L96 22 L104 38 L112 24 L114 42 Q124 50 118 62 L108 70 Q96 76 86 72 Z" fill="url(#w09-fur)"/>
+    <path d="M108 62 Q114 66 124 62 Q118 72 106 70 Z" fill="#fff"/>
+    <circle cx="104" cy="50" r="4" fill="#1E1B4B" stroke="none"/><circle cx="105.3" cy="48.8" r="1.4" fill="#fff" stroke="none"/>
+    <circle cx="124" cy="61" r="2.5" fill="#1E1B4B" stroke="none"/>
+    <g fill="#FEF9C3" stroke="none"><circle cx="50" cy="72" r="2"/><circle cx="64" cy="82" r="1.6"/><circle cx="76" cy="70" r="2.2"/><circle cx="96" cy="58" r="1.5"/></g>
+  </g>
+  <g class="leg-a" stroke="#1E1B4B" stroke-width="3.5"><rect x="32" y="94" width="11" height="22" rx="5" fill="#818CF8"/><rect x="62" y="94" width="11" height="22" rx="5" fill="#818CF8"/></g>
+  <g fill="#C4B5FD"><path d="M20 20 l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2z"/></g>
+</svg>

@@ -9,6 +9,7 @@ import { localDate, cryptoRandom } from './util.js';
 import { wrongSound, popSound } from './audio.js';
 import { toast } from './fx.js';
 import { VERSION, REPO_URL } from './config.js';
+import { levelInfo } from './data/progression.js';
 
 // ---------- Eltern-Sperre ----------
 
@@ -95,7 +96,8 @@ export function openSettings(hooks) {
         el('span', { class: 'child-row__avatar', 'aria-hidden': 'true' }, c.avatar),
         el('div', { class: 'child-row__info' },
           el('div', { class: 'child-row__name' }, c.name),
-          el('div', { class: 'child-row__theme' }, `${THEMES[c.theme].name} · ${c.tasks.morning.length} ☀️ / ${c.tasks.evening.length} 🌙`)),
+          el('div', { class: 'child-row__theme' }, `${THEMES[c.theme].name} · ${c.tasks.morning.length} ☀️ / ${c.tasks.evening.length} 🌙`),
+          el('div', { class: 'child-row__theme' }, `Level ${levelInfo(c.xp).level} · ${Object.keys(c.figures).length} Figuren · ✨ ${c.stardust}`)),
         el('div', { class: 'child-row__actions' },
         el('button', { type: 'button', class: 'icon-btn', disabled: i === 0, 'aria-label': `${c.name} nach oben`, onclick: () => { swap(i, i - 1); } }, '⬆️'),
         el('button', { type: 'button', class: 'icon-btn', disabled: i === state.children.length - 1, 'aria-label': `${c.name} nach unten`, onclick: () => { swap(i, i + 1); } }, '⬇️'),

@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <title>Krabbe</title>
+  <ellipse cx="64" cy="122" rx="44" ry="4" fill="#000" opacity=".18"/>
+  <g class="leg-b" stroke="#4A2C0A" stroke-width="5" stroke-linecap="round" fill="none"><path d="M36 94 L22 104 L18 116 M92 94 L106 104 L110 116"/></g>
+  <g class="body" stroke="#4A2C0A" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M30 70 Q14 60 12 42 Q10 28 22 26 Q20 38 30 40 Q26 30 34 26 Q40 40 36 52 Q42 62 40 70 Z" fill="#F97316"/>
+    <path d="M98 70 Q114 60 116 42 Q118 28 106 26 Q108 38 98 40 Q102 30 94 26 Q88 40 92 52 Q86 62 88 70 Z" fill="#F97316"/>
+    <path d="M54 56 L50 40 M74 56 L78 40" fill="none"/>
+    <circle cx="50" cy="38" r="7" fill="#FFFFFF"/><circle cx="78" cy="38" r="7" fill="#FFFFFF"/>
+    <circle cx="51" cy="38" r="3.4" fill="#1C1917" stroke="none"/><circle cx="79" cy="38" r="3.4" fill="#1C1917" stroke="none"/>
+    <path d="M26 84 Q26 56 64 54 Q102 56 102 84 Q102 104 64 104 Q26 104 26 84 Z" fill="#F97316"/>
+    <path d="M36 70 Q64 60 92 70" stroke="#FDBA74" stroke-width="5" fill="none"/>
+    <path d="M56 86 q8 6 16 0" fill="none"/>
+    <circle cx="44" cy="84" r="4" fill="#FCA5A5" stroke="none"/><circle cx="84" cy="84" r="4" fill="#FCA5A5" stroke="none"/>
+  </g>
+  <g class="leg-a" stroke="#4A2C0A" stroke-width="5" stroke-linecap="round" fill="none"><path d="M44 100 L36 112 L36 120 M84 100 L92 112 L92 120"/></g>
+</svg>

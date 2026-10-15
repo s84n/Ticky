@@ -1,12 +1,12 @@
 // Reine Logik für das Glücksrad (ohne DOM) – Ziehung, Segmente, Zielwinkel. Wird von tests/ direkt genutzt.
-import { RARITIES, LUCK_THRESHOLD, LUCK_FACTOR, figuresOf } from '../data/figures.js';
+import { RARITIES, RARITY_ORDER, LUCK_THRESHOLD, LUCK_FACTOR, figuresOf } from '../data/figures.js';
 
-/** Rad-Reihenfolge: Raritäten verteilt, damit Magisch/Legendär nicht nebeneinander liegen. */
-const ORDER = ['standard', 'magisch', 'standard', 'standard', 'legendaer', 'standard', 'magisch', 'standard', 'standard', 'magisch'];
+/** Rad-Reihenfolge: Raritäten verteilt, damit die seltenen Felder nicht nebeneinander liegen. */
+const ORDER = ['standard', 'magisch', 'standard', 'legendaer', 'standard', 'magisch', 'standard', 'mythisch', 'standard', 'magisch', 'standard', 'geheim'];
 
-/** Ordnet die 10 Figuren eines Styles in Rad-Reihenfolge an. */
+/** Ordnet die 12 Figuren eines Styles in Rad-Reihenfolge an. */
 export function wheelOrder(theme) {
-  const pools = { standard: [], magisch: [], legendaer: [] };
+  const pools = Object.fromEntries(RARITY_ORDER.map(r => [r, []]));
   for (const fig of figuresOf(theme)) pools[fig.rarity].push(fig);
   const out = [];
   for (const r of ORDER) if (pools[r].length) out.push(pools[r].shift());

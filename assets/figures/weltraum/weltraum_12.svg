@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <title>Schwarzloch-Kätzchen</title>
+  <defs>
+    <radialGradient id="w12-swirl" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#000"/><stop offset=".35" stop-color="#4C1D95"/><stop offset=".7" stop-color="#DB2777"/><stop offset="1" stop-color="#FDE047"/></radialGradient>
+  </defs>
+  <ellipse cx="64" cy="122" rx="34" ry="4" fill="#7C3AED" opacity=".35"/>
+  <g class="tail" stroke="#0B0B14" stroke-width="10" stroke-linecap="round" fill="none"><path d="M34 100 Q8 96 12 70 Q14 58 26 60"/><path d="M34 100 Q8 96 12 70 Q14 58 26 60" stroke="#A78BFA" stroke-width="2" stroke-dasharray="2 8"/></g>
+  <g class="body" stroke="#0B0B14" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M32 92 Q30 62 64 60 Q98 62 96 92 Q96 116 64 116 Q32 116 32 92 Z" fill="#1A1626"/>
+    <circle cx="64" cy="92" r="16" fill="url(#w12-swirl)"/>
+    <path d="M52 86 Q64 76 76 90 Q66 84 58 92" stroke="#F9A8D4" stroke-width="2" fill="none"/>
+    <path d="M38 34 L42 10 L58 28 Z M90 34 L86 10 L70 28 Z" fill="#1A1626"/>
+    <path d="M43 18 L52 28 M85 18 L76 28" stroke="#A78BFA" stroke-width="2.5"/>
+    <ellipse cx="64" cy="44" rx="28" ry="24" fill="#1A1626"/>
+    <ellipse cx="53" cy="44" rx="6" ry="7" fill="#A3E635" stroke="none"/><ellipse cx="75" cy="44" rx="6" ry="7" fill="#A3E635" stroke="none"/>
+    <ellipse cx="53" cy="44" rx="2" ry="5" fill="#0B0B14" stroke="none"/><ellipse cx="75" cy="44" rx="2" ry="5" fill="#0B0B14" stroke="none"/>
+    <path d="M61 54 l6 0 l-3 3 z" fill="#F472B6"/>
+    <path d="M58 58 q3 3 6 0 q3 3 6 0" fill="none" stroke="#A78BFA" stroke-width="2"/>
+    <path d="M40 52 l-12 -2 M40 56 l-12 4 M88 52 l12 -2 M88 56 l12 4" stroke="#A78BFA" stroke-width="2"/>
+    <ellipse cx="48" cy="116" rx="10" ry="5" fill="#1A1626"/><ellipse cx="80" cy="116" rx="10" ry="5" fill="#1A1626"/>
+  </g>
+  <g fill="#FDE047"><path d="M106 20 l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2z"/><circle cx="16" cy="30" r="2"/><circle cx="112" cy="70" r="2.5" fill="#F0ABFC"/></g>
+</svg>

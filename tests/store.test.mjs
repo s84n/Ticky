@@ -3,6 +3,11 @@ import assert from 'node:assert/strict';
 import { createDefaultState, normalizeState, cleanupSpins, ensureToday, removeChild, removeCustomTask, parseBackup, exportBackup, spinKey } from '../js/store.js';
 import { localDate, daysBetween } from '../js/util.js';
 import { toggleTask, toggleAll, autoRoutine, currentRoutine, nextRoutine, isNight, validateTimes } from '../js/routine.js';
+import {
+  levelInfo, levelTitle, awardRoutine, addFigure, upgradeTier, buyAccessory, equipAccessory, tierOf, nextTierCost,
+  XP_PER_TASK, XP_ROUTINE_BONUS, MAX_LEVEL, DUST_PER_LEVEL, DUST_PER_DUPLICATE, TIERS, MAX_TIER,
+} from '../js/data/progression.js';
+import { figureById } from '../js/data/figures.js';
 
 const child = (id, extra = {}) => ({
   id, name: 'Kind 1', theme: 'pixel', avatar: '⛏️',
@@ -11,7 +16,7 @@ const child = (id, extra = {}) => ({
 
 test('Defaults sind gültig und Onboarding ist offen', () => {
   const s = createDefaultState();
-  assert.equal(s.schemaVersion, 1);
+  assert.equal(s.schemaVersion, 2);
   assert.equal(s.setupDone, false);
   assert.deepEqual(s.children, []);
 });
@@ -135,4 +140,87 @@ test('Manueller Start endet bei echter Routinezeit oder neuem Tag', () => {
   assert.equal(s.ui.manualRoutine, null);
   s.ui.manualRoutine = { routine: 'morning', date: '2026-10-14' };
   assert.equal(currentRoutine(s, new Date(2026, 9, 15, 12, 0)), null);
+});
+
+test('Altes Schema (v1) bekommt Level, Sternenstaub und Buddy-Defaults', () => {
+  const s = normalizeState({ schemaVersion: 1, setupDone: true, children: [child('c_a', { figures: { pixel_03: 2 } })] });
+  const c = s.children[0];
+  assert.equal(c.xp, 0);
+  assert.equal(c.stardust, 0);
+  assert.deepEqual(c.wardrobe, []);
+  assert.deepEqual(c.upgrades, {});
+  assert.equal(c.buddy, null);
+});
+
+test('Normalisierung: ungültige Aufwertungen, Accessoires und Buddys werden verworfen', () => {
+  const s = normalizeState({ setupDone: true, children: [child('c_a', {
+    figures: { pixel_03: 2, pixel_10: 1 }, xp: 1234, stardust: -5,
+    wardrobe: ['krone', 'krone', 'gibtsnicht'],
+    upgrades: { pixel_03: { tier: 9, acc: 'krone' }, pixel_10: { tier: 1, acc: 'zylinder' }, pixel_05: { tier: 2 } },
+    buddy: 'pixel_07',
+  })] });
+  const c = s.children[0];
+  assert.equal(c.xp, 1234);
+  assert.equal(c.stardust, 0);
+  assert.deepEqual(c.wardrobe, ['krone']);
+  assert.deepEqual(c.upgrades, { pixel_03: { tier: 3, acc: 'krone' }, pixel_10: { tier: 1, acc: null } });
+  assert.equal(c.buddy, null); // pixel_07 nicht gewonnen
+});
+
+test('XP gibt es nur beim ersten Abschluss der Routine (Farm-Schutz)', () => {
+  const s = normalizeState({ setupDone: true, children: [child('c_a')] });
+  const today = s.progress.date;
+  toggleTask(s, 'morning', 'c_a', 'umziehen', today);
+  const r1 = toggleTask(s, 'morning', 'c_a', 'zaehne', today);
+  assert.deepEqual(r1.reward, { xp: 2 * XP_PER_TASK + XP_ROUTINE_BONUS, levelBefore: 1, levelAfter: 1, dust: 0 });
+  toggleTask(s, 'morning', 'c_a', 'zaehne', today);
+  const r2 = toggleTask(s, 'morning', 'c_a', 'zaehne', today);
+  assert.equal(r2.reward, null);
+  assert.equal(s.children[0].xp, 40);
+});
+
+test('Level-Kurve, Level-Aufstieg schenkt Sternenstaub', () => {
+  assert.deepEqual(levelInfo(0), { level: 1, into: 0, need: 100 });
+  assert.deepEqual(levelInfo(99), { level: 1, into: 99, need: 100 });
+  assert.deepEqual(levelInfo(100), { level: 2, into: 0, need: 150 });
+  assert.equal(levelInfo(250).level, 3);
+  assert.equal(levelInfo(1e9).level, MAX_LEVEL);
+  const c = { xp: 90, stardust: 0 };
+  const r = awardRoutine(c, 5); // +70 XP → 160 → Level 2
+  assert.equal(r.levelAfter, 2);
+  assert.equal(c.stardust, DUST_PER_LEVEL);
+  assert.equal(levelTitle(['A', 'B', 'C'], 1), 'A');
+  assert.equal(levelTitle(['A', 'B', 'C'], 5), 'B');
+  assert.equal(levelTitle(['A', 'B', 'C'], 99), 'C');
+});
+
+test('Duplikate werden zu Sternenstaub, erste Figur wird Buddy', () => {
+  const c = { figures: {}, stardust: 0, buddy: null };
+  const fig = figureById('neon_10');
+  assert.deepEqual(addFigure(c, fig), { duplicate: false, dust: 0 });
+  assert.equal(c.buddy, 'neon_10');
+  assert.deepEqual(addFigure(c, fig), { duplicate: true, dust: DUST_PER_DUPLICATE.legendaer });
+  addFigure(c, figureById('neon_01'));
+  assert.equal(c.buddy, 'neon_10');
+  assert.equal(c.figures.neon_10, 2);
+});
+
+test('Aufwerten und Accessoires kosten Sternenstaub, nur für eigene Figuren', () => {
+  const c = { figures: { zauber_01: 1 }, stardust: 30, wardrobe: [], upgrades: {} };
+  assert.equal(upgradeTier(c, 'zauber_02'), null); // nicht gewonnen
+  assert.equal(upgradeTier(c, 'zauber_01'), 1);
+  assert.equal(c.stardust, 30 - TIERS[1].cost);
+  assert.equal(upgradeTier(c, 'zauber_01'), null); // zu wenig Staub
+  c.stardust = 1000;
+  upgradeTier(c, 'zauber_01'); upgradeTier(c, 'zauber_01');
+  assert.equal(tierOf(c, 'zauber_01'), MAX_TIER);
+  assert.equal(nextTierCost(c, 'zauber_01'), null);
+  assert.equal(upgradeTier(c, 'zauber_01'), null);
+  assert.equal(equipAccessory(c, 'zauber_01', 'krone'), false); // noch nicht freigeschaltet
+  assert.equal(buyAccessory(c, 'krone'), true);
+  assert.equal(buyAccessory(c, 'krone'), false); // schon vorhanden
+  assert.equal(equipAccessory(c, 'zauber_01', 'krone'), true);
+  assert.deepEqual(c.upgrades.zauber_01, { tier: 3, acc: 'krone' });
+  assert.equal(equipAccessory(c, 'zauber_01', null), true);
+  assert.equal(c.upgrades.zauber_01.acc, null);
 });

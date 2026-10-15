@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <title>Mond-Drache</title>
+  <defs>
+    <linearGradient id="zb11-body" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C4B5FD"/><stop offset="1" stop-color="#818CF8"/></linearGradient>
+    <linearGradient id="zb11-wing" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#E0E7FF"/><stop offset="1" stop-color="#F0ABFC"/></linearGradient>
+  </defs>
+  <ellipse cx="64" cy="124" rx="32" ry="3" fill="#6B2C7A" opacity=".15"/>
+  <g class="wing-b" stroke="#7A3E8E" stroke-width="3.5" stroke-linejoin="round"><path d="M50 60 Q30 22 8 22 Q20 36 14 48 Q30 46 30 60 Q40 56 50 68 Z" fill="url(#zb11-wing)"/></g>
+  <g class="tail" stroke="#7A3E8E" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"><path d="M36 86 Q10 96 8 74 Q8 64 18 66 Q14 78 36 76 Z" fill="url(#zb11-body)"/><path d="M14 64 A8 8 0 1 0 24 74 A6 6 0 1 1 14 64 Z" fill="#FDE68A"/></g>
+  <g class="body" stroke="#7A3E8E" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round">
+    <ellipse cx="60" cy="82" rx="26" ry="20" fill="url(#zb11-body)"/>
+    <path d="M48 80 Q60 92 74 82" stroke="#E0E7FF" stroke-width="5" fill="none"/>
+    <path d="M74 70 Q80 48 94 42 Q116 36 120 52 Q120 66 104 66 L88 70 Z" fill="url(#zb11-body)"/>
+    <path d="M94 42 Q90 26 98 18 Q100 30 104 38 Z M104 40 Q110 26 120 24 Q116 34 112 42 Z" fill="#FDE68A"/>
+    <circle cx="104" cy="50" r="4.2" fill="#4A1460" stroke="none"/><circle cx="105.4" cy="48.6" r="1.5" fill="#fff" stroke="none"/>
+    <circle cx="98" cy="58" r="3.5" fill="#FBCFE8" stroke="none"/>
+    <path d="M110 60 q4 2 7 -1" fill="none"/>
+    <path d="M48 100 l-4 12 h10 M72 100 l4 12 h-10" fill="#818CF8"/>
+    <path d="M52 64 l2 -6 l2 6 M62 62 l2 -6 l2 6" fill="#FDE68A"/>
+  </g>
+  <g class="wing" stroke="#7A3E8E" stroke-width="3.5" stroke-linejoin="round"><path d="M64 64 Q72 22 98 10 Q92 28 100 34 Q86 38 88 50 Q76 52 72 70 Z" fill="url(#zb11-wing)"/></g>
+  <g fill="#FDE68A"><path d="M24 30 l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2z"/><path d="M112 86 l2 4 4 2 -4 2 -2 4 -2 -4 -4 -2 4 -2z"/><circle cx="40" cy="16" r="2"/></g>
+</svg>

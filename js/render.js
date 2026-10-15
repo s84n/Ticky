@@ -3,6 +3,10 @@ import { el, svg, clear, $, starIcon, isSingleCard } from './ui.js';
 import { TASK_CATALOG, ROUTINE_META } from './data/task-catalog.js';
 import { childStats, overallStats, doneOf, spinStatus, nextRoutine, isNight } from './routine.js';
 import { formatDuration } from './util.js';
+import { THEMES } from './data/themes.js';
+import { figureById } from './data/figures.js';
+import { levelInfo, levelTitle } from './data/progression.js';
+import { figureView } from './figure-view.js';
 
 /** Icon + Label einer Aufgabe (Katalog oder eigene). */
 export function taskInfo(id, state) {
@@ -61,7 +65,45 @@ function starsWidget(total, cls) {
   return { wrap, stars };
 }
 
+const FOOT_PATH = 'M12 22c-3.3 0-5.5-2.2-5.5-5 0-2.6 2.4-4.5 5.5-4.5s5.5 1.9 5.5 4.5c0 2.8-2.2 5-5.5 5zM5 11.5C3.6 11.5 2.5 10 2.5 8S3.6 4.5 5 4.5 7.5 6 7.5 8 6.4 11.5 5 11.5zM12 9C10.6 9 9.5 7.3 9.5 5S10.6 1 12 1s2.5 1.7 2.5 4S13.4 9 12 9zM19 11.5c-1.4 0-2.5-1.5-2.5-3.5s1.1-3.5 2.5-3.5S21.5 6 21.5 8 20.4 11.5 19 11.5z';
+
+/** Weg mit Stationen und wanderndem Marker (Dino-Spuren, Planeten, Schatzkarte). */
+function trackWidget(theme, total) {
+  const cfg = THEMES[theme].track;
+  const nodes = [];
+  const path = el('div', { class: 'track__path' });
+  for (let i = 0; i < Math.max(1, total); i++) {
+    const n = theme === 'dino'
+      ? svg('svg', { class: 'track__node', viewBox: '0 0 24 24', style: `--i:${i}` }, svg('path', { d: FOOT_PATH }))
+      : el('span', { class: 'track__node', style: { '--i': i } });
+    nodes.push(n);
+    path.append(n);
+  }
+  const goal = el('span', { class: 'track__goal emoji' }, cfg.goal);
+  const marker = el('span', { class: 'track__marker emoji' }, cfg.marker);
+  const label = el('div', { class: 'track__label' });
+  const lane = el('div', { class: 'track__lane' }, path, goal, marker);
+  const root = el('div', { class: 'track', 'data-kind': theme, role: 'progressbar', 'aria-valuemin': 0, 'aria-valuemax': total }, lane, label);
+  return {
+    root,
+    update(done, animate) {
+      nodes.forEach((n, i) => {
+        const on = i < done;
+        if (on && !n.classList.contains('is-on') && animate) { n.classList.add('is-new'); setTimeout(() => n.classList.remove('is-new'), 700); }
+        n.classList.toggle('is-on', on);
+      });
+      const complete = total > 0 && done >= total;
+      root.classList.toggle('is-complete', complete);
+      goal.textContent = complete && cfg.doneGoal ? cfg.doneGoal : cfg.goal;
+      marker.style.setProperty('--p', total ? done / total : 0);
+      label.textContent = complete ? cfg.done : cfg.label(done, total);
+      root.setAttribute('aria-valuenow', done);
+    },
+  };
+}
+
 function progressWidget(theme, total) {
+  if (THEMES[theme].progress === 'track') return trackWidget(theme, total);
   if (theme === 'pixel') {
     const segs = [];
     const bar = el('div', { class: 'xp__bar' });
@@ -106,7 +148,7 @@ function progressWidget(theme, total) {
 
 /**
  * Baut die komplette Hauptansicht neu auf.
- * h: { onToggle(childId, taskId, btn), onToggleAll(childId, btn), onSpin(childId), onSelect(childId), onTrophy(), onEndManual() }
+ * h: { onToggle(childId, taskId, btn), onToggleAll(childId, btn), onSpin(childId), onSelect(childId), onWorld(childId) }
  */
 export function renderMain(state, current, h) {
   const { routine } = current;
@@ -141,16 +183,18 @@ export function renderMain(state, current, h) {
     const count = el('span', { class: 'card-count' });
     const allBtn = el('button', { type: 'button', class: 'card-all', onclick: () => h.onToggleAll(child.id, allBtn) });
     const footer = el('div', { class: 'card-footer' });
+    const level = levelLine();
+    const buddy = el('button', { type: 'button', class: 'card-buddy', 'aria-label': `Figurenwelt von ${child.name} öffnen`, title: 'Figurenwelt', onclick: () => h.onWorld(child.id) });
     const card = el('article', { class: 'child-card', 'data-theme': child.theme, 'data-child': child.id, 'aria-label': child.name },
       el('div', { class: 'card-head' },
         el('span', { class: 'card-avatar emoji', 'aria-hidden': 'true' }, child.avatar),
-        el('h2', { class: 'card-name' }, child.name),
-        count, allBtn),
+        el('div', { class: 'card-who' }, el('h2', { class: 'card-name' }, child.name), level.root),
+        buddy, count, allBtn),
       progress.root,
       tasks.length ? list : el('p', { class: 'card-done-note' }, 'Keine Aufgaben ausgewählt – im Eltern-Bereich festlegen.'),
       footer);
     grid.append(card);
-    cards.set(child.id, { card, rows, progress, count, allBtn, footer, child, routine, onSpin: () => h.onSpin(child.id) });
+    cards.set(child.id, { card, rows, progress, count, allBtn, footer, child, routine, level, buddy, buddyKey: null, onSpin: () => h.onSpin(child.id) });
   }
 
   // Tabs (mobil)
@@ -201,7 +245,48 @@ export function updateChild(state, childId, animate = true) {
 
   const tab = document.querySelector(`.child-tab[data-child="${childId}"]`);
   tab?.classList.toggle('is-complete', stats.complete);
+  c.level.update(child);
+  updateBuddy(c);
   updateHeader(state, routine);
+}
+
+// ---------- Spieler-Level & Buddy ----------
+
+/** Kleine Level-Zeile unter dem Namen: „Lv 12 · Baumeister“ mit dünner XP-Leiste. */
+function levelLine() {
+  const text = el('span', { class: 'card-level__text' });
+  const fill = el('span', { class: 'card-level__fill' });
+  const root = el('div', { class: 'card-level' }, text, el('span', { class: 'card-level__bar', 'aria-hidden': 'true' }, fill));
+  return {
+    root,
+    update(child) {
+      const info = levelInfo(child.xp);
+      text.textContent = `Lv ${info.level} · ${levelTitle(THEMES[child.theme].levelTitles, info.level)}`;
+      fill.style.width = `${info.need ? (info.into / info.need) * 100 : 100}%`;
+      root.title = info.need ? `${info.into} / ${info.need} XP bis Level ${info.level + 1}` : 'Höchstes Level!';
+    },
+  };
+}
+
+/** Buddy-Figur (oder Welt-Symbol, solange es keinen Buddy gibt). Neu aufgebaut nur bei Änderungen. */
+function updateBuddy(c) {
+  const fig = c.child.buddy ? figureById(c.child.buddy) : null;
+  const key = fig ? `${fig.id}|${JSON.stringify(c.child.upgrades?.[fig.id] ?? null)}` : 'none';
+  if (key === c.buddyKey) return;
+  c.buddyKey = key;
+  clear(c.buddy);
+  c.buddy.classList.toggle('is-empty', !fig);
+  c.buddy.append(fig ? figureView(fig, c.child, { className: 'buddy', alt: '' }) : el('span', { class: 'emoji', 'aria-hidden': 'true' }, '🏝️'));
+}
+
+/** Buddy reagiert: 'cheer' (Aufgabe abgehakt) oder 'party' (Routine fertig). */
+export function buddyReact(childId, kind = 'cheer') {
+  const node = cards.get(childId)?.buddy.querySelector('.buddy');
+  if (!node) return;
+  node.classList.remove('is-cheer', 'is-party');
+  void node.offsetWidth;
+  node.classList.add(`is-${kind}`);
+  setTimeout(() => node.classList.remove(`is-${kind}`), kind === 'party' ? 1600 : 800);
 }
 
 export function updateHeader(state, routine) {
@@ -235,11 +320,37 @@ export function cardElement(childId) {
 
 // ---------- Ruhe-Screen ----------
 
-export function renderRest(state, now = new Date()) {
+let restKey = '';
+
+/** Ruhe-Screen. onWorld(childId) öffnet die Figurenwelt eines Kindes. */
+export function renderRest(state, now = new Date(), onWorld = () => {}) {
   const night = isNight(state.settings, now);
   $('#rest-scene').textContent = night ? '🌙' : '☀️';
   const next = nextRoutine(state.settings, now);
   const meta = ROUTINE_META[next.routine];
   const p = clear($('#rest-next'));
   p.append('Nächste Routine startet in ', el('strong', {}, formatDuration(next.inMinutes)), ` – ${meta.emoji} ${meta.title}`);
+
+  // Buddys: tagsüber entspannt, nachts schlafend. Nur neu bauen, wenn sich etwas geändert hat (Animationen laufen weiter).
+  const key = JSON.stringify([night, state.children.map(c => [c.id, c.name, c.theme, c.avatar, c.buddy, c.xp, c.upgrades?.[c.buddy]])]);
+  if (key === restKey) return;
+  restKey = key;
+  const wrap = clear($('#rest-buddies'));
+  wrap.classList.toggle('is-night', night);
+  for (const child of state.children) {
+    const fig = child.buddy ? figureById(child.buddy) : null;
+    const info = levelInfo(child.xp);
+    wrap.append(el('button', {
+      type: 'button', class: 'rest-buddy', 'data-theme': child.theme, onclick: () => onWorld(child.id),
+      'aria-label': `Figurenwelt von ${child.name} öffnen`,
+    },
+      el('span', { class: 'rest-buddy__stage' },
+        fig ? figureView(fig, child, { className: 'buddy', alt: '' }) : el('span', { class: 'rest-buddy__avatar emoji', 'aria-hidden': 'true' }, child.avatar),
+        night ? el('span', { class: 'rest-buddy__zzz', 'aria-hidden': 'true' }, 'z', el('span', {}, 'z'), el('span', {}, 'Z')) : null),
+      el('span', { class: 'rest-buddy__name' }, child.name),
+      el('span', { class: 'rest-buddy__level' }, `Lv ${info.level} · ${THEMES[child.theme].world.name}`)));
+  }
 }
+
+/** Erzwingt beim nächsten renderRest einen Neuaufbau (z. B. nach Änderungen in der Figurenwelt). */
+export function invalidateRest() { restKey = ''; }

@@ -2,7 +2,8 @@
 import { $, el, clear, confirmDialog, vibrate, isSingleCard } from './ui.js';
 import { state, load, save, saveNow, ensureToday, requestPersistence } from './store.js';
 import { currentRoutine, isNight, toggleTask, toggleAll } from './routine.js';
-import { renderMain, updateChild, setActiveChild, renderRest, layoutGrid } from './render.js';
+import { renderMain, updateChild, setActiveChild, renderRest, layoutGrid, buddyReact, invalidateRest } from './render.js';
+import { openWorld } from './world.js';
 import { startOnboarding } from './onboarding.js';
 import { parentLock, openSettings } from './settings.js';
 import { initCelebrate, childCompleted, requestSpin, openAllCelebration } from './celebrate.js';
@@ -101,7 +102,7 @@ function tick(force = false) {
     }
     showScreen('main');
   } else {
-    renderRest(state, now);
+    renderRest(state, now, openChildWorld);
     if (force || key !== renderedKey) { clear($('#ambient')); renderSky(night); }
     showScreen('rest');
   }
@@ -144,7 +145,8 @@ const handlers = {
       fx.praiseAt(pick(phrases), r.left + r.width / 2, r.top, child.theme);
       if (!intro) tapSound(child.theme); else setTimeout(() => tapSound(child.theme), 500);
       if (res.remaining === 1) setTimeout(() => speak(pick(SPEECH_ALMOST).replace('{Name}', child.name)), 600);
-      if (res.completedNow) childCompleted(child, current.routine);
+      buddyReact(childId, res.completedNow ? 'party' : 'cheer');
+      if (res.completedNow) childCompleted(child, current.routine, res.reward);
     } else {
       untapSound();
     }
@@ -162,12 +164,17 @@ const handlers = {
     if (!res) return;
     save();
     updateChild(state, childId);
-    if (res.completedNow) childCompleted(child, current.routine);
+    if (res.completedNow) { buddyReact(childId, 'party'); childCompleted(child, current.routine, res.reward); }
   },
 
   onSpin(childId) {
     unlockAudio();
     requestSpin(childId);
+  },
+
+  onWorld(childId) {
+    unlockAudio();
+    openChildWorld(childId);
   },
 
   onSelect(childId) {
@@ -177,6 +184,17 @@ const handlers = {
     if (isSingleCard()) renderAmbient();
   },
 };
+
+function openChildWorld(childId) {
+  unlockAudio();
+  openWorld(childId, {
+    onChange: () => {
+      invalidateRest();
+      if (current) updateChild(state, childId, false);
+      else renderRest(state, new Date(), openChildWorld);
+    },
+  });
+}
 
 function selectRelative(delta) {
   const ids = state.children.map(c => c.id);

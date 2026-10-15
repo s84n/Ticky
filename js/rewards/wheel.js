@@ -1,13 +1,22 @@
 // Glücksrad: Ziehung zuerst (crypto), dann Animation auf den berechneten Zielwinkel; anschließend Reveal.
 import { el, svg, openOverlay, vibrate } from '../ui.js';
 import { wheelOrder, figureWeights, drawIndex, segments, targetRotation, segmentAt, hasLuckBonus } from './draw.js';
-import { RARITIES } from '../data/figures.js';
-import { THEMES } from '../data/themes.js';
+import { RARITIES, RARITY_ORDER } from '../data/figures.js';
+import { THEMES, RARE_WHEEL } from '../data/themes.js';
 import { cryptoRandom } from '../util.js';
 import { tickSound, whooshSound, revealSound } from '../audio.js';
-import { fireworks, confetti, shake, burstAt, isReduced } from '../fx.js';
+import { fireworks, confetti, shake, burstAt, flash, isReduced } from '../fx.js';
+import { figureView } from '../figure-view.js';
 
 const R = 100; // Radius im SVG-Koordinatensystem (viewBox -100..100)
+
+const GLOW = {
+  standard: 'rgba(255,255,255,.35)',
+  magisch: 'rgba(168, 85, 247, .65)',
+  legendaer: 'rgba(255, 210, 80, .6)',
+  mythisch: 'rgba(239, 68, 68, .65)',
+  geheim: 'rgba(167, 139, 250, .8)',
+};
 
 function pt(angleDeg, r) {
   const a = (angleDeg * Math.PI) / 180;
@@ -28,16 +37,31 @@ function buildWheelSvg(theme, figures, segs, owned) {
     svg('pattern', { id: 'w-glitter', width: 12, height: 12, patternUnits: 'userSpaceOnUse' },
       svg('circle', { cx: 3, cy: 3, r: 0.9, fill: 'rgba(255,255,255,.7)' }), svg('circle', { cx: 9, cy: 8, r: 0.6, fill: 'rgba(255,255,255,.5)' })),
     svg('radialGradient', { id: 'w-gold', cx: '0', cy: '0', r: '100', gradientUnits: 'userSpaceOnUse' },
-      svg('stop', { offset: '0', 'stop-color': '#FFF6C8' }), svg('stop', { offset: '.55', 'stop-color': colors.legendaer[0] }), svg('stop', { offset: '1', 'stop-color': colors.legendaer[1] })));
+      svg('stop', { offset: '0', 'stop-color': '#FFF6C8' }), svg('stop', { offset: '.55', 'stop-color': colors.legendaer[0] }), svg('stop', { offset: '1', 'stop-color': colors.legendaer[1] })),
+    svg('radialGradient', { id: 'w-myth', cx: '0', cy: '0', r: '100', gradientUnits: 'userSpaceOnUse' },
+      svg('stop', { offset: '.2', 'stop-color': '#FCA5A5' }), svg('stop', { offset: '.6', 'stop-color': RARE_WHEEL.mythisch[0] }), svg('stop', { offset: '1', 'stop-color': RARE_WHEEL.mythisch[1] })),
+    svg('radialGradient', { id: 'w-secret', cx: '0', cy: '0', r: '100', gradientUnits: 'userSpaceOnUse' },
+      svg('stop', { offset: '.2', 'stop-color': '#6D28D9' }), svg('stop', { offset: '.7', 'stop-color': RARE_WHEEL.geheim[1] }), svg('stop', { offset: '1', 'stop-color': RARE_WHEEL.geheim[0] })));
   const g = svg('g', {});
   let stdIdx = 0, magIdx = 0;
   figures.forEach((fig, i) => {
     const { start, end } = segs[i];
     let fill;
     if (fig.rarity === 'legendaer') fill = 'url(#w-gold)';
+    else if (fig.rarity === 'mythisch') fill = 'url(#w-myth)';
+    else if (fig.rarity === 'geheim') fill = 'url(#w-secret)';
     else if (fig.rarity === 'magisch') fill = colors.magisch[magIdx++ % 2];
     else fill = colors.standard[stdIdx++ % 2];
     g.append(svg('path', { d: segPath(start, end, R), fill, stroke: 'rgba(255,255,255,.85)', 'stroke-width': 1.2 }));
+    // Sehr schmale Felder (Mythisch, Geheim): statt Figur ein leuchtendes Symbol am Rand
+    if (end - start < 10) {
+      const [sx, sy] = pt((start + end) / 2, R * 0.86);
+      const sym = svg('text', { x: sx.toFixed(2), y: sy.toFixed(2), 'font-size': 9, 'text-anchor': 'middle', 'dominant-baseline': 'central', class: 'wheel-rare-sym' },
+        fig.rarity === 'geheim' ? '❓' : '🔥');
+      sym.append(svg('title', {}, owned[fig.id] ? fig.name : RARITIES[fig.rarity].label));
+      g.append(sym);
+      return;
+    }
     if (fig.rarity === 'magisch') g.append(svg('path', { d: segPath(start, end, R), fill: 'url(#w-glitter)' }));
     if (fig.rarity === 'legendaer') {
       for (let k = 1; k < 4; k++) {
@@ -62,7 +86,7 @@ function buildWheelSvg(theme, figures, segs, owned) {
     g.append(img);
   });
   g.append(svg('circle', { cx: 0, cy: 0, r: R, fill: 'none', stroke: 'rgba(0,0,0,.25)', 'stroke-width': 2 }));
-  return svg('svg', { viewBox: '-100 -100 200 200', role: 'img', 'aria-label': 'Glücksrad mit 10 Figuren' }, defs, g);
+  return svg('svg', { viewBox: '-100 -100 200 200', role: 'img', 'aria-label': `Glücksrad mit ${figures.length} Figuren` }, defs, g);
 }
 
 const pointerSvg = () => svg('svg', { class: 'wheel-pointer', viewBox: '0 0 44 56', 'aria-hidden': 'true' },
@@ -86,6 +110,7 @@ export function openWheel(child, { commit, onFinish, onCancel, settings }) {
   let spun = false;
   let finished = false;
   let result = null;
+  let gain = null; // { duplicate, dust } aus commit()
 
   const rotor = el('div', { class: 'wheel-rotor' }, buildWheelSvg(theme, figures, segs, child.figures));
   const pointer = pointerSvg();
@@ -93,11 +118,10 @@ export function openWheel(child, { commit, onFinish, onCancel, settings }) {
     el('div', { class: 'wheel-ring', 'aria-hidden': 'true' }), rotor, pointer,
     el('div', { class: 'wheel-hub', 'aria-hidden': 'true' }, child.avatar));
   const spinBtn = el('button', { type: 'button', class: 'btn btn--primary btn--big wheel-spin', autofocus: true, onclick: spin }, 'DREHEN!');
-  const c = THEMES[theme].wheel;
+  const c = { ...THEMES[theme].wheel, ...RARE_WHEEL };
   const legend = el('div', { class: 'legend', 'aria-hidden': 'true' },
-    el('span', { style: { '--c': c.standard[0] } }, 'Standard 70 %'),
-    el('span', { style: { '--c': c.magisch[0] } }, 'Magisch 25 %'),
-    el('span', { style: { '--c': c.legendaer[0] } }, `Legendär ${luck ? '10' : '5'} %`));
+    ...RARITY_ORDER.map(r => el('span', { style: { '--c': c[r][0] } },
+      `${RARITIES[r].label.replace(/\s.*$/, '')} ${r === 'legendaer' && luck ? '10 %' : RARITIES[r].short}`)));
   const stage = el('div', { class: 'wheel-stage' },
     el('h2', { class: 'wheel-title' }, `${child.name}, dreh am Rad!`),
     wrap, spinBtn,
@@ -128,7 +152,7 @@ export function openWheel(child, { commit, onFinish, onCancel, settings }) {
     // 1) Ziehung
     const idx = drawIndex(drawWeights, cryptoRandom);
     result = figures[idx];
-    commit(result, luck);
+    gain = commit(result, luck);
     // 2) Animation zum Zielsegment
     const turns = 5 + Math.floor(cryptoRandom() * 3);
     const target = targetRotation(rotation, segs[idx], turns, cryptoRandom());
@@ -168,24 +192,40 @@ export function openWheel(child, { commit, onFinish, onCancel, settings }) {
     const fig = result;
     const count = child.figures[fig.id] ?? 1;
     const rar = RARITIES[fig.rarity];
-    const wrapFig = el('div', { class: 'reveal__figure-wrap' },
-      fig.rarity === 'legendaer' ? el('div', { class: 'reveal__rays' }) : null,
-      el('div', { class: 'reveal__glow', style: { '--glow': fig.rarity === 'magisch' ? 'rgba(168, 85, 247, .65)' : fig.rarity === 'legendaer' ? 'rgba(255, 210, 80, .6)' : 'rgba(255,255,255,.35)' } }),
-      el('img', { class: 'reveal__figure', src: fig.svg, alt: fig.name }));
+    const epic = ['legendaer', 'mythisch', 'geheim'].includes(fig.rarity);
+    const wrapFig = el('div', { class: 'reveal__figure-wrap', 'data-rarity': fig.rarity },
+      epic ? el('div', { class: 'reveal__rays' }) : null,
+      el('div', { class: 'reveal__glow', style: { '--glow': GLOW[fig.rarity] } }),
+      figureView(fig, child, { className: 'reveal__figure' }));
     const btn = el('button', { type: 'button', class: 'btn btn--primary btn--big', onclick: () => { finished = true; close(); onFinish(fig); } }, 'Los, feiern! 🎉');
     const box = el('div', { class: 'reveal' },
       wrapFig,
       el('div', { class: 'reveal__badge', 'data-rarity': fig.rarity }, rar.label),
       el('h2', { class: 'reveal__title', 'data-rarity': fig.rarity }, rar.reveal),
       el('div', { class: 'reveal__name' }, fig.name),
-      el('div', { class: 'reveal__count' }, count <= 1 ? 'Neu!' : `Schon ${count}× gewonnen`),
+      el('div', { class: 'reveal__count' }, count <= 1 ? 'Neu! Sie zieht in deine Figurenwelt ein.' : `Schon ${count}× gewonnen`),
+      gain?.dust ? el('div', { class: 'reveal__dust' }, `+${gain.dust} ✨ Sternenstaub`) : null,
       btn);
     stage.replaceChildren(box);
     setDismissible(true);
     btn.focus();
     revealSound(fig.rarity, theme);
     const cx = innerWidth / 2, cy = innerHeight * 0.38;
-    if (fig.rarity === 'legendaer') {
+    if (fig.rarity === 'geheim') {
+      flash('rgba(167, 139, 250, .6)');
+      shake();
+      setTimeout(shake, 700);
+      fireworks(8, { delayStep: 220 });
+      confetti(160);
+      burstAt(cx, cy, theme, 36);
+      setTimeout(() => burstAt(cx, cy, 'zauber', 30), 500);
+    } else if (fig.rarity === 'mythisch') {
+      flash('rgba(239, 68, 68, .45)');
+      shake();
+      fireworks(6, { delayStep: 260 });
+      confetti(120);
+      burstAt(cx, cy, theme, 32);
+    } else if (fig.rarity === 'legendaer') {
       shake();
       fireworks(4, { delayStep: 300 });
       confetti(90);

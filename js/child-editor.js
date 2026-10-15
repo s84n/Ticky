@@ -8,7 +8,7 @@ import { taskInfo } from './render.js';
 
 export function newChildDraft(index = 0) {
   const theme = THEME_IDS[index % THEME_IDS.length];
-  return { id: randomId('c'), name: '', theme, avatar: THEMES[theme].avatars[0], tasks: defaultTaskSelection(), figures: {}, sinceLegendary: 0 };
+  return { id: randomId('c'), name: '', theme, avatar: THEMES[theme].avatars[0], tasks: defaultTaskSelection(), figures: {}, sinceLegendary: 0, xp: 0, stardust: 0, wardrobe: [], upgrades: {}, buddy: null };
 }
 
 /** Mini-Vorschau-Card im Look eines Styles. */

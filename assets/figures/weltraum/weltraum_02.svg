@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <title>Mondhase</title>
+  <ellipse cx="64" cy="122" rx="34" ry="4" fill="#000" opacity=".18"/>
+  <g class="body" stroke="#1E1B4B" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M50 44 Q38 10 48 6 Q58 6 60 40 Z" fill="#E5E7EB"/>
+    <path d="M70 40 Q76 6 86 8 Q94 14 78 44 Z" fill="#E5E7EB"/>
+    <path d="M51 36 Q45 14 49 12 Q54 14 56 36 Z M73 36 Q79 16 84 15 Q86 19 77 38 Z" fill="#C4B5FD" stroke="none"/>
+    <ellipse cx="64" cy="92" rx="30" ry="25" fill="#F3F4F6"/>
+    <circle cx="64" cy="60" r="25" fill="#F3F4F6"/>
+    <circle cx="54" cy="70" r="5" fill="#D1D5DB" stroke="none"/><circle cx="80" cy="96" r="6" fill="#D1D5DB" stroke="none"/><circle cx="50" cy="100" r="4" fill="#D1D5DB" stroke="none"/>
+    <circle cx="55" cy="56" r="4.5" fill="#1E1B4B" stroke="none"/><circle cx="76" cy="56" r="4.5" fill="#1E1B4B" stroke="none"/>
+    <circle cx="56.5" cy="54.5" r="1.6" fill="#fff" stroke="none"/><circle cx="77.5" cy="54.5" r="1.6" fill="#fff" stroke="none"/>
+    <path d="M63 64 l4 0 l-2 3 z" fill="#F472B6"/>
+    <path d="M60 70 q5 4 10 0" fill="none"/>
+    <path d="M80 34 A10 10 0 1 0 90 46 A8 8 0 1 1 80 34 Z" fill="#FDE047" transform="translate(-20 50)"/>
+    <ellipse cx="50" cy="116" rx="11" ry="6" fill="#F3F4F6"/><ellipse cx="80" cy="116" rx="11" ry="6" fill="#F3F4F6"/>
+  </g>
+</svg>
