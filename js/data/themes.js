@@ -1,6 +1,6 @@
 // Style-Definitionen. Farben, die JS braucht (Partikel, Flash, Rad); alles Visuelle sonst in css/themes/*.css.
 // progress: Art der Fortschrittsanzeige auf der Card (xp | neon | magic | track).
-// world: Name und Deko der Figurenwelt. levelTitles: Titel fürs Spieler-Level (alle 4 Level ein neuer).
+// world: Name als Untertitel im Album (props: Deko der früheren Figurenwelt, derzeit ungenutzt). levelTitles: Titel fürs Spieler-Level (alle 4 Level ein neuer).
 export const THEMES = {
   pixel: {
     id: 'pixel',

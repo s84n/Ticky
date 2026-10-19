@@ -5,8 +5,9 @@ import { childStats, overallStats, doneOf, spinStatus, nextRoutine, isNight } fr
 import { formatDuration } from './util.js';
 import { THEMES } from './data/themes.js';
 import { figureById } from './data/figures.js';
-import { levelInfo, levelTitle } from './data/progression.js';
+import { levelInfo, levelTitle, focusOf, nextStep, EVO_STEPS } from './data/progression.js';
 import { figureView } from './figure-view.js';
+import { mountHerd } from './herd.js';
 
 /** Icon + Label einer Aufgabe (Katalog oder eigene). */
 export function taskInfo(id, state) {
@@ -148,7 +149,7 @@ function progressWidget(theme, total) {
 
 /**
  * Baut die komplette Hauptansicht neu auf.
- * h: { onToggle(childId, taskId, btn), onToggleAll(childId, btn), onSpin(childId), onSelect(childId), onWorld(childId) }
+ * h: { onToggle(childId, taskId, btn), onToggleAll(childId, btn), onSpin(childId), onSelect(childId), onAlbum(childId) }
  */
 export function renderMain(state, current, h) {
   const { routine } = current;
@@ -157,6 +158,7 @@ export function renderMain(state, current, h) {
   $('#btn-end-manual').hidden = !current.manual;
 
   listObserver?.disconnect();
+  for (const c of cards.values()) c.herd.destroy();
   const grid = clear($('#children-grid'));
   grid.classList.toggle('single', state.children.length === 1);
   cards.clear();
@@ -184,17 +186,21 @@ export function renderMain(state, current, h) {
     const allBtn = el('button', { type: 'button', class: 'card-all', onclick: () => h.onToggleAll(child.id, allBtn) });
     const footer = el('div', { class: 'card-footer' });
     const level = levelLine();
-    const buddy = el('button', { type: 'button', class: 'card-buddy', 'aria-label': `Figurenwelt von ${child.name} öffnen`, title: 'Figurenwelt', onclick: () => h.onWorld(child.id) });
+    const album = el('button', { type: 'button', class: 'card-album', 'aria-label': `Album von ${child.name} öffnen`, title: 'Album', onclick: () => h.onAlbum(child.id) },
+      el('span', { class: 'emoji', 'aria-hidden': 'true' }, '📖'));
+    const meadow = el('div', { class: 'card-meadow' });
     const card = el('article', { class: 'child-card', 'data-theme': child.theme, 'data-child': child.id, 'aria-label': child.name },
       el('div', { class: 'card-head' },
         el('span', { class: 'card-avatar emoji', 'aria-hidden': 'true' }, child.avatar),
         el('div', { class: 'card-who' }, el('h2', { class: 'card-name' }, child.name), level.root),
-        buddy, count, allBtn),
+        album, count, allBtn),
       progress.root,
       tasks.length ? list : el('p', { class: 'card-done-note' }, 'Keine Aufgaben ausgewählt – im Eltern-Bereich festlegen.'),
+      meadow,
       footer);
     grid.append(card);
-    cards.set(child.id, { card, rows, progress, count, allBtn, footer, child, routine, level, buddy, buddyKey: null, onSpin: () => h.onSpin(child.id) });
+    const herd = mountHerd(meadow, child, { onOpen: () => h.onAlbum(child.id) });
+    cards.set(child.id, { card, rows, progress, count, allBtn, footer, child, routine, level, herd, herdKey: herdKey(child), onSpin: () => h.onSpin(child.id) });
   }
 
   // Tabs (mobil)
@@ -246,7 +252,8 @@ export function updateChild(state, childId, animate = true) {
   const tab = document.querySelector(`.child-tab[data-child="${childId}"]`);
   tab?.classList.toggle('is-complete', stats.complete);
   c.level.update(child);
-  updateBuddy(c);
+  const key = herdKey(child);
+  if (key !== c.herdKey) { c.herdKey = key; c.herd.refresh(); }
   updateHeader(state, routine);
 }
 
@@ -268,25 +275,15 @@ function levelLine() {
   };
 }
 
-/** Buddy-Figur (oder Welt-Symbol, solange es keinen Buddy gibt). Neu aufgebaut nur bei Änderungen. */
-function updateBuddy(c) {
-  const fig = c.child.buddy ? figureById(c.child.buddy) : null;
-  const key = fig ? `${fig.id}|${JSON.stringify(c.child.upgrades?.[fig.id] ?? null)}` : 'none';
-  if (key === c.buddyKey) return;
-  c.buddyKey = key;
-  clear(c.buddy);
-  c.buddy.classList.toggle('is-empty', !fig);
-  c.buddy.append(fig ? figureView(fig, c.child, { className: 'buddy', alt: '' }) : el('span', { class: 'emoji', 'aria-hidden': 'true' }, '🏝️'));
+/** Alles, was das Aussehen des Teams bestimmt. Ändert es sich, wird das Team neu aufgebaut. */
+function herdKey(child) {
+  const team = child.team ?? [];
+  return JSON.stringify([team, team.map(id => [child.evo?.[id] ?? 0, child.acc?.[id] ?? null]), child.focus, child.evo?.[child.focus] ?? 0]);
 }
 
-/** Buddy reagiert: 'cheer' (Aufgabe abgehakt) oder 'party' (Routine fertig). */
-export function buddyReact(childId, kind = 'cheer') {
-  const node = cards.get(childId)?.buddy.querySelector('.buddy');
-  if (!node) return;
-  node.classList.remove('is-cheer', 'is-party');
-  void node.offsetWidth;
-  node.classList.add(`is-${kind}`);
-  setTimeout(() => node.classList.remove(`is-${kind}`), kind === 'party' ? 1600 : 800);
+/** Team reagiert: 'cheer' (Aufgabe abgehakt, clientX = Position der Aufgabe) oder 'party' (Routine fertig). */
+export function buddyReact(childId, kind = 'cheer', clientX = null) {
+  cards.get(childId)?.herd.react(kind, clientX);
 }
 
 export function updateHeader(state, routine) {
@@ -322,8 +319,8 @@ export function cardElement(childId) {
 
 let restKey = '';
 
-/** Ruhe-Screen. onWorld(childId) öffnet die Figurenwelt eines Kindes. */
-export function renderRest(state, now = new Date(), onWorld = () => {}) {
+/** Ruhe-Screen. onAlbum(childId) öffnet das Album eines Kindes. */
+export function renderRest(state, now = new Date(), onAlbum = () => {}) {
   const night = isNight(state.settings, now);
   $('#rest-scene').textContent = night ? '🌙' : '☀️';
   const next = nextRoutine(state.settings, now);
@@ -332,25 +329,29 @@ export function renderRest(state, now = new Date(), onWorld = () => {}) {
   p.append('Nächste Routine startet in ', el('strong', {}, formatDuration(next.inMinutes)), ` – ${meta.emoji} ${meta.title}`);
 
   // Buddys: tagsüber entspannt, nachts schlafend. Nur neu bauen, wenn sich etwas geändert hat (Animationen laufen weiter).
-  const key = JSON.stringify([night, state.children.map(c => [c.id, c.name, c.theme, c.avatar, c.buddy, c.xp, c.upgrades?.[c.buddy]])]);
+  const key = JSON.stringify([night, state.children.map(c => [c.id, c.name, c.theme, c.avatar, c.xp, herdKey(c)])]);
   if (key === restKey) return;
   restKey = key;
   const wrap = clear($('#rest-buddies'));
   wrap.classList.toggle('is-night', night);
   for (const child of state.children) {
-    const fig = child.buddy ? figureById(child.buddy) : null;
+    const team = (child.team ?? []).map(figureById).filter(Boolean);
     const info = levelInfo(child.xp);
+    const focus = focusOf(child);
+    const step = focus ? EVO_STEPS[nextStep(child, focus)] : null;
     wrap.append(el('button', {
-      type: 'button', class: 'rest-buddy', 'data-theme': child.theme, onclick: () => onWorld(child.id),
-      'aria-label': `Figurenwelt von ${child.name} öffnen`,
+      type: 'button', class: 'rest-buddy', 'data-theme': child.theme, onclick: () => onAlbum(child.id),
+      'aria-label': `Album von ${child.name} öffnen`,
     },
-      el('span', { class: 'rest-buddy__stage' },
-        fig ? figureView(fig, child, { className: 'buddy', alt: '' }) : el('span', { class: 'rest-buddy__avatar emoji', 'aria-hidden': 'true' }, child.avatar),
+      el('span', { class: `rest-buddy__stage${team.length > 1 ? ' is-team' : ''}` },
+        team.length
+          ? team.map((fig, i) => figureView(fig, child, { className: `buddy${i ? ' is-side' : ''}`, alt: '' }))
+          : el('span', { class: 'rest-buddy__avatar emoji', 'aria-hidden': 'true' }, child.avatar),
         night ? el('span', { class: 'rest-buddy__zzz', 'aria-hidden': 'true' }, 'z', el('span', {}, 'z'), el('span', {}, 'Z')) : null),
       el('span', { class: 'rest-buddy__name' }, child.name),
-      el('span', { class: 'rest-buddy__level' }, `Lv ${info.level} · ${THEMES[child.theme].world.name}`)));
+      el('span', { class: 'rest-buddy__level' }, step ? `Bald: ${step.icon} ${step.label} für ${focus.name}` : `Lv ${info.level} · ${levelTitle(THEMES[child.theme].levelTitles, info.level)}`)));
   }
 }
 
-/** Erzwingt beim nächsten renderRest einen Neuaufbau (z. B. nach Änderungen in der Figurenwelt). */
+/** Erzwingt beim nächsten renderRest einen Neuaufbau (z. B. nach Änderungen im Album). */
 export function invalidateRest() { restKey = ''; }

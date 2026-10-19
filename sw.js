@@ -1,12 +1,13 @@
 // Service Worker: Offline-Betrieb. Bei jedem Release CACHE_VERSION (und VERSION in js/config.js) erhöhen.
 // Die Dateiliste kann mit `node tools/update-sw-assets.mjs` aktualisiert werden.
-const CACHE_VERSION = 'ticky-v1.1.0';
+const CACHE_VERSION = 'ticky-v1.2.0';
 const NETWORK_TIMEOUT_MS = 3000; // danach App-Shell aus dem Cache (schlechtes WLAN)
 
 const ASSETS = [
   './',
   './index.html',
   './manifest.webmanifest',
+  './css/album.css',
   './css/base.css',
   './css/themes/dino.css',
   './css/themes/neon.css',
@@ -14,7 +15,7 @@ const ASSETS = [
   './css/themes/schatz.css',
   './css/themes/weltraum.css',
   './css/themes/zauber.css',
-  './css/world.css',
+  './js/album.js',
   './js/audio.js',
   './js/celebrate.js',
   './js/child-editor.js',
@@ -25,6 +26,7 @@ const ASSETS = [
   './js/data/themes.js',
   './js/figure-view.js',
   './js/fx.js',
+  './js/herd.js',
   './js/main.js',
   './js/onboarding.js',
   './js/pwa.js',
@@ -38,7 +40,6 @@ const ASSETS = [
   './js/store.js',
   './js/ui.js',
   './js/util.js',
-  './js/world.js',
   './assets/figures/dino/dino_01.svg',
   './assets/figures/dino/dino_02.svg',
   './assets/figures/dino/dino_03.svg',

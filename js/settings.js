@@ -1,6 +1,6 @@
 // Eltern-Bereich (⚙️) inkl. Eltern-Sperre.
 import { el, clear, openOverlay, confirmDialog, alertDialog } from './ui.js';
-import { state, save, saveNow, exportBackup, parseBackup, replaceState, resetAll, removeChild, removeCustomTask, MAX_CHILDREN } from './store.js';
+import { state, save, saveNow, exportBackup, parseBackup, replaceState, resetAll, removeChild, removeCustomTask, MAX_CHILDREN, requestPersistence } from './store.js';
 import { THEMES } from './data/themes.js';
 import { ROUTINES, ROUTINE_META } from './data/task-catalog.js';
 import { validateTimes } from './routine.js';
@@ -97,7 +97,7 @@ export function openSettings(hooks) {
         el('div', { class: 'child-row__info' },
           el('div', { class: 'child-row__name' }, c.name),
           el('div', { class: 'child-row__theme' }, `${THEMES[c.theme].name} · ${c.tasks.morning.length} ☀️ / ${c.tasks.evening.length} 🌙`),
-          el('div', { class: 'child-row__theme' }, `Level ${levelInfo(c.xp).level} · ${Object.keys(c.figures).length} Figuren · ✨ ${c.stardust}`)),
+          el('div', { class: 'child-row__theme' }, `Level ${levelInfo(c.xp).level} · ${Object.keys(c.figures).length} Figuren`)),
         el('div', { class: 'child-row__actions' },
         el('button', { type: 'button', class: 'icon-btn', disabled: i === 0, 'aria-label': `${c.name} nach oben`, onclick: () => { swap(i, i - 1); } }, '⬆️'),
         el('button', { type: 'button', class: 'icon-btn', disabled: i === state.children.length - 1, 'aria-label': `${c.name} nach unten`, onclick: () => { swap(i, i + 1); } }, '⬇️'),
@@ -238,7 +238,16 @@ export function openSettings(hooks) {
   // 5. Daten
   function dataSection() {
     const sec = el('section', { class: 'settings-section' }, el('h3', {}, '💾 Daten'));
-    sec.append(el('p', { class: 'muted' }, 'Alle Daten liegen nur in diesem Browser. Beim Löschen der Browserdaten geht alles verloren – ein Backup hilft, auch beim Umzug auf ein anderes Gerät.'));
+    sec.append(el('p', { class: 'muted' }, 'Alle Daten liegen nur auf diesem Gerät (doppelt gespeichert). Beim Löschen der App- oder Browserdaten geht alles verloren – ein Backup hilft, auch beim Umzug auf ein anderes Gerät.'));
+    const status = el('p', { class: 'muted' }, 'Speicherschutz wird geprüft …');
+    sec.append(status);
+    requestPersistence().then(ok => {
+      status.textContent = ok === true
+        ? '✅ Speicher ist geschützt: Das Gerät löscht die Daten nicht von selbst.'
+        : ok === false
+          ? '⚠️ Speicher ist nicht geschützt. Installiere Ticky als App (Menü ⋮ → „App installieren“) und nimm Ticky in den Akku-Einstellungen vom Energiesparen aus. Exportiere zur Sicherheit ab und zu ein Backup.'
+          : 'Speicherschutz wird von diesem Browser nicht gemeldet. Exportiere zur Sicherheit ab und zu ein Backup.';
+    });
     const file = el('input', { type: 'file', accept: 'application/json,.json', hidden: true });
     file.addEventListener('change', async () => {
       const f = file.files?.[0];

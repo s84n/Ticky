@@ -90,3 +90,14 @@ test('Zielwinkel landet immer im gezogenen Segment', () => {
     current = next;
   }
 });
+
+test('Upgrade-Feld: 35 % vorne, Figuren behalten ihr Verhältnis', async () => {
+  const { withUpgradeSlot } = await import('../js/rewards/draw.js');
+  const w = figureWeights(wheelOrder('pixel'));
+  assert.equal(withUpgradeSlot(w, 0), w);
+  const u = withUpgradeSlot(w, 0.35);
+  assert.equal(u.length, w.length + 1);
+  assert.equal(u[0], 0.35);
+  assert.ok(Math.abs(u.reduce((a, b) => a + b, 0) - 1) < 1e-9);
+  assert.ok(Math.abs(u[1] / u[2] - w[0] / w[1]) < 1e-9);
+});

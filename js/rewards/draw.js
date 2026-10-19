@@ -31,6 +31,15 @@ export function figureWeights(figures, { luckBonus = false } = {}) {
   return figures.map(fig => chance[fig.rarity] / count[fig.rarity] / total);
 }
 
+/**
+ * Fügt vorne das goldene Upgrade-Feld ein (Index 0). Die Figuren teilen sich den Rest im alten Verhältnis.
+ * Ohne offene Reise (chance 0) bleiben die Gewichte unverändert.
+ */
+export function withUpgradeSlot(weights, chance) {
+  if (!chance) return weights;
+  return [chance, ...weights.map(w => w * (1 - chance))];
+}
+
 export function hasLuckBonus(sinceLegendary) {
   return (sinceLegendary ?? 0) >= LUCK_THRESHOLD;
 }

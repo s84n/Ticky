@@ -1,33 +1,46 @@
-// Langzeit-Fortschritt: Spieler-Level, Sternenstaub, Aufwertungen (Bronze/Silber/Gold) und Accessoires.
-// DOM-frei, damit tests/ die Regeln direkt prüfen können.
+// Langzeit-Fortschritt: Spieler-Level, Upgrade-Reisen der Figuren, Team (3 Figuren auf dem Aufgaben-Bildschirm)
+// und Accessoires. DOM-frei, damit tests/ die Regeln direkt prüfen können.
+import { RARITY_ORDER, figureById } from './figures.js';
 
 /** XP pro erledigter Aufgabe und Bonus für die komplette Routine. */
 export const XP_PER_TASK = 10;
 export const XP_ROUTINE_BONUS = 20;
 export const MAX_LEVEL = 99;
 
-/** Sternenstaub für eine doppelte Figur, je nach Rarität. */
-export const DUST_PER_DUPLICATE = { standard: 5, magisch: 15, legendaer: 40, mythisch: 80, geheim: 150 };
-/** Sternenstaub als Geschenk bei jedem Level-Aufstieg. */
-export const DUST_PER_LEVEL = 25;
+/** So viele Figuren laufen auf dem Aufgaben-Bildschirm mit. */
+export const TEAM_MAX = 3;
 
-/** Aufwertungsstufen. cost = Preis, um diese Stufe zu erreichen. */
-export const TIERS = [
-  null,
-  { id: 'bronze', label: 'Bronze', medal: '🥉', cost: 20 },
-  { id: 'silber', label: 'Silber', medal: '🥈', cost: 50 },
-  { id: 'gold', label: 'Gold', medal: '🥇', cost: 120 },
-];
-export const MAX_TIER = TIERS.length - 1;
+/** Anteil des goldenen Upgrade-Felds am Rad, solange eine Reise offen ist. */
+export const UPGRADE_CHANCE = 0.35;
+/** Nach so vielen Drehs ohne Upgrade kommt das nächste sicher. */
+export const UPGRADE_PITY = 2;
+
+/** Die Upgrade-Stufen. Jede Figur durchläuft einen Teil davon, immer in dieser Reihenfolge. */
+export const EVO_STEPS = {
+  farbe: { icon: '🎨', label: 'Neue Farbe', reveal: 'bekommt eine neue Farbe!' },
+  tempo: { icon: '⚡', label: 'Turbo', reveal: 'wird superschnell!' },
+  groesse: { icon: '📏', label: 'Wachstum', reveal: 'ist gewachsen!' },
+  trick: { icon: '💃', label: 'Trick', reveal: 'hat einen Trick gelernt!' },
+  verwandlung: { icon: '🌟', label: 'Verwandlung', reveal: 'hat sich verwandelt!' },
+};
+
+/** Je seltener die Figur, desto länger die Reise. */
+export const EVO_PATHS = {
+  standard: ['farbe', 'tempo'],
+  magisch: ['farbe', 'tempo', 'groesse'],
+  legendaer: ['farbe', 'tempo', 'groesse', 'verwandlung'],
+  mythisch: ['farbe', 'tempo', 'groesse', 'trick', 'verwandlung'],
+  geheim: ['farbe', 'tempo', 'groesse', 'trick', 'verwandlung'],
+};
 
 /** Accessoires: einmal freigeschaltet, für alle Figuren des Kindes nutzbar. */
 export const ACCESSORIES = [
-  { id: 'krone', icon: '👑', label: 'Krone', cost: 40 },
-  { id: 'zylinder', icon: '🎩', label: 'Zylinder', cost: 40 },
-  { id: 'schleife', icon: '🎀', label: 'Schleife', cost: 40 },
-  { id: 'kappe', icon: '🧢', label: 'Kappe', cost: 40 },
-  { id: 'bluete', icon: '🌸', label: 'Blüte', cost: 40 },
-  { id: 'doktorhut', icon: '🎓', label: 'Doktorhut', cost: 40 },
+  { id: 'krone', icon: '👑', label: 'Krone' },
+  { id: 'zylinder', icon: '🎩', label: 'Zylinder' },
+  { id: 'schleife', icon: '🎀', label: 'Schleife' },
+  { id: 'kappe', icon: '🧢', label: 'Kappe' },
+  { id: 'bluete', icon: '🌸', label: 'Blüte' },
+  { id: 'doktorhut', icon: '🎓', label: 'Doktorhut' },
 ];
 export const ACCESSORY_IDS = ACCESSORIES.map(a => a.id);
 export const accessoryById = id => ACCESSORIES.find(a => a.id === id) ?? null;
@@ -53,75 +66,138 @@ export function levelTitle(titles, level) {
   return titles[Math.min(titles.length - 1, Math.floor((level - 1) / 4))];
 }
 
+/** Schaltet ein zufälliges, noch fehlendes Accessoire frei. Gibt die id zurück oder null (alle schon da). */
+function giftAccessory(child, rnd) {
+  child.wardrobe ??= [];
+  const missing = ACCESSORY_IDS.filter(id => !child.wardrobe.includes(id));
+  if (!missing.length) return null;
+  const id = missing[Math.floor(rnd() * missing.length)];
+  child.wardrobe.push(id);
+  return id;
+}
+
 /**
  * Vergibt XP für eine fertige Routine (nur einmal pro Routine und Tag aufrufen).
- * Gibt { xp, levelBefore, levelAfter, dust } zurück.
+ * Beim Level-Aufstieg gibt es ein Accessoire als Geschenk. Gibt { xp, levelBefore, levelAfter, gift } zurück.
  */
-export function awardRoutine(child, taskCount) {
+export function awardRoutine(child, taskCount, rnd = Math.random) {
   const before = levelInfo(child.xp).level;
   const xp = taskCount * XP_PER_TASK + XP_ROUTINE_BONUS;
   child.xp = (child.xp ?? 0) + xp;
   const after = levelInfo(child.xp).level;
-  const dust = (after - before) * DUST_PER_LEVEL;
-  child.stardust = (child.stardust ?? 0) + dust;
-  return { xp, levelBefore: before, levelAfter: after, dust };
+  const gift = after > before ? giftAccessory(child, rnd) : null;
+  return { xp, levelBefore: before, levelAfter: after, gift };
 }
+
+// ---------- Upgrade-Reisen ----------
+
+export const pathOf = fig => EVO_PATHS[fig.rarity] ?? EVO_PATHS.standard;
+export const stageOf = (child, figId) => child.evo?.[figId] ?? 0;
+
+/** Bereits freigeschaltete Upgrades einer Figur (Liste von Step-ids). */
+export function stepsOf(child, fig) {
+  return child ? pathOf(fig).slice(0, stageOf(child, fig.id)) : [];
+}
+
+export const hasStep = (child, fig, step) => stepsOf(child, fig).includes(step);
+export const journeyOpen = (child, fig) => !!child.figures[fig.id] && stageOf(child, fig.id) < pathOf(fig).length;
+export const nextStep = (child, fig) => pathOf(fig)[stageOf(child, fig.id)] ?? null;
+
+/** Figur, deren Reise gerade verfolgt wird (oder null). */
+export function focusOf(child) {
+  const fig = child.focus ? figureById(child.focus) : null;
+  return fig && journeyOpen(child, fig) ? fig : null;
+}
+
+/** Wählt die nächste offene Reise: die seltenste Figur zuerst. */
+export function pickFocus(child) {
+  let best = null;
+  for (const id of Object.keys(child.figures)) {
+    const fig = figureById(id);
+    if (!fig || !journeyOpen(child, fig)) continue;
+    if (!best || RARITY_ORDER.indexOf(fig.rarity) > RARITY_ORDER.indexOf(best.rarity)) best = fig;
+  }
+  return best?.id ?? null;
+}
+
+/** Schaltet das nächste Upgrade einer Figur frei. Gibt die Step-id zurück oder null (Reise schon fertig). */
+export function applyUpgrade(child, fig) {
+  if (!journeyOpen(child, fig)) return null;
+  const step = nextStep(child, fig);
+  child.evo ??= {};
+  child.evo[fig.id] = stageOf(child, fig.id) + 1;
+  if (child.focus === fig.id && !journeyOpen(child, fig)) child.focus = pickFocus(child);
+  return step;
+}
+
+/** Erzwingt die Garantie (nach UPGRADE_PITY Drehs ohne Upgrade)? */
+export const upgradeGuaranteed = child => (child.sinceUpgrade ?? 0) >= UPGRADE_PITY;
 
 /**
- * Bucht eine gewonnene Figur ein. Duplikate werden zu Sternenstaub.
- * Gibt { duplicate, dust } zurück.
+ * Bucht eine gewonnene Figur ein.
+ * Neu: kommt ins Team (falls Platz) und ihre Reise wird verfolgt, wenn sie seltener ist als die aktuelle.
+ * Doppelt: gibt ein Upgrade für genau diese Figur; ist ihre Reise fertig, ein neues Accessoire.
+ * Gibt { isNew, upgrade, gift } zurück.
  */
-export function addFigure(child, fig) {
+export function addFigure(child, fig, rnd = Math.random) {
   const had = child.figures[fig.id] ?? 0;
   child.figures[fig.id] = had + 1;
-  const dust = had > 0 ? DUST_PER_DUPLICATE[fig.rarity] ?? 0 : 0;
-  child.stardust = (child.stardust ?? 0) + dust;
-  if (!child.buddy) child.buddy = fig.id; // erste Figur wird automatisch zum Buddy
-  return { duplicate: had > 0, dust };
+  child.team ??= [];
+  if (!had) {
+    if (child.team.length < TEAM_MAX) child.team.push(fig.id);
+    const cur = focusOf(child);
+    if (journeyOpen(child, fig) && (!cur || RARITY_ORDER.indexOf(fig.rarity) >= RARITY_ORDER.indexOf(cur.rarity))) child.focus = fig.id;
+    return { isNew: true, upgrade: null, gift: null };
+  }
+  const upgrade = applyUpgrade(child, fig);
+  return { isNew: false, upgrade, gift: upgrade ? null : giftAccessory(child, rnd) };
 }
 
-export function tierOf(child, figId) {
-  return child.upgrades?.[figId]?.tier ?? 0;
+/** Zählt einen Dreh für die Garantie mit. hadTarget: Gab es beim Dreh ein Upgrade-Feld? */
+export function trackSpin(child, gotUpgrade, hadTarget) {
+  if (gotUpgrade) child.sinceUpgrade = 0;
+  else if (hadTarget) child.sinceUpgrade = (child.sinceUpgrade ?? 0) + 1;
+}
+
+// ---------- Team, Reise wählen, Accessoires ----------
+
+export const leaderOf = child => child.team?.[0] ?? null;
+
+/** Nimmt eine Figur ins Team auf oder heraus. Gibt false zurück, wenn das Team voll ist. */
+export function toggleTeam(child, figId) {
+  if (!child.figures[figId]) return false;
+  child.team ??= [];
+  if (child.team.includes(figId)) { child.team = child.team.filter(id => id !== figId); return true; }
+  if (child.team.length >= TEAM_MAX) return false;
+  child.team.push(figId);
+  return true;
+}
+
+/** Macht eine Figur zum Anführer (erster Platz im Team, ggf. ersetzt sie den letzten Platz). */
+export function makeLeader(child, figId) {
+  if (!child.figures[figId]) return false;
+  const rest = (child.team ?? []).filter(id => id !== figId);
+  child.team = [figId, ...rest].slice(0, TEAM_MAX);
+  return true;
+}
+
+export function setFocus(child, figId) {
+  const fig = figureById(figId);
+  if (!fig || !journeyOpen(child, fig)) return false;
+  child.focus = figId;
+  return true;
 }
 
 export function accessoryOf(child, figId) {
-  return child.upgrades?.[figId]?.acc ?? null;
-}
-
-/** Kosten der nächsten Stufe oder null, wenn schon Gold. */
-export function nextTierCost(child, figId) {
-  const t = tierOf(child, figId);
-  return t >= MAX_TIER ? null : TIERS[t + 1].cost;
-}
-
-/** Wertet eine Figur um eine Stufe auf. Gibt die neue Stufe zurück oder null (nicht möglich). */
-export function upgradeTier(child, figId) {
-  if (!child.figures[figId]) return null;
-  const cost = nextTierCost(child, figId);
-  if (cost === null || (child.stardust ?? 0) < cost) return null;
-  child.stardust -= cost;
-  child.upgrades ??= {};
-  const cur = child.upgrades[figId] ?? { tier: 0, acc: null };
-  child.upgrades[figId] = { ...cur, tier: cur.tier + 1 };
-  return cur.tier + 1;
-}
-
-/** Schaltet ein Accessoire frei. true bei Erfolg. */
-export function buyAccessory(child, accId) {
-  const acc = accessoryById(accId);
-  child.wardrobe ??= [];
-  if (!acc || child.wardrobe.includes(accId) || (child.stardust ?? 0) < acc.cost) return false;
-  child.stardust -= acc.cost;
-  child.wardrobe.push(accId);
-  return true;
+  return child.acc?.[figId] ?? null;
 }
 
 /** Setzt (oder entfernt mit null) das Accessoire einer Figur. */
 export function equipAccessory(child, figId, accId) {
   if (!child.figures[figId]) return false;
   if (accId !== null && !child.wardrobe?.includes(accId)) return false;
-  child.upgrades ??= {};
-  const cur = child.upgrades[figId] ?? { tier: 0, acc: null };
-  child.upgrades[figId] = { ...cur, acc: accId };
+  child.acc ??= {};
+  if (accId === null) delete child.acc[figId];
+  else child.acc[figId] = accId;
   return true;
 }

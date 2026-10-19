@@ -1,9 +1,9 @@
 // Bootstrapping und Router zwischen Onboarding, Hauptansicht und Ruhe-Screen.
 import { $, el, clear, confirmDialog, vibrate, isSingleCard } from './ui.js';
-import { state, load, save, saveNow, ensureToday, requestPersistence } from './store.js';
+import { state, load, save, flush, ensureToday, requestPersistence, replaceState } from './store.js';
 import { currentRoutine, isNight, toggleTask, toggleAll } from './routine.js';
 import { renderMain, updateChild, setActiveChild, renderRest, layoutGrid, buddyReact, invalidateRest } from './render.js';
-import { openWorld } from './world.js';
+import { openAlbum } from './album.js';
 import { startOnboarding } from './onboarding.js';
 import { parentLock, openSettings } from './settings.js';
 import { initCelebrate, childCompleted, requestSpin, openAllCelebration } from './celebrate.js';
@@ -102,7 +102,7 @@ function tick(force = false) {
     }
     showScreen('main');
   } else {
-    renderRest(state, now, openChildWorld);
+    renderRest(state, now, openChildAlbum);
     if (force || key !== renderedKey) { clear($('#ambient')); renderSky(night); }
     showScreen('rest');
   }
@@ -145,7 +145,7 @@ const handlers = {
       fx.praiseAt(pick(phrases), r.left + r.width / 2, r.top, child.theme);
       if (!intro) tapSound(child.theme); else setTimeout(() => tapSound(child.theme), 500);
       if (res.remaining === 1) setTimeout(() => speak(pick(SPEECH_ALMOST).replace('{Name}', child.name)), 600);
-      buddyReact(childId, res.completedNow ? 'party' : 'cheer');
+      buddyReact(childId, res.completedNow ? 'party' : 'cheer', r.left + r.width / 2);
       if (res.completedNow) childCompleted(child, current.routine, res.reward);
     } else {
       untapSound();
@@ -172,9 +172,9 @@ const handlers = {
     requestSpin(childId);
   },
 
-  onWorld(childId) {
+  onAlbum(childId) {
     unlockAudio();
-    openChildWorld(childId);
+    openChildAlbum(childId);
   },
 
   onSelect(childId) {
@@ -185,13 +185,13 @@ const handlers = {
   },
 };
 
-function openChildWorld(childId) {
+function openChildAlbum(childId) {
   unlockAudio();
-  openWorld(childId, {
+  openAlbum(childId, {
     onChange: () => {
       invalidateRest();
       if (current) updateChild(state, childId, false);
-      else renderRest(state, new Date(), openChildWorld);
+      else renderRest(state, new Date(), openChildAlbum);
     },
   });
 }
@@ -222,10 +222,17 @@ function showOnboarding() {
     state.ui.activeChildId = children[0].id;
     state.setupDone = true;
     save();
-    saveNow();
     requestPersistence();
     startApp();
     if (!state.ui.pwaDismissed) setTimeout(showInstallHint, 1200);
+  }, {
+    onRestore(next) {
+      next.setupDone = true;
+      replaceState(next);
+      requestPersistence();
+      applySettings();
+      startApp();
+    },
   });
 }
 
@@ -261,15 +268,18 @@ function wireStatic() {
   }, { passive: true });
 
   document.addEventListener('pointerdown', unlockAudio, { passive: true });
-  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') tick(); else saveNow(); });
-  window.addEventListener('pagehide', saveNow);
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') tick(); else flush(); });
+  window.addEventListener('pagehide', flush);
+  document.addEventListener('freeze', flush); // Android friert Apps im Hintergrund ein
+  window.addEventListener('appinstalled', () => requestPersistence());
   motionQuery.addEventListener?.('change', () => { applySettings(); tick(true); });
   let resizeTimer = null;
   window.addEventListener('resize', () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(() => { if (current) renderAmbient(); }, 300); layoutGrid(); });
 }
 
-function boot() {
-  load();
+async function boot() {
+  await load();
+  if (state.setupDone) requestPersistence(); // bei jedem Start: Chrome sagt oft erst nach der Installation Ja
   setSoundEnabledGetter(() => state.settings.sound);
   setSpeechEnabledGetter(() => state.settings.speech);
   fx.setReducedMotionGetter(reducedMotion);

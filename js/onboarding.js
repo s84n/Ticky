@@ -1,14 +1,15 @@
 // Ersteinrichtung: Willkommen → Kinder anlegen → Aufgaben je Kind → Fertig.
-import { el, clear, $ } from './ui.js';
+import { el, clear, $, confirmDialog, alertDialog } from './ui.js';
 import { THEMES } from './data/themes.js';
-import { MAX_CHILDREN, sanitizeName } from './store.js';
+import { MAX_CHILDREN, sanitizeName, parseBackup } from './store.js';
 import { newChildDraft, basicsEditor, tasksEditor } from './child-editor.js';
 import { unlockAudio, popSound } from './audio.js';
 
 /**
- * Startet das Onboarding im Screen-Element. onDone({ children, customTasks }) wird am Ende aufgerufen.
+ * Startet das Onboarding im Screen-Element. onDone({ children, customTasks }) wird am Ende aufgerufen,
+ * onRestore(state) nach dem Wiederherstellen eines Backups.
  */
-export function startOnboarding(onDone) {
+export function startOnboarding(onDone, { onRestore } = {}) {
   const screen = $('#screen-onboarding');
   const drafts = [newChildDraft(0)];
   const customTasks = {};
@@ -45,7 +46,29 @@ export function startOnboarding(onDone) {
       el('div', { class: 'onb-logo', 'aria-hidden': 'true' }, '✅'),
       el('h1', { class: 'onb-title', id: 'onb-title' }, 'Willkommen bei Ticky!'),
       el('p', { class: 'onb-lead' }, 'Lege fest, welche Kinder mitmachen – alles bleibt nur auf diesem Gerät.'),
-      el('button', { type: 'button', class: 'btn btn--primary btn--big', autofocus: true, onclick: () => { unlockAudio(); popSound(); go('children'); } }, "Los geht's 🚀")));
+      el('button', { type: 'button', class: 'btn btn--primary btn--big', autofocus: true, onclick: () => { unlockAudio(); popSound(); go('children'); } }, "Los geht's 🚀"),
+      onRestore ? restoreButton() : null));
+  }
+
+  function restoreButton() {
+    const file = el('input', { type: 'file', accept: 'application/json,.json', hidden: true });
+    file.addEventListener('change', async () => {
+      const f = file.files?.[0];
+      file.value = '';
+      if (!f) return;
+      try {
+        if (f.size > 2_000_000) throw new Error('Die Datei ist zu groß für ein Ticky-Backup.');
+        const next = parseBackup(await f.text());
+        const names = next.children.map(c => c.name).join(', ');
+        if (!(await confirmDialog(`Backup mit ${next.children.length} Kind(ern) (${names}) wiederherstellen?`, { ok: 'Wiederherstellen' }))) return;
+        onRestore(next);
+      } catch (e) {
+        alertDialog(e.message, { title: 'Wiederherstellen nicht möglich' });
+      }
+    });
+    return el('div', {},
+      el('button', { type: 'button', class: 'btn', onclick: () => file.click() }, '⬆️ Backup wiederherstellen'),
+      file);
   }
 
   function renderChildren(root) {

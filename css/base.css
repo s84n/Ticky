@@ -256,7 +256,7 @@ h1, h2, h3, p { margin: 0; }
 }
 .children-grid.single { grid-template-columns: minmax(0, 520px); }
 .child-card { display: flex; flex-direction: column; min-height: 0; gap: clamp(6px, 1.3dvh, 14px); padding: clamp(10px, 1.8dvh, 18px); }
-.card-head, .card-footer, .child-card > .xp, .child-card > .neon-progress, .child-card > .magic-progress, .child-card > .track { flex: none; }
+.card-head, .card-footer, .card-meadow, .child-card > .xp, .child-card > .neon-progress, .child-card > .magic-progress, .child-card > .track { flex: none; }
 .card-avatar { width: clamp(38px, 6.5dvh, 56px); height: clamp(38px, 6.5dvh, 56px); font-size: clamp(1.5rem, 4.2dvh, 2.4rem); }
 .card-name { font-size: clamp(1.15rem, 3.2dvh, 1.6rem); }
 .task-list {
@@ -302,7 +302,7 @@ h1, h2, h3, p { margin: 0; }
   .neon-progress, .magic-progress { gap: 4px; }
   .track__lane { height: 22px; }
   .track__marker, .track__goal { font-size: 1.1rem; }
-  .card-buddy { width: 34px; height: 34px; }
+  .card-album { width: 34px; height: 34px; }
   .card-level { display: none; }
   .child-tabs.has-tabs { padding-top: 4px; padding-bottom: calc(4px + var(--safe-b)); }
   .child-tabs .child-tab { min-height: 40px; flex-direction: row; gap: 6px; }
@@ -558,10 +558,10 @@ body.shake #app, body.shake .overlay { animation: shake .5s; }
 .install-banner__text { flex: 1; font-size: .95rem; }
 .install-banner__text strong { display: block; font-size: 1.05rem; }
 
-/* ---------- Spieler-Level & Buddy auf der Card ---------- */
+/* ---------- Spieler-Level & Album-Knopf auf der Card ---------- */
 .card-who { flex: 1; min-width: 0; display: grid; gap: 2px; }
 .card-who .card-name { overflow-wrap: normal; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-/* Schmale Cards: zuerst das Avatar-Emoji (der Buddy steht ja daneben), dann der Zähler weichen */
+/* Schmale Cards: zuerst das Avatar-Emoji, dann der Zähler weichen */
 .child-card { container: card / inline-size; }
 @container card (max-width: 360px) { .card-avatar { display: none; } }
 @container card (max-width: 280px) { .card-count { display: none; } .card-head { gap: 8px; } }
@@ -569,34 +569,44 @@ body.shake #app, body.shake .overlay { animation: shake .5s; }
 .card-level__text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .card-level__bar { display: block; height: 4px; max-width: 140px; border-radius: 99px; background: var(--count-bg, rgba(0,0,0,.15)); overflow: hidden; }
 .card-level__fill { display: block; height: 100%; width: 0; border-radius: inherit; background: linear-gradient(90deg, #FFD34D, #FF9F1C); transition: width .6s cubic-bezier(.2,.8,.2,1); }
-.card-buddy {
+.card-album {
   flex: none; position: relative; display: grid; place-items: center;
   width: clamp(40px, 7dvh, 58px); height: clamp(40px, 7dvh, 58px); padding: 0;
-  border: 0; border-radius: var(--tile-radius); background: transparent; color: inherit;
+  border: 0; border-radius: var(--tile-radius); background: var(--count-bg, rgba(0,0,0,.15)); color: inherit;
+  font-size: clamp(1.2rem, 3.4dvh, 1.7rem);
 }
-.card-buddy.is-empty { background: var(--count-bg, rgba(0,0,0,.15)); font-size: clamp(1.2rem, 3.4dvh, 1.7rem); }
-.card-buddy .fig { width: 100%; }
-.card-buddy:active { transform: scale(.94); }
+.card-album:active { transform: scale(.94); }
 .buddy { animation: buddy-idle 3.2s ease-in-out infinite; transform-origin: 50% 100%; }
-.buddy.is-cheer { animation: buddy-cheer .7s cubic-bezier(.3,1.6,.5,1); }
-.buddy.is-party { animation: buddy-party 1.5s cubic-bezier(.3,1.4,.5,1); }
-body.evening .card-buddy .buddy:not(.is-cheer):not(.is-party) { animation: buddy-sleepy 5s ease-in-out infinite; }
-body.evening .card-buddy:not(.is-empty)::after { content: '🥱'; position: absolute; right: -6px; top: -8px; font-family: var(--emoji); font-size: .95rem; opacity: 0; animation: yawn 9s ease-in-out infinite; }
 
 /* ---------- Figuren-Darstellung (Aufwertung + Accessoire) ---------- */
 .fig { position: relative; aspect-ratio: 1; container-type: inline-size; }
 .fig > .fig__img, .fig > svg { display: block; width: 100%; height: 100%; }
 .fig.is-silhouette > .fig__img { filter: brightness(0) opacity(.4); }
 .fig__acc { position: absolute; left: var(--hx, 50%); top: var(--hy, 10%); transform: translate(-50%, -70%); font-family: var(--emoji); font-size: 30cqw; line-height: 1; pointer-events: none; filter: drop-shadow(0 2px 2px rgba(0,0,0,.3)); z-index: 2; }
-.fig[data-tier="1"] > .fig__img, .fig[data-tier="1"] > svg { filter: drop-shadow(0 0 1.5px #A0612A) drop-shadow(0 0 5px rgba(205, 127, 50, .85)); }
-.fig[data-tier="2"] > .fig__img, .fig[data-tier="2"] > svg { filter: drop-shadow(0 0 1.5px #94A3B8) drop-shadow(0 0 7px rgba(226, 232, 240, .95)); }
-.fig[data-tier="3"] > .fig__img, .fig[data-tier="3"] > svg { filter: drop-shadow(0 0 2px #E0A21A) drop-shadow(0 0 10px rgba(255, 205, 60, .95)); }
-.fig[data-tier="3"]::before {
-  content: ''; position: absolute; inset: -12%; z-index: -1; border-radius: 50%; pointer-events: none;
-  background: repeating-conic-gradient(from 0deg, rgba(255, 214, 90, .5) 0 12deg, transparent 12deg 30deg);
+/* Upgrades: Farbe (eigener Farbton je Figur), Verwandlung (Leucht-Aura, drehender Strahlenkranz, Glitzer) */
+.fig > .fig__img, .fig > svg { filter: var(--f-hue, ) var(--f-glow, ); transition: filter .4s; }
+.fig[data-evo~="farbe"] { --f-hue: hue-rotate(var(--hue, 180deg)) saturate(1.3); }
+.fig[data-evo~="verwandlung"] { --f-glow: drop-shadow(0 0 2px #fff) drop-shadow(0 0 9px rgba(255, 211, 77, .95)); }
+.fig[data-evo~="verwandlung"]::before {
+  content: ''; position: absolute; inset: -16%; z-index: -1; border-radius: 50%; pointer-events: none;
+  background: repeating-conic-gradient(from 0deg, rgba(255, 214, 90, .55) 0 12deg, rgba(244, 114, 182, .35) 12deg 18deg, transparent 18deg 30deg);
   mask: radial-gradient(circle, #000 25%, transparent 70%); -webkit-mask: radial-gradient(circle, #000 25%, transparent 70%);
-  animation: spin 10s linear infinite;
+  animation: spin 9s linear infinite;
 }
+.fig[data-evo~="verwandlung"]::after {
+  content: '✨'; position: absolute; right: -4%; top: 4%; z-index: 3; pointer-events: none;
+  font-family: var(--emoji); font-size: 26cqw; line-height: 1;
+  animation: evo-sparkle 2.4s ease-in-out infinite;
+}
+.fig.is-silhouette::before, .fig.is-silhouette::after { content: none; }
+@keyframes evo-sparkle { 0%, 100% { opacity: 0; transform: scale(.4) rotate(0); } 40%, 60% { opacity: 1; transform: scale(1) rotate(20deg); } }
+.evo-dots { display: inline-flex; gap: 4px; }
+.evo-dot { display: grid; place-items: center; width: 1.7em; height: 1.7em; border-radius: 50%; background: rgba(127, 127, 127, .25); font-family: var(--emoji); font-size: .85em; filter: grayscale(1); opacity: .55; }
+.evo-dot.is-on { background: linear-gradient(135deg, #FFE58A, #FBBF24); filter: none; opacity: 1; box-shadow: 0 0 8px rgba(251, 191, 36, .6); }
+.evo-dot.is-next { opacity: 1; filter: none; box-shadow: inset 0 0 0 2px #FBBF24; animation: pulse 1.4s ease-in-out infinite; }
+.reveal__journey { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; color: #fff; font-family: var(--font-ui); font-weight: 800; }
+.reveal__badge--upgrade { background: linear-gradient(135deg, #FFE58A, #F59E0B); color: #3B2300; }
+.reveal__title--upgrade { text-shadow: none; filter: drop-shadow(0 4px 12px rgba(0,0,0,.5)); background: linear-gradient(90deg, #FFE58A, #FBBF24, #F472B6); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .parade-actor.is-flipped .fig__acc { left: calc(100% - var(--hx, 50%)); }
 .rarity-badge { display: inline-block; padding: .2em .8em; border-radius: 99px; font-weight: 800; font-size: .85rem; background: var(--surface-2); color: var(--text); }
 .rarity-badge[data-rarity="magisch"] { background: linear-gradient(135deg, #8B5CF6, #14B8A6); color: #fff; }
@@ -631,9 +641,13 @@ body.evening .card-buddy:not(.is-empty)::after { content: '🥱'; position: abso
 .rest-buddy:active { transform: scale(.96); }
 .rest-buddy__stage { position: relative; width: 78px; height: 78px; display: grid; place-items: center; }
 .rest-buddy__stage .fig { width: 100%; }
+.rest-buddy__stage.is-team { width: 110px; display: flex; align-items: flex-end; justify-content: center; }
+.rest-buddy__stage.is-team .fig { width: 56px; flex: none; }
+.rest-buddy__stage.is-team .fig.is-side { width: 34px; margin: 0 -3px; }
+.rest-buddy__stage.is-team .fig.is-side:nth-child(2) { order: -1; }
 .rest-buddy__avatar { font-size: 3rem; }
 .rest-buddy__name { font-size: 1.1rem; max-width: 12ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.rest-buddy__level { font-family: var(--font-ui); font-size: .78rem; opacity: .85; }
+.rest-buddy__level { max-width: 15ch; font-family: var(--font-ui); font-size: .78rem; line-height: 1.25; text-align: center; opacity: .85; }
 .rest-buddies.is-night .buddy { animation: buddy-sleep 4.5s ease-in-out infinite; filter: brightness(.85); }
 .rest-buddy__zzz { position: absolute; right: -2px; top: -4px; font-weight: 800; color: #C7D2FE; text-shadow: 0 0 6px rgba(99, 102, 241, .8); animation: zzz 3s ease-in-out infinite; }
 .rest-buddy__zzz span { display: inline-block; animation: zzz 3s ease-in-out infinite; }
@@ -670,9 +684,6 @@ body.evening .card-buddy:not(.is-empty)::after { content: '🥱'; position: abso
 @keyframes flap { from { transform: scaleY(1); } to { transform: scaleY(-.35); } }
 @keyframes wag { from { transform: rotate(-12deg); } to { transform: rotate(12deg); } }
 @keyframes buddy-idle { 0%, 100% { transform: translateY(0) scale(1, 1); } 50% { transform: translateY(-3px) scale(.98, 1.02); } }
-@keyframes buddy-cheer { 0% { transform: translateY(0) scale(1.1, .9); } 35% { transform: translateY(-14px) scale(.95, 1.08) rotate(-6deg); } 70% { transform: translateY(0) scale(1.08, .92); } 100% { transform: none; } }
-@keyframes buddy-party { 0% { transform: scale(1.1, .9); } 25% { transform: translateY(-20px) rotate(-180deg) scale(1.1); } 50% { transform: translateY(-26px) rotate(-360deg) scale(1.15); } 75% { transform: translateY(0) scale(1.1, .9); } 88% { transform: translateY(-8px); } 100% { transform: none; } }
-@keyframes buddy-sleepy { 0%, 100% { transform: rotate(0) scale(1, 1); } 40% { transform: rotate(-4deg) scale(1.02, .97); } 55% { transform: rotate(-6deg) scale(1.04, .95); } }
 @keyframes buddy-sleep { 0%, 100% { transform: rotate(-10deg) translateY(4px) scale(1.03, .94); } 50% { transform: rotate(-10deg) translateY(4px) scale(.99, 1); } }
 @keyframes yawn { 0%, 72%, 100% { opacity: 0; transform: scale(.4); } 78%, 92% { opacity: 1; transform: scale(1); } }
 @keyframes zzz { 0% { opacity: 0; transform: translate(0, 6px); } 30%, 70% { opacity: 1; } 100% { opacity: 0; transform: translate(6px, -14px); } }

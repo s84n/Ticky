@@ -1,6 +1,6 @@
 // Ablauf rund um das Fertigwerden: Kind-Abschluss → Glücksrad → Parade → ggf. Gesamt-Feier.
 import { el, openOverlay } from './ui.js';
-import { state, save, saveNow, spinKey } from './store.js';
+import { state, save, spinKey } from './store.js';
 import { THEMES } from './data/themes.js';
 import { overallStats, spinStatus } from './routine.js';
 import { localDate } from './util.js';
@@ -9,7 +9,7 @@ import { completeSound, fanfareSound, levelUpSound } from './audio.js';
 import { openWheel } from './rewards/wheel.js';
 import { runParade } from './rewards/parade.js';
 import { isEpic } from './data/figures.js';
-import { addFigure, levelTitle } from './data/progression.js';
+import { addFigure, applyUpgrade, trackSpin, focusOf, levelTitle, accessoryById } from './data/progression.js';
 
 let hooks = { getRoutine: () => null, refreshChild: () => {} };
 const queue = [];
@@ -48,13 +48,18 @@ function showLevelUp(childId) {
       el('h2', { class: 'levelup__title' }, '⭐ LEVEL UP! ⭐'),
       el('p', { class: 'levelup__text' }, `${child.name} ist jetzt Level ${reward.levelAfter}!`),
       newTitle !== oldTitle ? el('p', { class: 'levelup__rank' }, `Neuer Titel: ${newTitle}`) : null,
-      reward.dust ? el('p', { class: 'levelup__gift' }, `Geschenk: +${reward.dust} ✨ Sternenstaub`) : null,
+      giftLine(reward.gift),
       el('button', { type: 'button', class: 'btn btn--primary btn--big', autofocus: true, onclick: () => close() }, 'Juhu! 🎉'));
     levelUpSound();
     fireworks(2);
     confetti(60);
     const { close } = openOverlay(box, { label: 'Level-Aufstieg', className: 'celebration-overlay', theme: child.theme, onClose: () => { hooks.refreshChild(childId); resolve(); } });
   });
+}
+
+function giftLine(accId) {
+  const acc = accessoryById(accId);
+  return acc ? el('p', { class: 'levelup__gift' }, `Geschenk: ${acc.icon} ${acc.label} für deine Figuren!`) : null;
 }
 
 /** Stellt ein Glücksrad für ein Kind in die Warteschlange (immer nur ein Rad gleichzeitig). */
@@ -86,20 +91,26 @@ function spinFlow(child, routine) {
   return new Promise(resolve => {
     openWheel(child, {
       settings: state.settings,
-      commit(fig) {
+      commit(result) {
         // Ergebnis sofort speichern: Neustart während der Animation ergibt kein zweites Rad.
         const c = state.children.find(x => x.id === child.id);
         if (!c) return null;
-        const res = addFigure(c, fig);
-        c.sinceLegendary = isEpic(fig.rarity) ? 0 : (c.sinceLegendary ?? 0) + 1;
+        const hadTarget = !!focusOf(c);
+        let gain;
+        if (result.kind === 'upgrade') {
+          gain = { isNew: false, upgrade: applyUpgrade(c, result.fig), gift: null };
+        } else {
+          gain = addFigure(c, result.fig);
+          c.sinceLegendary = isEpic(result.fig.rarity) ? 0 : (c.sinceLegendary ?? 0) + 1;
+        }
+        trackSpin(c, !!gain.upgrade, hadTarget);
         state.spins[spinKey(localDate(), routine, c.id)] = 'done';
         save();
-        saveNow();
-        return res;
+        return gain;
       },
-      async onFinish(fig) {
+      async onFinish(result) {
         hooks.refreshChild(child.id);
-        if (fig) await runParade(fig, state.children.find(x => x.id === child.id));
+        if (result) await runParade(result.fig, state.children.find(x => x.id === child.id));
         await showLevelUp(child.id);
         resolve();
       },

@@ -3,10 +3,11 @@
 import { localDate, daysBetween, parseTime } from './util.js';
 import { THEME_IDS, THEMES } from './data/themes.js';
 import { TASK_CATALOG, ROUTINES } from './data/task-catalog.js';
-import { ACCESSORY_IDS, MAX_TIER } from './data/progression.js';
+import { ACCESSORY_IDS, TEAM_MAX, pathOf, pickFocus, focusOf } from './data/progression.js';
+import { RARITY_ORDER, figureById } from './data/figures.js';
 
 export const STORAGE_KEY = 'ticky_v1';
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
 export const MAX_CHILDREN = 5;
 export const NAME_MAX = 20;
 export const TASK_LABEL_MAX = 30;
@@ -92,20 +93,23 @@ export function normalizeState(raw, today = localDate()) {
         }
       }
       const sinceLegendary = Number.isInteger(c.sinceLegendary) && c.sinceLegendary >= 0 ? c.sinceLegendary : 0;
+      const sinceUpgrade = nonNegInt(c.sinceUpgrade, 99);
       const xp = nonNegInt(c.xp, 99_999_999);
-      const stardust = nonNegInt(c.stardust, 9_999_999);
       const wardrobe = Array.isArray(c.wardrobe) ? [...new Set(c.wardrobe.filter(a => ACCESSORY_IDS.includes(a)))] : [];
-      const upgrades = {};
-      if (isObj(c.upgrades)) {
-        for (const [fid, u] of Object.entries(c.upgrades)) {
-          if (!figures[fid] || !isObj(u)) continue;
-          const tier = Number.isInteger(u.tier) ? Math.min(MAX_TIER, Math.max(0, u.tier)) : 0;
-          const acc = wardrobe.includes(u.acc) ? u.acc : null;
-          if (tier || acc) upgrades[fid] = { tier, acc };
-        }
+      const evo = {};
+      const acc = {};
+      for (const fid of Object.keys(figures)) {
+        const fig = figureById(fid);
+        const stage = isObj(c.evo) ? c.evo[fid] : undefined;
+        if (fig && Number.isInteger(stage) && stage > 0) evo[fid] = Math.min(stage, pathOf(fig).length);
+        const a = isObj(c.acc) ? c.acc[fid] : undefined;
+        if (wardrobe.includes(a)) acc[fid] = a;
       }
-      const buddy = typeof c.buddy === 'string' && figures[c.buddy] ? c.buddy : null;
-      out.children.push({ id: c.id, name, theme, avatar, tasks, figures, sinceLegendary, xp, stardust, wardrobe, upgrades, buddy });
+      const team = Array.isArray(c.team) ? [...new Set(c.team.filter(id => typeof id === 'string' && figures[id]))].slice(0, TEAM_MAX) : [];
+      const kid = { id: c.id, name, theme, avatar, tasks, figures, sinceLegendary, sinceUpgrade, xp, wardrobe, evo, acc, team, focus: null };
+      kid.focus = typeof c.focus === 'string' && figures[c.focus] ? c.focus : null;
+      if (!focusOf(kid)) kid.focus = pickFocus(kid);
+      out.children.push(kid);
     }
   }
 
@@ -155,11 +159,35 @@ function normTime(t) {
   return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
 }
 
-/** Schema-Migrationen. v1 → v2: Level, Sternenstaub, Aufwertungen und Buddy kommen dazu (Defaults aus normalizeState). */
+/**
+ * Schema-Migrationen.
+ * v1 → v2: Level, Sternenstaub, Aufwertungen und Buddy kamen dazu (Defaults aus normalizeState).
+ * v2 → v3: Sternenstaub entfällt. Bronze/Silber/Gold werden zu freigeschalteten Upgrade-Stufen,
+ *          Accessoires wandern nach `acc`, der Buddy wird Anführer des Teams (aufgefüllt mit den seltensten Figuren).
+ */
 function migrate(raw) {
   const v = Number(raw.schemaVersion) || 1;
-  if (v > SCHEMA_VERSION) return raw; // Neuere Version: so gut wie möglich lesen
-  return raw;
+  if (v >= 3 || !Array.isArray(raw.children)) return raw;
+  return {
+    ...raw,
+    children: raw.children.map(c => {
+      if (!isObj(c)) return c;
+      const figures = isObj(c.figures) ? c.figures : {};
+      const evo = {}, acc = {};
+      if (isObj(c.upgrades)) {
+        for (const [fid, u] of Object.entries(c.upgrades)) {
+          if (!isObj(u)) continue;
+          if (Number.isInteger(u.tier) && u.tier > 0) evo[fid] = u.tier;
+          if (typeof u.acc === 'string') acc[fid] = u.acc;
+        }
+      }
+      const byRarity = Object.keys(figures)
+        .filter(id => figureById(id))
+        .sort((a, b) => RARITY_ORDER.indexOf(figureById(b).rarity) - RARITY_ORDER.indexOf(figureById(a).rarity));
+      const team = [...new Set([c.buddy, ...byRarity].filter(id => typeof id === 'string' && figures[id]))].slice(0, TEAM_MAX);
+      return { ...c, evo, acc, team };
+    }),
+  };
 }
 
 export function taskExists(id, routine, customTasks) {
@@ -207,39 +235,124 @@ export function removeCustomTask(state, taskId) {
 
 // ---------- Laufzeit: Laden / Speichern ----------
 
+// Doppelt gespeichert: localStorage (synchron, sofort) und eine Kopie in IndexedDB (eigener Speicher,
+// überlebt z. B., wenn localStorage geleert wurde oder nicht lesbar ist). Beim Start gewinnt der neuere Stand.
+
 export let state = createDefaultState();
 const listeners = new Set();
-let saveTimer = null;
+let mirrorTimer = null;
 let dirty = false; // nur speichern, wenn sich etwas geändert hat (sonst überschreibt z. B. pagehide frischere Daten)
 
-export function load() {
-  let raw = null;
+const IDB_NAME = 'ticky';
+const IDB_STORE = 'kv';
+
+function idbOpen() {
+  return new Promise((resolve, reject) => {
+    if (typeof indexedDB === 'undefined') { reject(new Error('kein IndexedDB')); return; }
+    const req = indexedDB.open(IDB_NAME, 1);
+    req.onupgradeneeded = () => req.result.createObjectStore(IDB_STORE);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+    req.onblocked = () => reject(new Error('IndexedDB blockiert'));
+  });
+}
+
+let dbPromise = null;
+const db = () => (dbPromise ??= idbOpen().catch(e => { dbPromise = null; throw e; }));
+
+async function idb(mode, fn) {
+  const d = await db();
+  return new Promise((resolve, reject) => {
+    const tx = d.transaction(IDB_STORE, mode);
+    const req = fn(tx.objectStore(IDB_STORE));
+    tx.oncomplete = () => resolve(req?.result);
+    tx.onerror = tx.onabort = () => reject(tx.error);
+  });
+}
+
+const withTimeout = (p, ms) => Promise.race([p, new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), ms))]);
+
+function readLocal() {
   try {
     const txt = localStorage.getItem(STORAGE_KEY);
-    if (txt) raw = JSON.parse(txt);
+    return txt ? JSON.parse(txt) : null;
   } catch (e) {
     console.warn('Ticky: gespeicherte Daten konnten nicht gelesen werden', e);
+    return null;
   }
+}
+
+async function readMirror() {
+  try {
+    const txt = await withTimeout(idb('readonly', s => s.get(STORAGE_KEY)), 2000);
+    return typeof txt === 'string' ? JSON.parse(txt) : null;
+  } catch (e) {
+    console.warn('Ticky: Kopie in IndexedDB nicht lesbar', e);
+    return null;
+  }
+}
+
+const usable = raw => isObj(raw) && raw.setupDone === true && Array.isArray(raw.children) && raw.children.length > 0;
+const stamp = raw => (Number.isFinite(raw?.savedAt) ? raw.savedAt : 0);
+
+/** Wählt aus beiden Speichern den brauchbaren, neueren Stand. */
+export function pickNewest(a, b) {
+  if (!usable(a)) return usable(b) ? b : a ?? b;
+  if (!usable(b)) return a;
+  return stamp(b) > stamp(a) ? b : a;
+}
+
+/** Lädt den Zustand. Fällt auf die IndexedDB-Kopie zurück, falls localStorage leer oder älter ist. */
+export async function load() {
+  const local = readLocal();
+  const mirror = await readMirror();
+  const raw = pickNewest(local, mirror);
   state = normalizeState(raw);
+  if (raw && raw !== local && state.setupDone) {
+    console.info('Ticky: Stand aus der IndexedDB-Kopie wiederhergestellt');
+    dirty = true;
+    saveNow();
+  }
   return state;
 }
 
 export function save() {
   dirty = true;
-  clearTimeout(saveTimer);
-  saveTimer = setTimeout(saveNow, 200);
+  saveNow(); // sofort: Android kann die App im Hintergrund jederzeit beenden
   for (const fn of listeners) fn(state);
 }
 
 export function saveNow() {
-  clearTimeout(saveTimer);
   if (!dirty) return;
+  // Ein leerer Zustand (Onboarding noch nicht fertig) überschreibt nie gespeicherte Daten. Löschen nur über resetAll().
+  if (!state.setupDone) return;
   dirty = false;
+  const txt = JSON.stringify({ ...state, savedAt: Date.now() });
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    localStorage.setItem(STORAGE_KEY, txt);
   } catch (e) {
     console.warn('Ticky: Speichern fehlgeschlagen', e);
   }
+  clearTimeout(mirrorTimer);
+  mirrorTimer = setTimeout(() => writeMirror(txt), 150);
+}
+
+/** Schreibt die Kopie sofort (z. B. wenn die App in den Hintergrund geht). */
+export function flush() {
+  saveNow();
+  if (mirrorTimer === null) return;
+  clearTimeout(mirrorTimer);
+  writeMirror(readLocalText());
+}
+
+function readLocalText() {
+  try { return localStorage.getItem(STORAGE_KEY); } catch { return null; }
+}
+
+function writeMirror(txt) {
+  mirrorTimer = null;
+  if (!txt) return;
+  idb('readwrite', s => s.put(txt, STORAGE_KEY)).catch(e => console.warn('Ticky: Kopie in IndexedDB fehlgeschlagen', e));
 }
 
 export function onChange(fn) {
@@ -256,7 +369,9 @@ export function replaceState(next) {
 
 export function resetAll() {
   try { localStorage.removeItem(STORAGE_KEY); } catch { /* egal */ }
-  clearTimeout(saveTimer);
+  clearTimeout(mirrorTimer);
+  mirrorTimer = null;
+  idb('readwrite', s => s.delete(STORAGE_KEY)).catch(() => {});
   dirty = false;
   state = createDefaultState();
   for (const fn of listeners) fn(state);
@@ -285,9 +400,26 @@ export function parseBackup(text) {
   return next;
 }
 
-/** Fordert dauerhaften Speicher an (schützt v. a. unter iOS vor automatischem Löschen). */
+/**
+ * Fordert dauerhaften Speicher an. Ohne diese Freigabe darf der Browser (v. a. Android bei wenig Speicher
+ * oder im Energiesparmodus) die Daten löschen. Chrome entscheidet selbst und sagt oft erst Ja, wenn die App
+ * installiert ist – deshalb bei jedem Start erneut fragen. Gibt true zurück, wenn der Speicher geschützt ist.
+ */
 export async function requestPersistence() {
   try {
-    if (navigator.storage?.persist && !(await navigator.storage.persisted())) await navigator.storage.persist();
-  } catch { /* nicht unterstützt */ }
+    if (!navigator.storage?.persist) return null;
+    if (await navigator.storage.persisted()) return true;
+    return await navigator.storage.persist();
+  } catch {
+    return null; // nicht unterstützt
+  }
+}
+
+/** true = geschützt, false = Browser darf löschen, null = unbekannt. */
+export async function persistenceStatus() {
+  try {
+    return navigator.storage?.persisted ? await navigator.storage.persisted() : null;
+  } catch {
+    return null;
+  }
 }

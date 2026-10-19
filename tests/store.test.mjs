@@ -1,11 +1,12 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { createDefaultState, normalizeState, cleanupSpins, ensureToday, removeChild, removeCustomTask, parseBackup, exportBackup, spinKey } from '../js/store.js';
+import { createDefaultState, normalizeState, cleanupSpins, ensureToday, removeChild, removeCustomTask, parseBackup, exportBackup, spinKey, pickNewest } from '../js/store.js';
 import { localDate, daysBetween } from '../js/util.js';
 import { toggleTask, toggleAll, autoRoutine, currentRoutine, nextRoutine, isNight, validateTimes } from '../js/routine.js';
 import {
-  levelInfo, levelTitle, awardRoutine, addFigure, upgradeTier, buyAccessory, equipAccessory, tierOf, nextTierCost,
-  XP_PER_TASK, XP_ROUTINE_BONUS, MAX_LEVEL, DUST_PER_LEVEL, DUST_PER_DUPLICATE, TIERS, MAX_TIER,
+  levelInfo, levelTitle, awardRoutine, addFigure, applyUpgrade, trackSpin, upgradeGuaranteed, hasStep, journeyOpen,
+  toggleTeam, makeLeader, setFocus, focusOf, equipAccessory, accessoryOf,
+  XP_PER_TASK, XP_ROUTINE_BONUS, MAX_LEVEL, ACCESSORY_IDS, TEAM_MAX, EVO_PATHS, UPGRADE_PITY,
 } from '../js/data/progression.js';
 import { figureById } from '../js/data/figures.js';
 
@@ -16,7 +17,7 @@ const child = (id, extra = {}) => ({
 
 test('Defaults sind gültig und Onboarding ist offen', () => {
   const s = createDefaultState();
-  assert.equal(s.schemaVersion, 2);
+  assert.equal(s.schemaVersion, 3);
   assert.equal(s.setupDone, false);
   assert.deepEqual(s.children, []);
 });
@@ -142,85 +143,150 @@ test('Manueller Start endet bei echter Routinezeit oder neuem Tag', () => {
   assert.equal(currentRoutine(s, new Date(2026, 9, 15, 12, 0)), null);
 });
 
-test('Altes Schema (v1) bekommt Level, Sternenstaub und Buddy-Defaults', () => {
-  const s = normalizeState({ schemaVersion: 1, setupDone: true, children: [child('c_a', { figures: { pixel_03: 2 } })] });
-  const c = s.children[0];
-  assert.equal(c.xp, 0);
-  assert.equal(c.stardust, 0);
-  assert.deepEqual(c.wardrobe, []);
-  assert.deepEqual(c.upgrades, {});
-  assert.equal(c.buddy, null);
-});
-
-test('Normalisierung: ungültige Aufwertungen, Accessoires und Buddys werden verworfen', () => {
-  const s = normalizeState({ setupDone: true, children: [child('c_a', {
-    figures: { pixel_03: 2, pixel_10: 1 }, xp: 1234, stardust: -5,
-    wardrobe: ['krone', 'krone', 'gibtsnicht'],
-    upgrades: { pixel_03: { tier: 9, acc: 'krone' }, pixel_10: { tier: 1, acc: 'zylinder' }, pixel_05: { tier: 2 } },
-    buddy: 'pixel_07',
-  })] });
-  const c = s.children[0];
-  assert.equal(c.xp, 1234);
-  assert.equal(c.stardust, 0);
-  assert.deepEqual(c.wardrobe, ['krone']);
-  assert.deepEqual(c.upgrades, { pixel_03: { tier: 3, acc: 'krone' }, pixel_10: { tier: 1, acc: null } });
-  assert.equal(c.buddy, null); // pixel_07 nicht gewonnen
-});
-
 test('XP gibt es nur beim ersten Abschluss der Routine (Farm-Schutz)', () => {
   const s = normalizeState({ setupDone: true, children: [child('c_a')] });
   const today = s.progress.date;
   toggleTask(s, 'morning', 'c_a', 'umziehen', today);
   const r1 = toggleTask(s, 'morning', 'c_a', 'zaehne', today);
-  assert.deepEqual(r1.reward, { xp: 2 * XP_PER_TASK + XP_ROUTINE_BONUS, levelBefore: 1, levelAfter: 1, dust: 0 });
+  assert.deepEqual(r1.reward, { xp: 2 * XP_PER_TASK + XP_ROUTINE_BONUS, levelBefore: 1, levelAfter: 1, gift: null });
   toggleTask(s, 'morning', 'c_a', 'zaehne', today);
   const r2 = toggleTask(s, 'morning', 'c_a', 'zaehne', today);
   assert.equal(r2.reward, null);
   assert.equal(s.children[0].xp, 40);
 });
 
-test('Level-Kurve, Level-Aufstieg schenkt Sternenstaub', () => {
+test('Level-Kurve, Level-Aufstieg schenkt ein Accessoire', () => {
   assert.deepEqual(levelInfo(0), { level: 1, into: 0, need: 100 });
   assert.deepEqual(levelInfo(99), { level: 1, into: 99, need: 100 });
   assert.deepEqual(levelInfo(100), { level: 2, into: 0, need: 150 });
   assert.equal(levelInfo(250).level, 3);
   assert.equal(levelInfo(1e9).level, MAX_LEVEL);
-  const c = { xp: 90, stardust: 0 };
-  const r = awardRoutine(c, 5); // +70 XP → 160 → Level 2
+  const c = { xp: 90, wardrobe: [] };
+  const r = awardRoutine(c, 5, () => 0); // +70 XP → 160 → Level 2
   assert.equal(r.levelAfter, 2);
-  assert.equal(c.stardust, DUST_PER_LEVEL);
+  assert.equal(r.gift, ACCESSORY_IDS[0]);
+  assert.deepEqual(c.wardrobe, [ACCESSORY_IDS[0]]);
+  c.wardrobe = [...ACCESSORY_IDS];
+  assert.equal(awardRoutine(c, 50).gift, null); // alle schon da
   assert.equal(levelTitle(['A', 'B', 'C'], 1), 'A');
   assert.equal(levelTitle(['A', 'B', 'C'], 5), 'B');
   assert.equal(levelTitle(['A', 'B', 'C'], 99), 'C');
 });
 
-test('Duplikate werden zu Sternenstaub, erste Figur wird Buddy', () => {
-  const c = { figures: {}, stardust: 0, buddy: null };
-  const fig = figureById('neon_10');
-  assert.deepEqual(addFigure(c, fig), { duplicate: false, dust: 0 });
-  assert.equal(c.buddy, 'neon_10');
-  assert.deepEqual(addFigure(c, fig), { duplicate: true, dust: DUST_PER_DUPLICATE.legendaer });
-  addFigure(c, figureById('neon_01'));
-  assert.equal(c.buddy, 'neon_10');
-  assert.equal(c.figures.neon_10, 2);
+const kid = () => ({ figures: {}, wardrobe: [], evo: {}, acc: {}, team: [], focus: null, sinceUpgrade: 0 });
+
+test('Neue Figur: kommt ins Team (max. 3), seltenste offene Reise wird verfolgt', () => {
+  const c = kid();
+  assert.deepEqual(addFigure(c, figureById('pixel_01')), { isNew: true, upgrade: null, gift: null });
+  assert.equal(c.focus, 'pixel_01');
+  addFigure(c, figureById('pixel_10')); // legendär → wird verfolgt
+  assert.equal(c.focus, 'pixel_10');
+  addFigure(c, figureById('pixel_02')); // standard → Fokus bleibt
+  assert.equal(c.focus, 'pixel_10');
+  addFigure(c, figureById('pixel_03'));
+  assert.deepEqual(c.team, ['pixel_01', 'pixel_10', 'pixel_02']);
+  assert.equal(TEAM_MAX, 3);
 });
 
-test('Aufwerten und Accessoires kosten Sternenstaub, nur für eigene Figuren', () => {
-  const c = { figures: { zauber_01: 1 }, stardust: 30, wardrobe: [], upgrades: {} };
-  assert.equal(upgradeTier(c, 'zauber_02'), null); // nicht gewonnen
-  assert.equal(upgradeTier(c, 'zauber_01'), 1);
-  assert.equal(c.stardust, 30 - TIERS[1].cost);
-  assert.equal(upgradeTier(c, 'zauber_01'), null); // zu wenig Staub
-  c.stardust = 1000;
-  upgradeTier(c, 'zauber_01'); upgradeTier(c, 'zauber_01');
-  assert.equal(tierOf(c, 'zauber_01'), MAX_TIER);
-  assert.equal(nextTierCost(c, 'zauber_01'), null);
-  assert.equal(upgradeTier(c, 'zauber_01'), null);
-  assert.equal(equipAccessory(c, 'zauber_01', 'krone'), false); // noch nicht freigeschaltet
-  assert.equal(buyAccessory(c, 'krone'), true);
-  assert.equal(buyAccessory(c, 'krone'), false); // schon vorhanden
-  assert.equal(equipAccessory(c, 'zauber_01', 'krone'), true);
-  assert.deepEqual(c.upgrades.zauber_01, { tier: 3, acc: 'krone' });
-  assert.equal(equipAccessory(c, 'zauber_01', null), true);
-  assert.equal(c.upgrades.zauber_01.acc, null);
+test('Upgrade-Reise: Länge je Rarität, Reihenfolge, danach nächste Reise', () => {
+  assert.deepEqual(EVO_PATHS.standard, ['farbe', 'tempo']);
+  assert.equal(EVO_PATHS.legendaer.at(-1), 'verwandlung');
+  assert.equal(EVO_PATHS.geheim.length, 5);
+  const c = kid();
+  const leg = figureById('neon_10'), std = figureById('neon_01');
+  addFigure(c, std); addFigure(c, leg);
+  assert.equal(c.focus, 'neon_10');
+  const got = [];
+  for (let i = 0; i < 4; i++) got.push(applyUpgrade(c, leg));
+  assert.deepEqual(got, ['farbe', 'tempo', 'groesse', 'verwandlung']);
+  assert.ok(hasStep(c, leg, 'verwandlung'));
+  assert.equal(journeyOpen(c, leg), false);
+  assert.equal(applyUpgrade(c, leg), null);
+  assert.equal(c.focus, 'neon_01'); // nächste offene Reise
+});
+
+test('Doppelte Figur: Upgrade für sie, nach fertiger Reise ein Accessoire', () => {
+  const c = kid();
+  const fig = figureById('zauber_01');
+  addFigure(c, fig);
+  assert.deepEqual(addFigure(c, fig), { isNew: false, upgrade: 'farbe', gift: null });
+  assert.deepEqual(addFigure(c, fig), { isNew: false, upgrade: 'tempo', gift: null });
+  const r = addFigure(c, fig, () => 0);
+  assert.equal(r.upgrade, null);
+  assert.equal(r.gift, ACCESSORY_IDS[0]);
+  assert.equal(c.figures.zauber_01, 4);
+});
+
+test('Garantie: nach zwei Drehs ohne Upgrade kommt es sicher', () => {
+  const c = kid();
+  trackSpin(c, false, false);
+  assert.equal(c.sinceUpgrade, 0); // ohne Upgrade-Feld zählt nichts
+  trackSpin(c, false, true);
+  assert.equal(upgradeGuaranteed(c), false);
+  trackSpin(c, false, true);
+  assert.equal(upgradeGuaranteed(c), true);
+  trackSpin(c, true, true);
+  assert.equal(c.sinceUpgrade, 0);
+  assert.equal(UPGRADE_PITY, 2);
+});
+
+test('Team, Anführer, Reise wählen und Accessoires nur für eigene Figuren', () => {
+  const c = kid();
+  for (const id of ['dino_01', 'dino_02', 'dino_03', 'dino_04']) addFigure(c, figureById(id));
+  assert.equal(toggleTeam(c, 'dino_04'), false); // voll
+  assert.equal(toggleTeam(c, 'dino_02'), true);
+  assert.deepEqual(c.team, ['dino_01', 'dino_03']);
+  makeLeader(c, 'dino_04');
+  assert.deepEqual(c.team, ['dino_04', 'dino_01', 'dino_03']);
+  assert.equal(setFocus(c, 'dino_09'), false); // nicht gewonnen
+  assert.equal(setFocus(c, 'dino_03'), true);
+  assert.equal(focusOf(c).id, 'dino_03');
+  assert.equal(equipAccessory(c, 'dino_01', 'krone'), false); // noch nicht im Schrank
+  c.wardrobe.push('krone');
+  assert.equal(equipAccessory(c, 'dino_01', 'krone'), true);
+  assert.equal(accessoryOf(c, 'dino_01'), 'krone');
+  assert.equal(equipAccessory(c, 'dino_01', null), true);
+  assert.equal(accessoryOf(c, 'dino_01'), null);
+});
+
+test('Migration v2 → v3: Stufen werden Upgrades, Buddy wird Anführer, Sternenstaub entfällt', () => {
+  const s = normalizeState({ schemaVersion: 2, setupDone: true, children: [child('c_a', {
+    figures: { pixel_01: 3, pixel_07: 1, pixel_10: 1, pixel_12: 1, pixel_02: 1 }, xp: 1234, stardust: 500,
+    wardrobe: ['krone', 'krone', 'gibtsnicht'],
+    upgrades: { pixel_01: { tier: 3, acc: 'krone' }, pixel_10: { tier: 1, acc: 'zylinder' }, pixel_05: { tier: 2 } },
+    buddy: 'pixel_07',
+  })] });
+  const c = s.children[0];
+  assert.equal(c.xp, 1234);
+  assert.ok(!('stardust' in c) && !('upgrades' in c) && !('buddy' in c));
+  assert.deepEqual(c.wardrobe, ['krone']);
+  assert.deepEqual(c.evo, { pixel_01: 2, pixel_10: 1 }); // Standard hat nur 2 Stufen; pixel_05 nicht gewonnen
+  assert.deepEqual(c.acc, { pixel_01: 'krone' });        // Zylinder nicht im Schrank
+  assert.deepEqual(c.team, ['pixel_07', 'pixel_12', 'pixel_10']); // Buddy vorne, dann die seltensten
+  assert.equal(c.focus, 'pixel_12');                     // geheim, Reise offen
+});
+
+test('Normalisierung v3: ungültiges Team, Upgrades und Fokus werden repariert', () => {
+  const s = normalizeState({ schemaVersion: 3, setupDone: true, children: [child('c_a', {
+    figures: { pixel_01: 1, pixel_02: 1 },
+    evo: { pixel_01: 99, pixel_09: 2, pixel_02: -1 },
+    team: ['pixel_01', 'pixel_01', 'pixel_09', 'pixel_02', 'x'],
+    focus: 'pixel_01', sinceUpgrade: 1,
+  })] });
+  const c = s.children[0];
+  assert.deepEqual(c.evo, { pixel_01: 2 });
+  assert.deepEqual(c.team, ['pixel_01', 'pixel_02']);
+  assert.equal(c.focus, 'pixel_02'); // Reise von pixel_01 ist schon fertig
+  assert.equal(c.sinceUpgrade, 1);
+});
+
+test('Laden: neuerer, brauchbarer Stand aus localStorage oder IndexedDB gewinnt', () => {
+  const full = (savedAt) => ({ setupDone: true, children: [child('c_a')], savedAt });
+  const a = full(100), b = full(200);
+  assert.equal(pickNewest(a, b), b);
+  assert.equal(pickNewest(b, a), b);
+  assert.equal(pickNewest(null, a), a);           // localStorage leer → Kopie
+  assert.equal(pickNewest({ setupDone: false, children: [] }, a), a); // leerer Stand verliert immer
+  assert.equal(pickNewest(a, null), a);
+  assert.equal(pickNewest(null, null), null);
 });

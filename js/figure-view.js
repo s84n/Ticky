@@ -1,12 +1,20 @@
-// Darstellung einer Figur inkl. Aufwertung (Bronze/Silber/Gold) und Accessoire – für Welt, Buddy, Reveal und Parade.
+// Darstellung einer Figur inkl. Upgrades (Farbe, Turbo, Wachstum, Trick, Verwandlung) und Accessoire –
+// für Team, Album, Reveal und Parade.
 import { el } from './ui.js';
-import { tierOf, accessoryOf, accessoryById } from './data/progression.js';
+import { stepsOf, accessoryOf, accessoryById } from './data/progression.js';
 
-/** Setzt Stufe, Rarität und Accessoire an einem Figuren-Container (der Container braucht die Klasse .fig). */
+/** Stabiler Farbton je Figur für das Farb-Upgrade (90°–270°, damit es sich deutlich vom Original abhebt). */
+function hueOf(figId) {
+  let h = 0;
+  for (const ch of figId) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  return 90 + (h % 180);
+}
+
+/** Setzt Upgrades, Rarität und Accessoire an einem Figuren-Container (der Container braucht die Klasse .fig). */
 export function decorateFigure(node, fig, child) {
-  const tier = child ? tierOf(child, fig.id) : 0;
-  node.dataset.tier = String(tier);
+  node.dataset.evo = stepsOf(child, fig).join(' ');
   node.dataset.rarity = fig.rarity;
+  node.style.setProperty('--hue', `${hueOf(fig.id)}deg`);
   node.style.setProperty('--hx', `${fig.head[0]}%`);
   node.style.setProperty('--hy', `${fig.head[1]}%`);
   node.querySelector(':scope > .fig__acc')?.remove();
