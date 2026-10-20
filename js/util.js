@@ -47,6 +47,11 @@ export function cryptoRandom() {
   return buf[0] / 4294967296;
 }
 
+/** Tiefe Kopie für JSON-artige Daten (structuredClone fehlt z. B. in iOS < 15.4). */
+export function deepClone(v) {
+  return typeof structuredClone === 'function' ? structuredClone(v) : JSON.parse(JSON.stringify(v));
+}
+
 export function pick(arr, rnd = Math.random) {
   return arr[Math.floor(rnd() * arr.length)];
 }

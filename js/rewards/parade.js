@@ -2,6 +2,7 @@
 import { el, $ } from '../ui.js';
 import { sparkle, dust, confetti, isReduced } from '../fx.js';
 import { decorateFigure } from '../figure-view.js';
+import { isLite, animationDone } from '../perf.js';
 
 const svgCache = new Map();
 
@@ -28,11 +29,13 @@ const RAINBOW = ['#F87171', '#FBBF24', '#A3E635', '#38BDF8', '#A78BFA', '#F472B6
 /** Startet die Parade. child (optional) bringt Aufwertung und Accessoire mit. Promise wird erfüllt, wenn sie vorbei ist. */
 export async function runParade(fig, child = null) {
   const layer = $('#parade-layer');
+  // Inline-SVG erlaubt Bein-/Flügel-Animationen. Schwache Geräte bekommen das Bild: wird nur einmal gerastert.
   let svgNode;
   try {
+    if (isLite()) throw new Error('lite');
     svgNode = await loadFigureSvg(fig);
   } catch {
-    svgNode = el('img', { src: fig.svg, alt: '' });
+    svgNode = el('img', { class: 'fig__img', src: fig.svg, alt: '' });
   }
   const rare = fig.rarity === 'mythisch' || fig.rarity === 'geheim';
   const legendary = fig.rarity === 'legendaer' || rare;
@@ -48,7 +51,7 @@ export async function runParade(fig, child = null) {
       { opacity: 1, transform: 'translate(-50%, -50%) scale(1)', offset: .75 },
       { opacity: 0, transform: 'translate(-50%, -50%) scale(.95)' },
     ], { duration: 2600, easing: 'ease-in-out', fill: 'forwards' });
-    await a.finished.catch(() => {});
+    await animationDone(a, 3200);
     node.remove();
     return;
   }
@@ -62,7 +65,7 @@ export async function runParade(fig, child = null) {
   for (let p = 0; p < passes; p++) {
     const opts = { legendary, magic, rainbow: fig.rarity === 'geheim', fire: fig.rarity === 'mythisch', child };
     const tasks = [runPass(layer, svgNode.cloneNode(true), fig, size, ltr, { ...opts, echo: false })];
-    if (magic) tasks.push(runPass(layer, svgNode.cloneNode(true), fig, size, ltr, { ...opts, echo: true, delay: 180 }));
+    if (magic && !isLite()) tasks.push(runPass(layer, svgNode.cloneNode(true), fig, size, ltr, { ...opts, echo: true, delay: 180 }));
     await Promise.all(tasks);
     ltr = !ltr;
   }
@@ -125,7 +128,7 @@ async function runPass(layer, svgNode, fig, size, ltr, { legendary, magic, rainb
   let last = 0, k = 0;
   const loop = (ts) => {
     if (!trail) return;
-    if (!echo && ts - last > (legendary || magic ? 45 : 90)) {
+    if (!echo && ts - last > (legendary || magic ? (isLite() ? 90 : 50) : 100)) {
       last = ts;
       const trailColor = rainbow ? RAINBOW[k++ % RAINBOW.length] : fire && k++ % 2 ? '#FFB020' : baseColor;
       const r = inner.getBoundingClientRect();
@@ -138,7 +141,7 @@ async function runPass(layer, svgNode, fig, size, ltr, { legendary, magic, rainb
   };
   requestAnimationFrame(loop);
 
-  await move.finished.catch(() => {});
+  await animationDone(move, duration + 1500);
   trail = false;
   innerAnim.cancel();
   actor.remove();

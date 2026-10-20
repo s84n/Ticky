@@ -50,12 +50,18 @@ function tone(freq, { at = 0, dur = 0.15, type = 'sine', gain = 0.25, slideTo = 
   osc.stop(t0 + dur + 0.05);
 }
 
+const noiseBuffers = new Map(); // Rauschen je Länge nur einmal erzeugen (Rad-Ticks kommen sehr schnell hintereinander)
+
 function noise({ at = 0, dur = 0.03, gain = 0.15, freq = 3000 } = {}) {
   const t0 = ctx.currentTime + at;
   const len = Math.max(1, Math.floor(ctx.sampleRate * dur));
-  const buf = ctx.createBuffer(1, len, ctx.sampleRate);
-  const data = buf.getChannelData(0);
-  for (let i = 0; i < len; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / len);
+  let buf = noiseBuffers.get(len);
+  if (!buf) {
+    buf = ctx.createBuffer(1, len, ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / len);
+    noiseBuffers.set(len, buf);
+  }
   const src = ctx.createBufferSource();
   src.buffer = buf;
   const f = ctx.createBiquadFilter();

@@ -43,8 +43,7 @@
   --wheel-ring-1: #F9A8D4;
   --wheel-ring-2: #C4B5FD;
 }
-.child-card[data-theme="zauber"] { backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
-.child-card[data-theme="zauber"]::before { background-size: 90px 90px, 200% 200%, 200% 200%, 200% 200%; animation: aurora 24s ease-in-out infinite alternate; }
+.child-card[data-theme="zauber"]::before { inset: -30%; animation: aurora 24s ease-in-out infinite alternate; will-change: transform; } /* Aurora per transform: kein Neuzeichnen pro Frame */
 .child-card[data-theme="zauber"] .task { padding-left: clamp(10px, 3.5vw, 16px); padding-right: clamp(8px, 3vw, 12px); }
 .child-card[data-theme="zauber"] .task__label { font-weight: 600; --label-max: 1.22rem; }
 .child-card[data-theme="zauber"] .task.is-done .task__check::before {
@@ -65,8 +64,8 @@
 .magic-star.is-on path { fill: url(#magic-grad); stroke: #F59E0B; filter: drop-shadow(0 0 4px rgba(251, 191, 36, .8)); }
 .magic-star.is-new { animation: neon-star-pop .5s cubic-bezier(.3,1.8,.5,1); }
 .rainbow { position: relative; height: 16px; border-radius: 99px; background: rgba(217, 70, 239, .12); overflow: hidden; box-shadow: inset 0 0 0 1px rgba(217, 70, 239, .2); }
-.rainbow__fill { position: absolute; inset: 0 auto 0 0; width: 0; border-radius: inherit; background: linear-gradient(90deg, #F87171, #FBBF24, #A3E635, #38BDF8, #A78BFA, #F472B6); transition: width .6s cubic-bezier(.2,.8,.2,1); }
-.rainbow__fill::after { content: ''; position: absolute; inset: 0; background: linear-gradient(100deg, transparent 30%, rgba(255,255,255,.75) 50%, transparent 70%); background-size: 220% 100%; animation: shimmer 3.2s linear infinite; }
+.rainbow__fill { overflow: hidden; position: absolute; inset: 0 auto 0 0; width: 0; border-radius: inherit; background: linear-gradient(90deg, #F87171, #FBBF24, #A3E635, #38BDF8, #A78BFA, #F472B6); transition: width .6s cubic-bezier(.2,.8,.2,1); }
+.rainbow__fill::after { content: ''; position: absolute; inset: 0; background: linear-gradient(100deg, transparent 30%, rgba(255,255,255,.75) 50%, transparent 70%); animation: shimmer 3.2s linear infinite; }
 
 /* Abend: tiefes Indigo-Lila, Lavendel-Labels, Sternstaub */
 body.evening [data-theme="zauber"] {
@@ -93,4 +92,4 @@ body.evening [data-theme="zauber"] {
 }
 body.evening .child-card[data-theme="zauber"] .task.is-done .task__label { color: #F5EDFF; }
 
-@keyframes aurora { 0% { background-position: 0 0, 0% 0%, 100% 0%, 50% 100%; } 100% { background-position: 90px 90px, 100% 60%, 0% 80%, 20% 0%; } }
+@keyframes aurora { from { transform: translate(-10%, -8%) rotate(0deg); } to { transform: translate(10%, 8%) rotate(6deg); } }

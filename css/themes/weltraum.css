@@ -47,7 +47,6 @@
   --track-line: rgba(165, 180, 252, .35);
 }
 .child-card[data-theme="weltraum"] .card-name { text-shadow: 0 0 14px rgba(129, 140, 248, .7); }
-.child-card[data-theme="weltraum"] .task { backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
 .child-card[data-theme="weltraum"] .task__label { --label-max: 1.2rem; }
 .child-card[data-theme="weltraum"] .spin-btn { border-radius: 999px; background: linear-gradient(135deg, #FF8A3D, #F43F5E); color: #fff; box-shadow: 0 0 0 2px rgba(255,255,255,.3), 0 8px 26px rgba(244, 63, 94, .45); }
 .praise[data-theme="weltraum"] { box-shadow: 0 0 0 2px rgba(255,255,255,.4), 0 0 20px rgba(34, 211, 238, .6); }

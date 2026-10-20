@@ -64,58 +64,78 @@ function giftLine(accId) {
 
 /** Stellt ein Glücksrad für ein Kind in die Warteschlange (immer nur ein Rad gleichzeitig). */
 export function requestSpin(childId) {
-  if (queue.includes(childId) || current === childId) return;
+  if (current === childId) {
+    if (document.querySelector('.wheel-overlay')) return; // Rad ist schon offen
+    abortCurrent?.(); // Ablauf hängt ohne sichtbares Rad: freigeben, damit es neu öffnet
+  }
+  if (queue.includes(childId)) return;
   queue.push(childId);
   processQueue();
 }
 
 let current = null;
+let abortCurrent = null;
 
 async function processQueue() {
   if (busy) return;
   busy = true;
-  while (queue.length) {
-    const id = queue.shift();
-    const routine = hooks.getRoutine();
-    const child = state.children.find(c => c.id === id);
-    if (!child || !routine || spinStatus(state, routine, id) !== 'pending') continue;
-    current = id;
-    await spinFlow(child, routine);
-    current = null;
+  try {
+    while (queue.length) {
+      const id = queue.shift();
+      const routine = hooks.getRoutine();
+      const child = state.children.find(c => c.id === id);
+      if (!child || !routine || spinStatus(state, routine, id) !== 'pending') continue;
+      current = id;
+      // Ein Fehler im Ablauf darf die Warteschlange nie dauerhaft blockieren (sonst öffnet der Knopf kein Rad mehr).
+      try { await spinFlow(child, routine); }
+      catch (e) { console.error('Glücksrad-Ablauf fehlgeschlagen', e); }
+      finally { current = null; abortCurrent = null; }
+    }
+  } finally {
+    busy = false;
   }
-  busy = false;
   maybeCelebrateAll();
 }
 
 function spinFlow(child, routine) {
-  return new Promise(resolve => {
-    openWheel(child, {
-      settings: state.settings,
-      commit(result) {
-        // Ergebnis sofort speichern: Neustart während der Animation ergibt kein zweites Rad.
-        const c = state.children.find(x => x.id === child.id);
-        if (!c) return null;
-        const hadTarget = !!focusOf(c);
-        let gain;
-        if (result.kind === 'upgrade') {
-          gain = { isNew: false, upgrade: applyUpgrade(c, result.fig), gift: null };
-        } else {
-          gain = addFigure(c, result.fig);
-          c.sinceLegendary = isEpic(result.fig.rarity) ? 0 : (c.sinceLegendary ?? 0) + 1;
-        }
-        trackSpin(c, !!gain.upgrade, hadTarget);
-        state.spins[spinKey(localDate(), routine, c.id)] = 'done';
-        save();
-        return gain;
-      },
-      async onFinish(result) {
-        hooks.refreshChild(child.id);
-        if (result) await runParade(result.fig, state.children.find(x => x.id === child.id));
-        await showLevelUp(child.id);
-        resolve();
-      },
-      async onCancel() { await showLevelUp(child.id); resolve(); },
-    });
+  return new Promise((resolve, reject) => {
+    let settled = false;
+    const finish = () => { if (!settled) { settled = true; resolve(); } };
+    abortCurrent = finish;
+    const after = async (work) => {
+      try { await work(); } catch (e) { console.error(e); } finally { finish(); }
+    };
+    try {
+      openWheel(child, {
+        settings: state.settings,
+        commit(result) {
+          // Ergebnis sofort speichern: Neustart während der Animation ergibt kein zweites Rad.
+          const c = state.children.find(x => x.id === child.id);
+          if (!c) return null;
+          const hadTarget = !!focusOf(c);
+          let gain;
+          if (result.kind === 'upgrade') {
+            gain = { isNew: false, upgrade: applyUpgrade(c, result.fig), gift: null };
+          } else {
+            gain = addFigure(c, result.fig);
+            c.sinceLegendary = isEpic(result.fig.rarity) ? 0 : (c.sinceLegendary ?? 0) + 1;
+          }
+          trackSpin(c, !!gain.upgrade, hadTarget);
+          state.spins[spinKey(localDate(), routine, c.id)] = 'done';
+          save();
+          return gain;
+        },
+        onFinish: result => after(async () => {
+          hooks.refreshChild(child.id);
+          if (result) await runParade(result.fig, state.children.find(x => x.id === child.id));
+          await showLevelUp(child.id);
+        }),
+        onCancel: () => after(() => showLevelUp(child.id)),
+      });
+    } catch (e) {
+      settled = true;
+      reject(e);
+    }
   });
 }
 

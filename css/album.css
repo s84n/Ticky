@@ -4,7 +4,7 @@
 .world-overlay { padding: 0; place-items: stretch; background: #0B0E25; backdrop-filter: none; -webkit-backdrop-filter: none; }
 .world {
   position: relative; display: flex; flex-direction: column;
-  width: 100%; height: 100dvh; overflow: hidden;
+  width: 100%; height: calc(100 * var(--vh)); overflow: hidden;
   color: #fff; font-family: var(--font-head, var(--font-ui));
   animation: fade-in .25s ease-out;
 }
@@ -112,7 +112,7 @@
 .album__body > * { width: 100%; max-width: 760px; justify-self: center; }
 .album__stats { display: flex; flex-wrap: wrap; gap: 8px; }
 .album__chip { padding: 5px 12px; border-radius: 99px; background: rgba(0, 0, 0, .45); font-family: var(--font-ui); font-size: .85rem; font-weight: 800; }
-.album__sec { display: grid; gap: 8px; padding: 12px 14px; border-radius: 18px; background: rgba(10, 12, 30, .68); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+.album__sec { display: grid; gap: 8px; padding: 12px 14px; border-radius: 18px; background: rgba(10, 12, 30, .78); }
 .album__sec h3 { margin: 0; font-size: 1.15rem; }
 .album__hint { margin: 0; font-family: var(--font-ui); font-size: .88rem; opacity: .85; }
 .album-team { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
@@ -132,20 +132,25 @@
 
 /* ---------- Team auf der Kinder-Card ---------- */
 .card-meadow {
-  position: relative; flex: none; height: clamp(46px, 9dvh, 86px); margin: 0 calc(-1 * clamp(4px, 1dvh, 10px));
+  position: relative; flex: none; height: clamp(46px, calc(9 * var(--vh)), 86px); contain: layout style; margin: 0 calc(-1 * clamp(4px, calc(1 * var(--vh)), 10px));
   border-radius: var(--tile-radius, 14px);
   background: linear-gradient(180deg, transparent 58%, var(--count-bg, rgba(0, 0, 0, .12)) 58%);
 }
 .herd-actor {
-  --actor: min(100%, clamp(40px, 8dvh, 76px));
+  --actor: min(100%, clamp(40px, calc(8 * var(--vh)), 76px));
   position: absolute; bottom: 4%; width: auto; height: var(--actor); aspect-ratio: 1; padding: 0; border: 0; background: none; color: inherit;
-  transform: translateX(-50%); transition-property: left; transition-timing-function: ease-in-out;
+  /* Laufen per transform (Compositor). --x: Position in % der Wiesenbreite, setzt herd.js */
+  left: calc(var(--x, 50) * 1%); transform: translateX(-50%); transition-property: left; transition-timing-function: ease-in-out;
   -webkit-tap-highlight-color: transparent;
 }
-.herd-actor.is-big { --actor: min(118%, clamp(50px, 10dvh, 96px)); }
-.herd-actor:has(.fig[data-motion="fly"]) { bottom: 18%; }
-.herd-actor::before { content: ''; position: absolute; left: 22%; right: 22%; bottom: -2px; height: 6px; border-radius: 50%; background: rgba(0, 0, 0, .22); filter: blur(1.5px); }
-.herd-actor:has(.fig[data-motion="fly"])::before { opacity: 0; }
+.herd-actor.is-big { --actor: min(118%, clamp(50px, calc(10 * var(--vh)), 96px)); }
+@supports (width: 1cqw) {
+  .card-meadow { container-type: inline-size; }
+  .herd-actor { left: 0; transform: translateX(calc(var(--x, 50) * 1cqw - 50%)); transition-property: transform; }
+}
+.herd-actor.is-fly { bottom: 18%; }
+.herd-actor::before { content: ''; position: absolute; left: 18%; right: 18%; bottom: -3px; height: 8px; border-radius: 50%; background: radial-gradient(closest-side, rgba(0, 0, 0, .26), transparent); }
+.herd-actor.is-fly::before { opacity: 0; }
 .herd-actor .fig { height: 100%; width: auto; }
 .herd-actor .fig__img { transition: transform .25s; }
 .herd-actor.is-left .fig__img { transform: scaleX(-1); }
@@ -163,7 +168,7 @@
 .herd-actor.is-leader { z-index: 3; }
 .herd-actor .world-bubble { font-size: .8rem; }
 .herd-heart { position: absolute; bottom: 70%; font-family: var(--emoji); font-size: .9rem; pointer-events: none; animation: heart-up 1.3s ease-out forwards; }
-.meadow__empty { position: absolute; inset: 0; border: 0; background: none; color: inherit; font-family: var(--font-ui); font-size: clamp(.72rem, 1.8dvh, .9rem); font-weight: 800; opacity: .8; padding: 0 8px; }
+.meadow__empty { position: absolute; inset: 0; border: 0; background: none; color: inherit; font-family: var(--font-ui); font-size: clamp(.72rem, calc(1.8 * var(--vh)), .9rem); font-weight: 800; opacity: .8; padding: 0 8px; }
 .meadow__focus {
   position: absolute; right: 4px; top: 2px; z-index: 1; display: inline-flex; align-items: center; gap: 3px;
   padding: 1px 7px 1px 3px; border: 1.5px solid rgba(251, 191, 36, .8); border-radius: 99px;

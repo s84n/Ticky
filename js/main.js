@@ -13,6 +13,7 @@ import * as fx from './fx.js';
 import { unlockAudio, setSoundEnabledGetter, tapSound, untapSound, introJingle } from './audio.js';
 import { speak, setSpeechEnabledGetter } from './speech.js';
 import { initPwa, showInstallHint } from './pwa.js';
+import { isLite, onLiteChange } from './perf.js';
 
 let current = null;       // { routine, manual } | null
 let renderedKey = '';
@@ -29,6 +30,12 @@ function applySettings() {
   document.body.classList.toggle('reduce-motion', reducedMotion());
 }
 
+// Ältere Browser (z. B. iOS < 15.4, Chrome < 108) kennen dvh nicht: dann misst JS die echte Fensterhöhe.
+const hasDvh = window.CSS?.supports?.('height', '1dvh') ?? false;
+function updateViewportUnit() {
+  if (!hasDvh) document.documentElement.style.setProperty('--vh', `${window.innerHeight / 100}px`);
+}
+
 function showScreen(name) {
   for (const id of ['onboarding', 'main', 'rest']) $(`#screen-${id}`).hidden = id !== name;
 }
@@ -38,7 +45,7 @@ function showScreen(name) {
 function renderSky(on) {
   const sky = clear($('#sky'));
   if (!on || reducedMotion()) return;
-  const n = window.matchMedia('(max-width: 699.98px)').matches ? 18 : 35;
+  const n = Math.round((window.matchMedia('(max-width: 699.98px)').matches ? 18 : 35) * (isLite() ? 0.5 : 1));
   for (let i = 0; i < n; i++) {
     const s = el('span', { class: 'star', style: { left: `${Math.random() * 100}%`, top: `${Math.random() * 70}%`, '--d': `${2 + Math.random() * 3}s`, '--delay': `${-Math.random() * 4}s` } });
     if (Math.random() < 0.25) { s.style.width = '4px'; s.style.height = '4px'; }
@@ -54,11 +61,11 @@ function renderAmbient() {
   if (mobile) {
     const active = state.children.find(c => c.id === state.ui.activeChildId) ?? state.children[0];
     const list = THEMES[active?.theme ?? 'pixel'].ambient;
-    for (let i = 0; i < 14; i++) emojis.push(list[i % list.length]);
+    for (let i = 0; i < (isLite() ? 7 : 14); i++) emojis.push(list[i % list.length]);
   } else {
     for (const theme of new Set(state.children.map(c => c.theme))) {
       const list = THEMES[theme].ambient;
-      for (let i = 0; i < 5; i++) emojis.push(pick(list));
+      for (let i = 0; i < (isLite() ? 3 : 5); i++) emojis.push(pick(list));
     }
   }
   emojis.forEach((e, i) => {
@@ -134,12 +141,12 @@ const handlers = {
     const intro = playIntroOnce();
     const res = toggleTask(state, current.routine, childId, taskId);
     if (!res) return;
+    const r = btn.getBoundingClientRect(); // vor dem DOM-Update lesen: kein erzwungenes Layout
     save();
     updateChild(state, childId);
     const child = state.children.find(c => c.id === childId);
     vibrate(30, state.settings);
     if (res.checked) {
-      const r = btn.getBoundingClientRect();
       fx.burstAt(r.right - 40, r.top + r.height / 2, child.theme, 14);
       const phrases = Math.random() < 0.65 ? THEMES[child.theme].praise : GENERIC_PRAISE;
       fx.praiseAt(pick(phrases), r.left + r.width / 2, r.top, child.theme);
@@ -274,10 +281,17 @@ function wireStatic() {
   window.addEventListener('appinstalled', () => requestPersistence());
   motionQuery.addEventListener?.('change', () => { applySettings(); tick(true); });
   let resizeTimer = null;
-  window.addEventListener('resize', () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(() => { if (current) renderAmbient(); }, 300); layoutGrid(); });
+  onLiteChange(() => { if (current) { renderAmbient(); renderSky(document.body.classList.contains('evening')); } });
+  window.addEventListener('resize', () => {
+    updateViewportUnit();
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => { if (current) renderAmbient(); }, 300);
+    layoutGrid();
+  });
 }
 
 async function boot() {
+  updateViewportUnit();
   await load();
   if (state.setupDone) requestPersistence(); // bei jedem Start: Chrome sagt oft erst nach der Installation Ja
   setSoundEnabledGetter(() => state.settings.sound);

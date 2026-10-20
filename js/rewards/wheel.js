@@ -7,9 +7,17 @@ import { cryptoRandom } from '../util.js';
 import { tickSound, whooshSound, revealSound } from '../audio.js';
 import { fireworks, confetti, shake, burstAt, flash, isReduced } from '../fx.js';
 import { figureView } from '../figure-view.js';
+import { animationDone, bezier } from '../perf.js';
 import { focusOf, upgradeGuaranteed, UPGRADE_CHANCE, EVO_STEPS, nextStep, pathOf, stageOf, accessoryById } from '../data/progression.js';
 
 const ACCESSORY_LABEL = id => { const a = accessoryById(id); return a ? `${a.icon} ${a.label}` : 'Ein Accessoire'; };
+
+const SPIN_EASE = bezier(0.12, 0.67, 0.1, 1);
+const POINTER_TICK = [
+  { transform: 'translateX(-50%) rotate(0deg)' },
+  { transform: 'translateX(-50%) rotate(-14deg)', offset: 0.5 },
+  { transform: 'translateX(-50%) rotate(0deg)' },
+];
 
 const R = 100; // Radius im SVG-Koordinatensystem (viewBox -100..100)
 
@@ -183,6 +191,11 @@ export function openWheel(child, { commit, onFinish, onCancel, settings }) {
 
   function spin() {
     if (spun) return;
+    try { runSpin(); }
+    catch (e) { console.error('Glücksrad', e); finished = true; close(); onFinish(result); }
+  }
+
+  function runSpin() {
     spun = true;
     spinBtn.disabled = true;
     setDismissible(false);
@@ -193,36 +206,46 @@ export function openWheel(child, { commit, onFinish, onCancel, settings }) {
     // 2) Animation zum Zielsegment
     const turns = 5 + Math.floor(cryptoRandom() * 3);
     const target = targetRotation(rotation, segs[idx], turns, cryptoRandom());
-    rotation = target;
     whooshSound();
-    rotor.classList.add('is-spinning');
-    requestAnimationFrame(() => { rotor.style.transform = `rotate(${target}deg)`; });
-    let lastSeg = segmentAt(0, segs);
+    const from = rotation;
+    rotation = target;
+    const dur = isReduced() ? 1200 : 4600;
+    // Drehung als Web-Animation: läuft auf dem Compositor und bleibt flüssig, auch wenn der Hauptthread zu tun hat.
+    const anim = rotor.animate?.([{ transform: `rotate(${from}deg)` }, { transform: `rotate(${target}deg)` }],
+      { duration: dur, easing: 'cubic-bezier(.12,.67,.1,1)', fill: 'forwards' });
+    if (anim) rotor.style.transform = `rotate(${target}deg)`;
+    else {
+      rotor.classList.add('is-spinning');
+      requestAnimationFrame(() => { rotor.style.transform = `rotate(${target}deg)`; });
+    }
+    // Ticks: Winkel aus derselben Kurve berechnen statt jeden Frame den Stil auszulesen.
+    const t0 = performance.now();
+    let lastSeg = segmentAt(from, segs);
     let running = true;
-    const watch = () => {
+    const watch = now => {
       if (!running) return;
-      const m = getComputedStyle(rotor).transform;
-      if (m && m !== 'none') {
-        const [a, b] = m.slice(m.indexOf('(') + 1, -1).split(',').map(Number);
-        const deg = (Math.atan2(b, a) * 180) / Math.PI;
-        const s = segmentAt(deg, segs);
-        if (s !== lastSeg) {
-          lastSeg = s;
-          tickSound();
-          vibrate(10, settings);
-          pointer.classList.remove('tick'); void pointer.getBoundingClientRect(); pointer.classList.add('tick');
-        }
+      const p = Math.min(1, Math.max(0, (now - t0) / dur));
+      const s = segmentAt(from + (target - from) * SPIN_EASE(p), segs);
+      if (s !== lastSeg) {
+        lastSeg = s;
+        tickSound();
+        vibrate(10, settings);
+        pointer.animate?.(POINTER_TICK, { duration: 120, easing: 'ease-out' });
       }
-      requestAnimationFrame(watch);
+      if (p < 1) requestAnimationFrame(watch);
     };
     requestAnimationFrame(watch);
     const done = () => {
       if (!running) return;
       running = false;
-      setTimeout(reveal, 450);
+      setTimeout(() => {
+        try { reveal(); }
+        catch (e) { console.error('Glücksrad-Reveal', e); finished = true; close(); onFinish(result); }
+      }, 450);
     };
-    rotor.addEventListener('transitionend', done, { once: true });
-    setTimeout(done, isReduced() ? 1600 : 5600); // Fallback
+    if (anim) animationDone(anim, dur + 600).then(done);
+    else rotor.addEventListener('transitionend', done, { once: true });
+    setTimeout(done, dur + 1200); // Fallback, falls kein Ende-Ereignis kommt (z. B. Tab im Hintergrund)
   }
 
   function reveal() {

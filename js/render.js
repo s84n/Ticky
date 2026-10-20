@@ -20,29 +20,58 @@ export function taskInfo(id, state) {
 }
 
 const cards = new Map();
+const TILE_POP = [{ transform: 'scale(1)' }, { transform: 'scale(1.04)', offset: 0.4 }, { transform: 'scale(1)' }];
 
 // ---------- Aufgabenliste an die verfügbare Höhe anpassen ----------
 
 const MIN_ROW = 48;   // darunter lieber eine weitere Spalte
 const MAX_ROW = 76;
 const MIN_COL = 130;  // Mindestbreite einer Aufgaben-Spalte
+const CRAMPED_ROW = 34; // darunter muss die Wiese weichen
 
-/** Wählt 1–3 Spalten, sodass Zeilen möglichst ≥ MIN_ROW hoch sind und nichts scrollt. */
+/**
+ * Wählt 1–3 Spalten, sodass Zeilen möglichst ≥ MIN_ROW hoch sind und nichts scrollt.
+ * Die Zeilenhöhe (--rh) und Spaltenbreite (--cw) landen als Pixel-Variablen an der Liste; daraus skalieren
+ * Icon, Text und Haken. Das ersetzt Container-Query-Einheiten und funktioniert so auch in älteren Browsern.
+ * Wird es extrem eng, weicht zuerst die Wiese mit dem Team (Klasse is-cramped an der Card).
+ */
 function fitList(list) {
   const n = Number(list.dataset.n) || 0;
   const H = list.clientHeight, W = list.clientWidth;
   if (!n || !H || !W) return;
-  const gap = parseFloat(getComputedStyle(list).rowGap) || 0;
-  const rowH = cols => { const rows = Math.ceil(n / cols); return (H - gap * (rows - 1)) / rows; };
+  const cs = getComputedStyle(list);
+  const gap = parseFloat(cs.rowGap) || 0;
+  const rowH = (cols, h = H) => { const rows = Math.ceil(n / cols); return Math.min(MAX_ROW, (h - gap * (rows - 1)) / rows); };
   let best = 1;
   for (let c = 1; c <= 3; c++) {
     if (c > 1 && (W - gap * (c - 1)) / c < MIN_COL) break;
     best = c;
     if (rowH(c) >= MIN_ROW) break;
   }
+  const card = list.closest('.child-card');
+  if (card) {
+    const cramped = card.classList.contains('is-cramped');
+    const meadowH = cramped ? 0 : card.querySelector('.card-meadow')?.offsetHeight ?? 0;
+    if (!cramped && meadowH > 0 && rowH(best) < CRAMPED_ROW) {
+      card.dataset.freed = String(meadowH + (parseFloat(getComputedStyle(card).rowGap) || 0));
+      card.classList.add('is-cramped');
+      return; // der ResizeObserver meldet gleich die neue, größere Höhe
+    }
+    // Wiese erst zurückholen, wenn die Zeilen danach immer noch deutlich größer wären (keine Schaukel-Effekte)
+    if (cramped && rowH(best, H - Number(card.dataset.freed || 0)) >= CRAMPED_ROW + 8) {
+      card.classList.remove('is-cramped');
+      return;
+    }
+  }
+  const multi = best > 1;
+  list.classList.toggle('is-multi', multi);
+  const colGap = multi ? parseFloat(getComputedStyle(list).columnGap) || 0 : 0;
+  const rh = Math.max(0, rowH(best));
   list.style.setProperty('--tcols', best);
   list.style.setProperty('--n', Math.ceil(n / best));
-  list.classList.toggle('is-multi', best > 1);
+  list.style.setProperty('--rh', `${rh.toFixed(1)}px`);
+  list.style.setProperty('--cw', `${((W - colGap * (best - 1)) / best).toFixed(1)}px`);
+  list.classList.toggle('is-tight', rh <= 40);
 }
 
 const listObserver = typeof ResizeObserver === 'function'
@@ -231,7 +260,7 @@ export function updateChild(state, childId, animate = true) {
     const was = btn.classList.contains('is-done');
     btn.classList.toggle('is-done', on);
     btn.setAttribute('aria-checked', on ? 'true' : 'false');
-    if (on && !was && animate) { btn.classList.remove('just-done'); void btn.offsetWidth; btn.classList.add('just-done'); }
+    if (on && !was && animate) btn.animate?.(TILE_POP, { duration: 450, easing: 'cubic-bezier(.3,1.5,.5,1)' });
   }
   const stats = childStats(state, routine, child);
   c.progress.update(stats.done, animate);
@@ -304,6 +333,7 @@ export function layoutGrid() {
   const cols = isSingleCard() ? 1 : Math.max(1, Math.min(n, Math.floor(width / 240)));
   grid.style.setProperty('--cols', cols);
   grid.style.setProperty('--rows', Math.ceil(n / cols));
+  if (!listObserver) grid.querySelectorAll('.task-list').forEach(fitList);
 }
 
 export function setActiveChild(childId) {

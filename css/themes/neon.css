@@ -40,7 +40,6 @@
   --wheel-ring-1: #FF3B3B;
   --wheel-ring-2: #00B2FF;
 }
-.child-card[data-theme="neon"] .task { backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
 .child-card[data-theme="neon"] .card-name { letter-spacing: .01em; text-shadow: 0 0 14px rgba(0, 178, 255, .55); }
 .child-card[data-theme="neon"] .task__label { font-weight: 800; --label-max: 1.22rem; }
 .child-card[data-theme="neon"] .spin-btn { background: linear-gradient(135deg, #FFCC00, #FF3B3B); color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,.4); box-shadow: 0 0 0 2px #FFCC00, 0 0 24px rgba(255, 204, 0, .6); }
@@ -54,8 +53,8 @@
 .neon-star.is-on path { fill: #FFCC00; stroke: #FFE680; filter: drop-shadow(0 0 4px rgba(255, 204, 0, .9)); }
 .neon-star.is-new { animation: neon-star-pop .5s cubic-bezier(.3,1.8,.5,1); }
 .level { position: relative; height: 14px; border-radius: 99px; background: rgba(255, 255, 255, .08); overflow: hidden; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .12); }
-.level__fill { position: absolute; inset: 0 auto 0 0; width: 0; border-radius: inherit; background: linear-gradient(90deg, #FF3B3B, #FFCC00, #00B2FF); transition: width .5s cubic-bezier(.2,.8,.2,1); box-shadow: 0 0 12px rgba(0, 178, 255, .7); }
-.level__fill::after { content: ''; position: absolute; inset: 0; background: linear-gradient(100deg, transparent 30%, rgba(255,255,255,.6) 50%, transparent 70%); background-size: 200% 100%; animation: shimmer 2.4s linear infinite; }
+.level__fill { overflow: hidden; position: absolute; inset: 0 auto 0 0; width: 0; border-radius: inherit; background: linear-gradient(90deg, #FF3B3B, #FFCC00, #00B2FF); transition: width .5s cubic-bezier(.2,.8,.2,1); box-shadow: 0 0 12px rgba(0, 178, 255, .7); }
+.level__fill::after { content: ''; position: absolute; inset: 0; background: linear-gradient(100deg, transparent 30%, rgba(255,255,255,.6) 50%, transparent 70%); animation: shimmer 2.4s linear infinite; }
 .level__label { font-family: 'Baloo 2', sans-serif; font-size: .95rem; text-align: center; color: #9FE3FF; }
 
 /* Abend: gedämpftere Neons, Blau-Violett */
@@ -72,7 +71,6 @@ body.evening [data-theme="neon"] {
   --tab-bg: #0E0B22;
   --tab-accent: #8C7CFF;
 }
-body.evening .child-card[data-theme="neon"] { filter: saturate(.8); }
 
-@keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+@keyframes shimmer { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
 @keyframes neon-star-pop { 0% { transform: scale(.4); } 60% { transform: scale(1.35); } 100% { transform: scale(1); } }

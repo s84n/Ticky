@@ -44,7 +44,7 @@ export function mountHerd(meadow, child, { onOpen } = {}) {
         trick: hasStep(child, fig, 'trick'),
       };
       a.node = el('button', {
-        type: 'button', class: `herd-actor${hasStep(child, fig, 'groesse') ? ' is-big' : ''}${i === 0 ? ' is-leader' : ''}`,
+        type: 'button', class: `herd-actor${hasStep(child, fig, 'groesse') ? ' is-big' : ''}${i === 0 ? ' is-leader' : ''}${fig.motion === 'fly' ? ' is-fly' : ''}`,
         'aria-label': fig.name, onclick: () => greet(a),
       }, figureView(fig, child, { alt: '' }));
       setPos(a, 0);
@@ -65,9 +65,10 @@ export function mountHerd(meadow, child, { onOpen } = {}) {
     }
   }
 
+  /** Position als CSS-Variable: base.css schiebt die Figur per transform (Compositor, kein Layout pro Frame). */
   function setPos(a, dur) {
     a.node.style.transitionDuration = `${dur}s`;
-    a.node.style.left = `${a.x}%`;
+    a.node.style.setProperty('--x', a.x);
   }
 
   /** Läuft zu x (%), danach cb. */
@@ -93,9 +94,11 @@ export function mountHerd(meadow, child, { onOpen } = {}) {
   function play(a, cls, ms) {
     const inner = a.node.querySelector('.fig');
     inner.classList.remove('is-happy', 'is-salto', 'is-trick');
-    void inner.offsetWidth;
-    inner.classList.add(cls);
-    setTimeout(() => inner.classList.remove(cls), ms);
+    // Neustart der Animation im nächsten Frame statt per erzwungenem Reflow
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      inner.classList.add(cls);
+      setTimeout(() => inner.classList.remove(cls), ms);
+    }));
     if (cls === 'is-trick') hearts(a);
   }
 

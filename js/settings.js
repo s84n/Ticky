@@ -5,7 +5,7 @@ import { THEMES } from './data/themes.js';
 import { ROUTINES, ROUTINE_META } from './data/task-catalog.js';
 import { validateTimes } from './routine.js';
 import { basicsEditor, tasksEditor, newChildDraft, customTaskForm } from './child-editor.js';
-import { localDate, cryptoRandom } from './util.js';
+import { localDate, cryptoRandom, deepClone } from './util.js';
 import { wrongSound, popSound } from './audio.js';
 import { toast } from './fx.js';
 import { VERSION, REPO_URL } from './config.js';
@@ -125,8 +125,8 @@ export function openSettings(hooks) {
 
   function editChild(child) {
     const isNew = !child;
-    const draft = isNew ? newChildDraft(state.children.length) : structuredClone(child);
-    const customTasks = structuredClone(state.customTasks);
+    const draft = isNew ? newChildDraft(state.children.length) : deepClone(child);
+    const customTasks = deepClone(state.customTasks);
     const others = () => state.children.filter(c => c.id !== draft.id);
     const basics = basicsEditor(draft, { allNames: () => others().map(c => c.name) });
     const tasks = tasksEditor(draft, { customTasks, siblings: () => others() });
@@ -193,7 +193,7 @@ export function openSettings(hooks) {
   function timesSection() {
     const sec = el('section', { class: 'settings-section' }, el('h3', {}, '⏰ Routinezeiten'));
     const err = el('div', { class: 'field__error', 'aria-live': 'polite' });
-    const draft = structuredClone(state.settings.routines);
+    const draft = deepClone(state.settings.routines);
     const grid = el('div', { class: 'time-grid' }, el('span'), el('span', { class: 'field__label' }, 'Start'), el('span', { class: 'field__label' }, 'Ende'));
     for (const r of ROUTINES) {
       grid.append(el('span', {}, `${ROUTINE_META[r].emoji} ${ROUTINE_META[r].label}`));
@@ -203,7 +203,7 @@ export function openSettings(hooks) {
           draft[r][k] = inp.value;
           const errors = validateTimes(draft);
           err.textContent = errors.join(' ');
-          if (!errors.length) { state.settings.routines = structuredClone(draft); save(); hooks.onChange?.(); toast('Zeiten gespeichert.'); }
+          if (!errors.length) { state.settings.routines = deepClone(draft); save(); hooks.onChange?.(); toast('Zeiten gespeichert.'); }
         });
         grid.append(inp);
       }
