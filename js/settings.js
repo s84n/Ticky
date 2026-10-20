@@ -273,7 +273,7 @@ export function openSettings(hooks) {
           saveNow();
           const blob = new Blob([exportBackup()], { type: 'application/json' });
           const url = URL.createObjectURL(blob);
-          const a = el('a', { href: url, download: `routinen-backup-${localDate()}.json` });
+          const a = el('a', { href: url, download: `ticky-backup-${localDate()}.json` });
           document.body.append(a);
           a.click();
           a.remove();
