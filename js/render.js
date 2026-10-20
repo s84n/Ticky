@@ -26,7 +26,7 @@ const TILE_POP = [{ transform: 'scale(1)' }, { transform: 'scale(1.04)', offset:
 // ---------- Aufgabenliste an die verfügbare Höhe anpassen ----------
 
 const MIN_ROW = 48;   // darunter lieber eine weitere Spalte
-const MAX_ROW = 76;
+const MAX_ROW = 76;    // ab hier wachsen Icon und Text nicht weiter, die Zeile selbst füllt trotzdem die Höhe
 const MIN_COL = 130;  // Mindestbreite einer Aufgaben-Spalte
 const CRAMPED_ROW = 34; // darunter muss die Wiese weichen
 
@@ -42,7 +42,7 @@ function fitList(list) {
   if (!n || !H || !W) return;
   const cs = getComputedStyle(list);
   const gap = parseFloat(cs.rowGap) || 0;
-  const rowH = (cols, h = H) => { const rows = Math.ceil(n / cols); return Math.min(MAX_ROW, (h - gap * (rows - 1)) / rows); };
+  const rowH = (cols, h = H) => { const rows = Math.ceil(n / cols); return (h - gap * (rows - 1)) / rows; };
   let best = 1;
   for (let c = 1; c <= 3; c++) {
     if (c > 1 && (W - gap * (c - 1)) / c < MIN_COL) break;
@@ -70,7 +70,7 @@ function fitList(list) {
   const rh = Math.max(0, rowH(best));
   list.style.setProperty('--tcols', best);
   list.style.setProperty('--n', Math.ceil(n / best));
-  list.style.setProperty('--rh', `${rh.toFixed(1)}px`);
+  list.style.setProperty('--rh', `${Math.min(MAX_ROW, rh).toFixed(1)}px`); // Skalierung von Icon/Text, nicht die Zeilenhöhe
   list.style.setProperty('--cw', `${((W - colGap * (best - 1)) / best).toFixed(1)}px`);
   list.classList.toggle('is-tight', rh <= 40);
 }
