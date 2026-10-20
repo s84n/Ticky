@@ -8,6 +8,7 @@ import { figureById } from './data/figures.js';
 import { levelInfo, levelTitle, focusOf, nextStep, EVO_STEPS } from './data/progression.js';
 import { figureView } from './figure-view.js';
 import { mountHerd } from './herd.js';
+import { wheelComing } from './celebrate.js';
 
 /** Icon + Label einer Aufgabe (Katalog oder eigene). */
 export function taskInfo(id, state) {
@@ -299,7 +300,7 @@ export function updateChild(state, childId, animate = true) {
 
   clear(c.footer);
   const spin = spinStatus(state, routine, childId);
-  if (stats.complete && spin === 'pending') {
+  if (stats.complete && spin === 'pending' && !wheelComing(childId)) {
     c.footer.append(el('button', { type: 'button', class: 'spin-btn', onclick: c.onSpin }, '🎡 Glücksrad drehen!'));
   } else if (stats.complete) {
     c.footer.append(el('p', { class: 'card-done-note' }, `Alles geschafft! 🎉`));

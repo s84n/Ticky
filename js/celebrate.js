@@ -15,6 +15,7 @@ let hooks = { getRoutine: () => null, refreshChild: () => {} };
 const queue = [];
 let busy = false;
 const celebratedAll = new Set();
+const incoming = new Set(); // Kinder, deren Rad gleich automatisch öffnet
 const pendingLevelUps = new Map(); // childId → reward (Level-Aufstieg wird nach Rad und Parade gefeiert)
 
 export function initCelebrate(h) { hooks = { ...hooks, ...h }; }
@@ -30,7 +31,12 @@ export function childCompleted(child, routine, reward = null) {
   setTimeout(() => shower(child.theme, 80), 650);
   banner(`🏆 ${child.name} ist fertig! 🏆`, child.theme);
   completeSound(child.theme);
-  if (spinStatus(state, routine, child.id) === 'pending') setTimeout(() => requestSpin(child.id), 1500);
+  if (spinStatus(state, routine, child.id) === 'pending') {
+    // Das Rad öffnet gleich von selbst: so lange keinen „Glücksrad drehen“-Knopf zeigen, der nicht mehr klickbar wäre
+    incoming.add(child.id);
+    hooks.refreshChild(child.id);
+    setTimeout(() => { incoming.delete(child.id); requestSpin(child.id); }, 1500);
+  }
   else setTimeout(async () => { await showLevelUp(child.id); maybeCelebrateAll(); }, 1500);
 }
 
@@ -71,6 +77,7 @@ export function requestSpin(childId) {
   }
   if (queue.includes(childId)) return;
   queue.push(childId);
+  hooks.refreshChild(childId); // Knopf weg, solange das Rad wartet oder offen ist
   processQueue();
 }
 
@@ -90,7 +97,7 @@ async function processQueue() {
       // Ein Fehler im Ablauf darf die Warteschlange nie dauerhaft blockieren (sonst öffnet der Knopf kein Rad mehr).
       try { await spinFlow(child, routine); }
       catch (e) { console.error('Glücksrad-Ablauf fehlgeschlagen', e); }
-      finally { current = null; abortCurrent = null; }
+      finally { current = null; abortCurrent = null; hooks.refreshChild(id); }
     }
   } finally {
     busy = false;
@@ -141,6 +148,11 @@ function spinFlow(child, routine) {
 }
 
 export function isBusy() { return busy; }
+
+/** true, solange das Rad dieses Kindes gleich öffnet, wartet oder offen ist (dann braucht es keinen Knopf). */
+export function wheelComing(childId) {
+  return incoming.has(childId) || queue.includes(childId) || current === childId;
+}
 
 function maybeCelebrateAll() {
   const routine = hooks.getRoutine();
