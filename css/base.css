@@ -160,6 +160,28 @@ h1, h2, h3, p { margin: 0; }
 .global-progress__bar { flex: 1; height: 10px; border-radius: 99px; background: var(--line); overflow: hidden; }
 .global-progress__fill { display: block; height: 100%; width: 0; border-radius: inherit; background: linear-gradient(90deg, #22C55E, #FACC15, #F97316, #EC4899, #8B5CF6); background-size: 300% 100%; transition: width .5s cubic-bezier(.2,.8,.2,1); }
 .global-progress__count { font-size: .9rem; color: var(--text-soft); font-variant-numeric: tabular-nums; }
+/* Zeitleiste: --p = verstrichener Anteil, --goal = Position der Blitz-Zeit (beides 0–1, setzt render.js) */
+.time-left { display: flex; align-items: center; gap: 10px; }
+.time-left__track { position: relative; flex: 1; height: 6px; border-radius: 99px; background: var(--line); }
+.time-left__fill {
+  position: absolute; inset: 0; border-radius: inherit; transform-origin: right center;
+  background: linear-gradient(90deg, #38BDF8, #22C55E); transform: scaleX(calc(1 - var(--p, 0)));
+  transition: transform 1s linear, background .6s;
+}
+.time-left.is-low .time-left__fill { background: linear-gradient(90deg, #F97316, #FACC15); }
+.time-left__sun, .time-left__goal {
+  /* left statt transform: ändert sich nur alle 30 s, das Layout kostet hier nichts */
+  position: absolute; top: 50%; left: calc(var(--x) * 100%); font-size: 15px; line-height: 1; pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+.time-left__sun { --x: var(--p, 0); transition: left 1s linear; filter: drop-shadow(0 1px 2px rgba(0,0,0,.3)); }
+.time-left__goal { --x: var(--goal, .75); font-size: 13px; opacity: .35; filter: grayscale(1); }
+.time-left.is-blitz .time-left__goal { opacity: 1; filter: none; animation: blitz-pulse 1.6s ease-in-out infinite; }
+.time-left__text { min-width: 4.2em; text-align: right; font-size: .8rem; font-weight: 800; color: var(--text-soft); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.time-left.is-low .time-left__text { color: #EA580C; }
+@keyframes blitz-pulse { 0%, 100% { transform: translate(-50%, -50%) scale(1); } 50% { transform: translate(-50%, -50%) scale(1.25); } }
+.lite .time-left.is-blitz .time-left__goal, body.reduce-motion .time-left.is-blitz .time-left__goal { animation: none; }
+@media (max-height: 499.98px) { .time-left__text { display: none; } .time-left__track { height: 4px; } }
 
 /* ---------- Kinder-Grid ---------- */
 .children-grid {
@@ -214,6 +236,9 @@ h1, h2, h3, p { margin: 0; }
   transition: transform .12s ease, box-shadow .25s, background-color .25s, border-color .25s;
 }
 .task:active { transform: scale(.97); }
+.task { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+/* Langes Drücken nimmt eine erledigte Aufgabe zurück: Der Stern schrumpft, solange der Finger liegt */
+.task.is-done.is-holding .task__check svg { animation: none; opacity: .15; transform: scale(.2) rotate(40deg); transition: opacity .65s linear, transform .65s linear; }
 .task__icon { font-family: var(--emoji); font-size: 2.2rem; line-height: 1; width: 2.6rem; text-align: center; flex: none; }
 .task__label { flex: 1; min-width: 0; font-family: var(--font-body); font-size: 1.18rem; font-weight: 800; line-height: 1.2; overflow-wrap: break-word; hyphens: manual; }
 .task__check {
@@ -408,6 +433,7 @@ body.night .rest-scene { filter: drop-shadow(0 10px 30px rgba(160, 170, 255, .45
 .child-row .icon-btn { width: 40px; height: 40px; font-size: 1.1rem; background: var(--surface); }
 .time-grid { display: grid; grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr); gap: 10px; align-items: center; }
 .time-grid .input { min-height: 46px; min-width: 0; padding: .4em .5em; }
+.time-grid--goal { grid-template-columns: auto minmax(0, 1fr) auto; margin-top: 4px; }
 .muted { color: var(--text-soft); font-weight: 600; font-size: .95rem; }
 
 /* ---------- Kind bearbeiten (Onboarding + Eltern-Bereich) ---------- */

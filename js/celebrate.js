@@ -23,6 +23,7 @@ export function initCelebrate(h) { hooks = { ...hooks, ...h }; }
 export function childCompleted(child, routine, reward = null) {
   const t = THEMES[child.theme];
   toast(reward ? `Alles fertig! 🎉 +${reward.xp} XP` : 'Alles fertig! 🎉');
+  if (reward?.blitz) setTimeout(() => { toast(`⚡ Blitz-Bonus! +${reward.blitz} XP extra`); flash('rgba(255, 221, 87, .55)'); }, 900);
   if (reward && reward.levelAfter > reward.levelBefore) pendingLevelUps.set(child.id, reward);
   flash(t.flash);
   shower(child.theme, 80);

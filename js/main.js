@@ -1,8 +1,8 @@
 // Bootstrapping und Router zwischen Onboarding, Hauptansicht und Ruhe-Screen.
 import { $, el, clear, confirmDialog, vibrate, isSingleCard } from './ui.js';
 import { state, load, save, flush, ensureToday, requestPersistence, replaceState } from './store.js';
-import { currentRoutine, isNight, toggleTask, toggleAll } from './routine.js';
-import { renderMain, updateChild, setActiveChild, renderRest, layoutGrid, buddyReact, invalidateRest } from './render.js';
+import { currentRoutine, isNight, toggleTask, toggleAll, timeInfo } from './routine.js';
+import { renderMain, updateChild, setActiveChild, renderRest, layoutGrid, buddyReact, invalidateRest, updateTime } from './render.js';
 import { openAlbum } from './album.js';
 import { startOnboarding } from './onboarding.js';
 import { parentLock, openSettings } from './settings.js';
@@ -19,6 +19,7 @@ let current = null;       // { routine, manual } | null
 let renderedKey = '';
 let tickTimer = null;
 const introPlayed = new Set();
+let lastHoldHint = 0;
 const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
 
 function reducedMotion() {
@@ -107,6 +108,7 @@ function tick(force = false) {
       renderAmbient();
       renderSky(evening);
     }
+    updateTime(timeInfo(state.settings, cur, now), cur.routine);
     showScreen('main');
   } else {
     renderRest(state, now, openChildAlbum);
@@ -139,7 +141,8 @@ const handlers = {
     unlockAudio();
     if (!current) return;
     const intro = playIntroOnce();
-    const res = toggleTask(state, current.routine, childId, taskId);
+    const blitz = timeInfo(state.settings, current)?.blitz ?? false;
+    const res = toggleTask(state, current.routine, childId, taskId, localDate(), { blitz });
     if (!res) return;
     const r = btn.getBoundingClientRect(); // vor dem DOM-Update lesen: kein erzwungenes Layout
     save();
@@ -156,7 +159,15 @@ const handlers = {
       if (res.completedNow) childCompleted(child, current.routine, res.reward);
     } else {
       untapSound();
+      buddyReact(childId, 'oops');
     }
+  },
+
+  /** Kurzer Tipp auf eine erledigte Aufgabe: nichts ändern, nur zeigen, wie man zurücknimmt. */
+  onHoldHint(childId, btn) {
+    btn.animate?.([{ transform: 'none' }, { transform: 'translateX(-5px)' }, { transform: 'translateX(5px)' }, { transform: 'translateX(-3px)' }, { transform: 'none' }], { duration: 360, easing: 'ease-out' });
+    const now = Date.now();
+    if (now - lastHoldHint > 6000) { lastHoldHint = now; fx.toast('✋ Schon erledigt! Zum Zurücknehmen lange drücken.'); }
   },
 
   async onToggleAll(childId) {

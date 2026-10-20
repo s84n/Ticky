@@ -3,13 +3,13 @@ import { el, clear, openOverlay, confirmDialog, alertDialog } from './ui.js';
 import { state, save, saveNow, exportBackup, parseBackup, replaceState, resetAll, removeChild, removeCustomTask, MAX_CHILDREN, requestPersistence } from './store.js';
 import { THEMES } from './data/themes.js';
 import { ROUTINES, ROUTINE_META } from './data/task-catalog.js';
-import { validateTimes } from './routine.js';
+import { validateTimes, goalOf } from './routine.js';
 import { basicsEditor, tasksEditor, newChildDraft, customTaskForm } from './child-editor.js';
-import { localDate, cryptoRandom, deepClone } from './util.js';
+import { localDate, cryptoRandom, deepClone, parseTime } from './util.js';
 import { wrongSound, popSound } from './audio.js';
 import { toast } from './fx.js';
 import { VERSION, REPO_URL } from './config.js';
-import { levelInfo } from './data/progression.js';
+import { levelInfo, BLITZ_XP } from './data/progression.js';
 
 // ---------- Eltern-Sperre ----------
 
@@ -203,12 +203,39 @@ export function openSettings(hooks) {
           draft[r][k] = inp.value;
           const errors = validateTimes(draft);
           err.textContent = errors.join(' ');
-          if (!errors.length) { state.settings.routines = deepClone(draft); save(); hooks.onChange?.(); toast('Zeiten gespeichert.'); }
+          if (!errors.length) { state.settings.routines = deepClone(draft); save(); hooks.onChange?.(); syncGoals(); toast('Zeiten gespeichert.'); }
         });
         grid.append(inp);
       }
     }
-    sec.append(grid, err);
+
+    // Blitz-Zeit: Wer vorher fertig ist, bekommt Extra-XP. Leer = automatisch nach drei Vierteln der Zeit.
+    const goalGrid = el('div', { class: 'time-grid time-grid--goal' });
+    const goalInputs = {};
+    const syncGoals = () => { for (const r of ROUTINES) goalInputs[r].value = goalOf(draft[r]) ?? ''; };
+    for (const r of ROUTINES) {
+      const inp = el('input', { class: 'input', type: 'time', 'aria-label': `${ROUTINE_META[r].title}: Blitz-Bonus bis` });
+      goalInputs[r] = inp;
+      const store = goal => {
+        draft[r].goal = goal;
+        state.settings.routines = deepClone(draft); save(); hooks.onChange?.(); syncGoals();
+      };
+      inp.addEventListener('change', () => {
+        const g = parseTime(inp.value), s = parseTime(draft[r].start), e = parseTime(draft[r].end);
+        if (g === null || g <= s || g > e) { err.textContent = `${ROUTINE_META[r].title}: Die Blitz-Zeit muss zwischen Start und Ende liegen.`; syncGoals(); return; }
+        err.textContent = '';
+        store(inp.value);
+        toast('Blitz-Zeit gespeichert.');
+      });
+      goalGrid.append(
+        el('span', {}, `⚡ ${ROUTINE_META[r].label}`),
+        inp,
+        el('button', { type: 'button', class: 'btn btn--small', onclick: () => { err.textContent = ''; store(''); toast('Blitz-Zeit: automatisch.'); } }, 'Auto'));
+    }
+    syncGoals();
+    sec.append(grid,
+      el('p', { class: 'muted' }, '⚡ Blitz-Bonus: Wer seine Aufgaben vor dieser Uhrzeit selbst schafft, bekommt +' + BLITZ_XP + ' XP. „Auto“ setzt sie auf drei Viertel des Zeitfensters.'),
+      goalGrid, err);
     return sec;
   }
 
@@ -222,7 +249,7 @@ export function openSettings(hooks) {
       inp.addEventListener('change', () => { state.settings[key] = inp.checked; save(); hooks.onSettingsChanged?.(); if (key === 'sound' && inp.checked) popSound(); });
       return el('label', { class: 'switch', for: id }, el('span', {}, label), inp);
     };
-    sec.append(sw('sound', 'Sound'), sw('speech', 'Sprachansagen'));
+    sec.append(sw('sound', 'Sound'), sw('speech', 'Sprachansagen'), sw('timer', 'Zeitleiste & Blitz-Bonus'));
     if ('vibrate' in navigator) sec.append(sw('vibration', 'Vibration'));
     const seg = el('div', { class: 'segmented', role: 'group', 'aria-label': 'Animationen reduzieren' });
     for (const [v, l] of [['auto', 'Automatisch'], ['on', 'Ja'], ['off', 'Nein']]) {

@@ -1,8 +1,8 @@
 // Routine-Erkennung, Tagesreset, Abhaken, Fortschritt. DOM-frei (testbar).
-import { parseTime, minutesOfDay, localDate } from './util.js';
+import { parseTime, minutesOfDay, localDate, formatTime } from './util.js';
 import { ROUTINES } from './data/task-catalog.js';
 import { ensureToday, spinKey } from './store.js';
-import { awardRoutine } from './data/progression.js';
+import { awardRoutine, BLITZ_XP } from './data/progression.js';
 
 function inWindow(min, start, end) {
   return start <= end ? min >= start && min < end : min >= start || min < end;
@@ -72,6 +72,39 @@ export function validateTimes(routines) {
   return errors;
 }
 
+// ---------- Zeitleiste & Blitz-Bonus ----------
+
+/** Ab diesem Rest-Anteil der Routine wird die Zeit knapp (Leiste wird orange, das Team müde). */
+export const LOW_TIME = 0.2;
+
+/** Automatische Blitz-Zeit: nach drei Vierteln des Zeitfensters, auf 5 Minuten gerundet. */
+export function autoGoal(range) {
+  const s = parseTime(range.start), e = parseTime(range.end);
+  if (s === null || e === null || e <= s) return null;
+  return formatTime(s + Math.round(((e - s) * 0.75) / 5) * 5);
+}
+
+/** Eingestellte Blitz-Zeit, falls sie im Zeitfenster liegt, sonst die automatische. */
+export function goalOf(range) {
+  const s = parseTime(range.start), e = parseTime(range.end), g = parseTime(range.goal);
+  return g !== null && g > s && g <= e ? formatTime(g) : autoGoal(range);
+}
+
+/**
+ * Zeitstand einer planmäßigen Routine: { p (verstrichen 0–1), left (Minuten), goalP, blitz, low }.
+ * null, wenn die Zeitleiste aus ist oder die Routine von Hand gestartet wurde (dann gibt es kein Ende).
+ */
+export function timeInfo(settings, cur, now = new Date()) {
+  if (!cur || cur.manual || settings.timer === false) return null;
+  const range = settings.routines[cur.routine];
+  const s = parseTime(range.start), e = parseTime(range.end);
+  if (s === null || e === null || e <= s) return null;
+  const min = minutesOfDay(now) + now.getSeconds() / 60;
+  const p = Math.min(1, Math.max(0, (min - s) / (e - s)));
+  const g = parseTime(goalOf(range));
+  return { p, left: Math.max(0, Math.ceil(e - min)), goalP: (g - s) / (e - s), blitz: min < g, low: 1 - p <= LOW_TIME };
+}
+
 // ---------- Fortschritt ----------
 
 export function tasksOf(child, routine) {
@@ -101,9 +134,10 @@ export function overallStats(state, routine) {
 /**
  * Schaltet eine Aufgabe um. Gibt zurück, was passiert ist:
  * { checked, remaining, completedNow, newSpin, reward }
- * reward ({ xp, levelBefore, levelAfter, dust }) gibt es nur beim ersten Abschluss der Routine am Tag.
+ * reward ({ xp, blitz, levelBefore, levelAfter, gift }) gibt es nur beim ersten Abschluss der Routine am Tag.
+ * blitz: Wer selbst vor der Blitz-Zeit fertig wird, bekommt BLITZ_XP extra.
  */
-export function toggleTask(state, routine, childId, taskId, today = localDate()) {
+export function toggleTask(state, routine, childId, taskId, today = localDate(), { blitz = false } = {}) {
   ensureToday(state, today);
   const child = state.children.find(c => c.id === childId);
   if (!child || !child.tasks[routine].includes(taskId)) return null;
@@ -112,7 +146,7 @@ export function toggleTask(state, routine, childId, taskId, today = localDate())
   const checked = !list.has(taskId);
   if (checked) list.add(taskId); else list.delete(taskId);
   state.progress[routine][childId] = [...list];
-  return { checked, ...afterChange(state, routine, child, before, today) };
+  return { checked, ...afterChange(state, routine, child, before, today, blitz) };
 }
 
 /** Hakt alle Aufgaben eines Kindes ab (bzw. löst alle, wenn schon alle erledigt sind). */
@@ -126,7 +160,7 @@ export function toggleAll(state, routine, childId, today = localDate()) {
   return { checked, ...afterChange(state, routine, child, before, today) };
 }
 
-function afterChange(state, routine, child, before, today) {
+function afterChange(state, routine, child, before, today, blitz = false) {
   const stats = childStats(state, routine, child);
   const completedNow = !before && stats.complete;
   let newSpin = false;
@@ -136,7 +170,7 @@ function afterChange(state, routine, child, before, today) {
     if (!(key in state.spins)) {
       state.spins[key] = 'pending';
       newSpin = true;
-      reward = awardRoutine(child, stats.total); // Farm-Schutz: nur zusammen mit dem neuen Rad
+      reward = awardRoutine(child, stats.total, Math.random, blitz ? BLITZ_XP : 0); // Farm-Schutz: nur zusammen mit dem neuen Rad
     }
   }
   return { remaining: stats.total - stats.done, completedNow, newSpin, reward };

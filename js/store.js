@@ -18,12 +18,13 @@ export function createDefaultState() {
     setupDone: false,
     settings: {
       routines: {
-        morning: { start: '06:00', end: '10:00' },
-        evening: { start: '18:00', end: '22:00' },
+        morning: { start: '06:00', end: '10:00', goal: '' },
+        evening: { start: '18:00', end: '22:00', goal: '' },
       },
       sound: true,
       speech: true,
       vibration: true,
+      timer: true,
       reducedMotion: 'auto',
     },
     children: [],
@@ -56,8 +57,9 @@ export function normalizeState(raw, today = localDate()) {
     const src = isObj(st.routines) && isObj(st.routines[r]) ? st.routines[r] : {};
     if (parseTime(src.start) !== null) out.settings.routines[r].start = normTime(src.start);
     if (parseTime(src.end) !== null) out.settings.routines[r].end = normTime(src.end);
+    if (parseTime(src.goal) !== null) out.settings.routines[r].goal = normTime(src.goal);
   }
-  for (const k of ['sound', 'speech', 'vibration']) if (typeof st[k] === 'boolean') out.settings[k] = st[k];
+  for (const k of ['sound', 'speech', 'vibration', 'timer']) if (typeof st[k] === 'boolean') out.settings[k] = st[k];
   if (['auto', 'on', 'off'].includes(st.reducedMotion)) out.settings.reducedMotion = st.reducedMotion;
 
   // Eigene Aufgaben

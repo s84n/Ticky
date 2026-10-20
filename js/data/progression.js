@@ -5,6 +5,8 @@ import { RARITY_ORDER, figureById } from './figures.js';
 /** XP pro erledigter Aufgabe und Bonus für die komplette Routine. */
 export const XP_PER_TASK = 10;
 export const XP_ROUTINE_BONUS = 20;
+/** Extra-XP, wenn ein Kind vor der Blitz-Zeit fertig ist. */
+export const BLITZ_XP = 15;
 export const MAX_LEVEL = 99;
 
 /** So viele Figuren laufen auf dem Aufgaben-Bildschirm mit. */
@@ -80,13 +82,13 @@ function giftAccessory(child, rnd) {
  * Vergibt XP für eine fertige Routine (nur einmal pro Routine und Tag aufrufen).
  * Beim Level-Aufstieg gibt es ein Accessoire als Geschenk. Gibt { xp, levelBefore, levelAfter, gift } zurück.
  */
-export function awardRoutine(child, taskCount, rnd = Math.random) {
+export function awardRoutine(child, taskCount, rnd = Math.random, blitz = 0) {
   const before = levelInfo(child.xp).level;
-  const xp = taskCount * XP_PER_TASK + XP_ROUTINE_BONUS;
+  const xp = taskCount * XP_PER_TASK + XP_ROUTINE_BONUS + blitz;
   child.xp = (child.xp ?? 0) + xp;
   const after = levelInfo(child.xp).level;
   const gift = after > before ? giftAccessory(child, rnd) : null;
-  return { xp, levelBefore: before, levelAfter: after, gift };
+  return { xp, blitz, levelBefore: before, levelAfter: after, gift };
 }
 
 // ---------- Upgrade-Reisen ----------

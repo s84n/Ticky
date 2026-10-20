@@ -9,17 +9,24 @@ import { popSound } from './audio.js';
 import { pick } from './util.js';
 
 const GREETINGS = ['Hallo!', 'Hihi!', 'Juhu!', '💖', 'Hey!', '✨', 'Yeah!', '😄', 'Weiter so!', 'Du schaffst das!'];
+const CHEERS = ['Super!', 'Yeah!', '⭐', 'Toll!', 'Weiter so!', 'Juhu!', '💪', 'Klasse!'];
+const YAWNS = ['Gähn… 😴', '😪', 'Ich werd müde…', 'Schnell, bitte!', '⏰', 'Beeil dich!'];
+const WAKE = ['Ich bin wach! 😃', 'Weiter geht’s!', '⚡'];
 const rand = (a, b) => a + Math.random() * (b - a);
 
 /**
  * Baut das Team in `meadow` auf. onOpen() öffnet das Album (Tipp auf die leere Wiese oder die Reise-Anzeige).
- * Gibt { react(kind, clientX), refresh(), destroy() } zurück.
+ * Gibt { react(kind, clientX), setTired(on), refresh(), destroy() } zurück.
+ * Müde (die Zeit wird knapp): langsamer, gähnt ab und zu – jede erledigte Aufgabe weckt das Team kurz auf.
  */
 export function mountHerd(meadow, child, { onOpen } = {}) {
   let actors = [];
+  let tired = false;
+  let yawnTimer = null;
 
   function stop() {
     for (const a of actors) clearTimeout(a.timer);
+    clearTimeout(yawnTimer);
     actors = [];
   }
 
@@ -72,7 +79,7 @@ export function mountHerd(meadow, child, { onOpen } = {}) {
   }
 
   /** Läuft zu x (%), danach cb. */
-  function moveTo(a, x, cb, speed = 1) {
+  function moveTo(a, x, cb, speed = tired ? 0.55 : 1) {
     const dist = Math.abs(x - a.x);
     const dur = Math.max(0.5, (dist * 0.09) / speed / (a.fast ? 1.8 : 1));
     a.node.classList.toggle('is-left', x < a.x);
@@ -86,14 +93,32 @@ export function mountHerd(meadow, child, { onOpen } = {}) {
     moveTo(a, rand(8, 92), () => {
       if (a.fast && Math.random() < 0.35) play(a, 'is-salto', 750);
       else if (a.trick && Math.random() < 0.3) play(a, 'is-trick', 1300);
-      later(a, () => wander(a), rand(1200, 5200));
+      later(a, () => wander(a), tired ? rand(4000, 9000) : rand(1200, 5200));
     });
+  }
+
+  function yawnLater() {
+    clearTimeout(yawnTimer);
+    if (!tired || !actors.length) return;
+    yawnTimer = setTimeout(() => {
+      if (!meadow.isConnected || !tired) return;
+      bubble(pick(actors), pick(YAWNS));
+      yawnLater();
+    }, rand(7000, 14000));
+  }
+
+  function setTired(on) {
+    if (on === tired) return;
+    tired = on;
+    meadow.classList.toggle('is-tired', on);
+    if (on && actors.length) { bubble(pick(actors), pick(YAWNS)); yawnLater(); }
+    else clearTimeout(yawnTimer);
   }
 
   /** Spielt eine CSS-Animation an der Figur ab. */
   function play(a, cls, ms) {
     const inner = a.node.querySelector('.fig');
-    inner.classList.remove('is-happy', 'is-salto', 'is-trick');
+    inner.classList.remove('is-happy', 'is-salto', 'is-trick', 'is-oops');
     // Neustart der Animation im nächsten Frame statt per erzwungenem Reflow
     requestAnimationFrame(() => requestAnimationFrame(() => {
       inner.classList.add(cls);
@@ -131,7 +156,17 @@ export function mountHerd(meadow, child, { onOpen } = {}) {
       bubble(actors[0], pick(['Juhuuu!', 'Geschafft!', '🎉🎉🎉', 'Super!']));
       return;
     }
+    if (kind === 'oops') {
+      const a = pick(actors);
+      play(a, 'is-oops', 700);
+      bubble(a, pick(['Oh! 🙈', 'Hoppla!', '🤔', 'Nochmal?']));
+      return;
+    }
     const a = pick(actors);
+    // Die anderen hüpfen vor Freude mit, wer gerade müde ist, wird kurz wach
+    actors.forEach((o, i) => { if (o !== a) setTimeout(() => play(o, 'is-happy', 900), 120 + i * 140); });
+    if (tired) { bubble(a, pick(WAKE)); yawnLater(); }
+    else if (Math.random() < 0.45) bubble(a, pick(CHEERS));
     if (isReduced() || clientX === null) { play(a, 'is-happy', 900); return; }
     const r = meadow.getBoundingClientRect();
     const x = Math.min(92, Math.max(8, ((clientX - r.left) / r.width) * 100));
@@ -142,5 +177,9 @@ export function mountHerd(meadow, child, { onOpen } = {}) {
   }
 
   build();
-  return { react, refresh: build, destroy: stop };
+  return {
+    react, setTired,
+    refresh() { build(); if (tired) yawnLater(); },
+    destroy: stop,
+  };
 }

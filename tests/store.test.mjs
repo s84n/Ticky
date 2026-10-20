@@ -2,11 +2,11 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createDefaultState, normalizeState, cleanupSpins, ensureToday, removeChild, removeCustomTask, parseBackup, exportBackup, spinKey, pickNewest } from '../js/store.js';
 import { localDate, daysBetween } from '../js/util.js';
-import { toggleTask, toggleAll, autoRoutine, currentRoutine, nextRoutine, isNight, validateTimes } from '../js/routine.js';
+import { toggleTask, toggleAll, autoRoutine, currentRoutine, nextRoutine, isNight, validateTimes, autoGoal, goalOf, timeInfo } from '../js/routine.js';
 import {
   levelInfo, levelTitle, awardRoutine, addFigure, applyUpgrade, trackSpin, upgradeGuaranteed, hasStep, journeyOpen,
   toggleTeam, makeLeader, setFocus, focusOf, equipAccessory, accessoryOf,
-  XP_PER_TASK, XP_ROUTINE_BONUS, MAX_LEVEL, ACCESSORY_IDS, TEAM_MAX, EVO_PATHS, UPGRADE_PITY,
+  XP_PER_TASK, XP_ROUTINE_BONUS, BLITZ_XP, MAX_LEVEL, ACCESSORY_IDS, TEAM_MAX, EVO_PATHS, UPGRADE_PITY,
 } from '../js/data/progression.js';
 import { figureById } from '../js/data/figures.js';
 
@@ -148,7 +148,7 @@ test('XP gibt es nur beim ersten Abschluss der Routine (Farm-Schutz)', () => {
   const today = s.progress.date;
   toggleTask(s, 'morning', 'c_a', 'umziehen', today);
   const r1 = toggleTask(s, 'morning', 'c_a', 'zaehne', today);
-  assert.deepEqual(r1.reward, { xp: 2 * XP_PER_TASK + XP_ROUTINE_BONUS, levelBefore: 1, levelAfter: 1, gift: null });
+  assert.deepEqual(r1.reward, { xp: 2 * XP_PER_TASK + XP_ROUTINE_BONUS, blitz: 0, levelBefore: 1, levelAfter: 1, gift: null });
   toggleTask(s, 'morning', 'c_a', 'zaehne', today);
   const r2 = toggleTask(s, 'morning', 'c_a', 'zaehne', today);
   assert.equal(r2.reward, null);
@@ -289,4 +289,44 @@ test('Laden: neuerer, brauchbarer Stand aus localStorage oder IndexedDB gewinnt'
   assert.equal(pickNewest({ setupDone: false, children: [] }, a), a); // leerer Stand verliert immer
   assert.equal(pickNewest(a, null), a);
   assert.equal(pickNewest(null, null), null);
+});
+
+test('Blitz-Zeit: automatisch nach drei Vierteln, eigene nur innerhalb des Zeitfensters', () => {
+  assert.equal(autoGoal({ start: '06:00', end: '10:00' }), '09:00');
+  assert.equal(autoGoal({ start: '06:30', end: '07:40' }), '07:25');
+  assert.equal(goalOf({ start: '06:00', end: '10:00', goal: '07:30' }), '07:30');
+  assert.equal(goalOf({ start: '06:00', end: '10:00', goal: '05:30' }), '09:00');
+  assert.equal(goalOf({ start: '06:00', end: '10:00', goal: '' }), '09:00');
+  const s = normalizeState({ settings: { routines: { morning: { start: '06:00', end: '10:00', goal: '7:30' } }, timer: false } });
+  assert.equal(s.settings.routines.morning.goal, '07:30');
+  assert.equal(s.settings.routines.evening.goal, '');
+  assert.equal(s.settings.timer, false);
+  assert.equal(createDefaultState().settings.timer, true);
+});
+
+test('Zeitleiste: Anteil, Restzeit, Blitz und knappe Zeit; aus bei manuellem Start', () => {
+  const st = createDefaultState().settings;
+  st.routines.morning.goal = '07:00';
+  const cur = { routine: 'morning', manual: false };
+  const a = timeInfo(st, cur, new Date(2026, 9, 14, 6, 30));
+  assert.equal(a.p, 0.125);
+  assert.equal(a.left, 210);
+  assert.equal(a.goalP, 0.25);
+  assert.equal(a.blitz, true);
+  assert.equal(a.low, false);
+  const b = timeInfo(st, cur, new Date(2026, 9, 14, 9, 30));
+  assert.equal(b.blitz, false);
+  assert.equal(b.low, true);
+  assert.equal(timeInfo(st, { routine: 'morning', manual: true }, new Date(2026, 9, 14, 6, 30)), null);
+  assert.equal(timeInfo({ ...st, timer: false }, cur, new Date(2026, 9, 14, 6, 30)), null);
+});
+
+test('Blitz-Bonus gibt Extra-XP beim ersten Abschluss', () => {
+  const s = normalizeState({ setupDone: true, children: [child('c_a')] });
+  const today = s.progress.date;
+  toggleTask(s, 'morning', 'c_a', 'umziehen', today, { blitz: true });
+  const r = toggleTask(s, 'morning', 'c_a', 'zaehne', today, { blitz: true });
+  assert.equal(r.reward.blitz, BLITZ_XP);
+  assert.equal(r.reward.xp, 2 * XP_PER_TASK + XP_ROUTINE_BONUS + BLITZ_XP);
+  assert.equal(s.children[0].xp, r.reward.xp);
 });

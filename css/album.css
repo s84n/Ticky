@@ -164,6 +164,10 @@
 .herd-actor .fig.is-happy { animation: actor-happy .85s cubic-bezier(.3,1.6,.5,1); }
 .herd-actor .fig.is-salto { animation: actor-salto .75s cubic-bezier(.4,1.4,.5,1); }
 .herd-actor .fig.is-trick { animation: actor-trick 1.3s ease-in-out; }
+.herd-actor .fig.is-oops { animation: actor-oops .7s ease-in-out; }
+/* Müde, wenn die Zeit knapp wird: im Stehen langsam „durchhängen“ (nur transform) */
+.card-meadow.is-tired .herd-actor:not(.is-moving) .fig:not(.is-happy):not(.is-salto):not(.is-trick):not(.is-oops) { animation: actor-tired 3.2s ease-in-out infinite; transform-origin: 50% 100%; }
+body.reduce-motion .card-meadow.is-tired .herd-actor .fig { animation: none; }
 .herd-actor { z-index: 2; }
 .herd-actor.is-leader { z-index: 3; }
 .herd-actor .world-bubble { font-size: .8rem; }
@@ -183,6 +187,8 @@ body.reduce-motion .herd-actor { transition: none; }
 @keyframes heart-up { from { opacity: 0; transform: translateY(0) scale(.5); } 20% { opacity: 1; transform: translateY(-6px) scale(1); } to { opacity: 0; transform: translateY(-34px) scale(.8); } }
 @keyframes actor-walk { 0%, 100% { transform: translateY(0) rotate(-3deg); } 50% { transform: translateY(-6px) rotate(3deg); } }
 @keyframes actor-hop { 0%, 100% { transform: translateY(0) scale(1.08, .92); } 45% { transform: translateY(-26%) scale(.96, 1.05); } }
+@keyframes actor-oops { 0%, 100% { transform: none; } 25% { transform: rotate(-10deg) translateX(-6%); } 60% { transform: rotate(8deg) translateX(4%); } }
+@keyframes actor-tired { 0%, 100% { transform: scale(1, 1) rotate(0); } 50% { transform: scale(1.04, .9) rotate(-4deg); } }
 @keyframes actor-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
 @keyframes actor-happy { 0% { transform: scale(1.15, .85); } 35% { transform: translateY(-30%) rotate(-12deg) scale(1.05); } 65% { transform: translateY(0) scale(1.1, .9); } 100% { transform: none; } }
 @keyframes bubble { 0% { opacity: 0; transform: translate(-50%, 6px) scale(.6); } 15%, 80% { opacity: 1; transform: translate(-50%, -4px) scale(1); } 100% { opacity: 0; transform: translate(-50%, -14px); } }

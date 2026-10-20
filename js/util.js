@@ -26,6 +26,12 @@ export function parseTime(str) {
   return h * 60 + min;
 }
 
+/** Minuten seit Mitternacht → "HH:MM". */
+export function formatTime(min) {
+  const m = ((Math.round(min) % 1440) + 1440) % 1440;
+  return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+}
+
 export function minutesOfDay(d = new Date()) {
   return d.getHours() * 60 + d.getMinutes();
 }

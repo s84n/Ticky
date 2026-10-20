@@ -78,6 +78,35 @@ const listObserver = typeof ResizeObserver === 'function'
   ? new ResizeObserver(entries => { for (const e of entries) fitList(e.target); })
   : null;
 
+// ---------- Abhaken & Zurücknehmen ----------
+
+const HOLD_MS = 650;
+
+/**
+ * Antippen hakt ab. Eine erledigte Aufgabe lässt sich nur durch langes Drücken zurücknehmen
+ * (der Stern schrumpft dabei), damit doppelte Tipps nichts kaputt machen. Tastatur und Screenreader
+ * (click ohne Zeiger, detail 0) schalten direkt um.
+ */
+function bindTask(btn, toggle, hint) {
+  let timer = null, held = false, sx = 0, sy = 0;
+  const cancel = () => { clearTimeout(timer); timer = null; btn.classList.remove('is-holding'); };
+  btn.addEventListener('pointerdown', e => {
+    held = false;
+    if (!btn.classList.contains('is-done') || e.button > 0) return;
+    sx = e.clientX; sy = e.clientY;
+    btn.classList.add('is-holding');
+    timer = setTimeout(() => { timer = null; held = true; btn.classList.remove('is-holding'); toggle(); }, HOLD_MS);
+  });
+  btn.addEventListener('pointermove', e => { if (timer && Math.hypot(e.clientX - sx, e.clientY - sy) > 12) cancel(); });
+  for (const t of ['pointerup', 'pointercancel', 'pointerleave']) btn.addEventListener(t, cancel);
+  btn.addEventListener('contextmenu', e => e.preventDefault()); // Android: langes Drücken öffnet sonst ein Menü
+  btn.addEventListener('click', e => {
+    if (held) { held = false; return; }
+    if (!btn.classList.contains('is-done') || e.detail === 0) toggle();
+    else hint();
+  });
+}
+
 // ---------- Fortschrittsanzeigen je Style ----------
 
 const STAR_PATH = 'M12 1.8l3.1 6.4 7 1-5.1 4.9 1.2 7-6.2-3.3-6.2 3.3 1.2-7L1.9 9.2l7-1z';
@@ -199,13 +228,11 @@ export function renderMain(state, current, h) {
     listObserver?.observe(list);
     for (const id of tasks) {
       const info = taskInfo(id, state);
-      const btn = el('button', {
-        type: 'button', class: 'task', role: 'checkbox', 'aria-checked': 'false',
-        onclick: () => h.onToggle(child.id, id, btn),
-      },
+      const btn = el('button', { type: 'button', class: 'task', role: 'checkbox', 'aria-checked': 'false' },
         el('span', { class: 'task__icon', 'aria-hidden': 'true' }, info.icon),
         el('span', { class: 'task__label' }, info.label),
         el('span', { class: 'task__check', 'aria-hidden': 'true' }, starIcon()));
+      bindTask(btn, () => h.onToggle(child.id, id, btn), () => h.onHoldHint?.(child.id, btn));
       rows.set(id, btn);
       list.append(el('li', {}, btn));
     }
@@ -283,7 +310,29 @@ export function updateChild(state, childId, animate = true) {
   c.level.update(child);
   const key = herdKey(child);
   if (key !== c.herdKey) { c.herdKey = key; c.herd.refresh(); }
+  c.complete = stats.complete;
+  c.herd.setTired(timeLow && !stats.complete);
   updateHeader(state, routine);
+}
+
+// ---------- Zeitleiste ----------
+
+let timeLow = false;
+
+/** Zeitleiste im Kopf: Sonne/Mond wandert, die Lunte wird kürzer, ⚡ markiert die Blitz-Zeit. info aus timeInfo(). */
+export function updateTime(info, routine) {
+  const wrap = $('#time-left');
+  wrap.hidden = !info;
+  timeLow = !!info?.low;
+  for (const c of cards.values()) c.herd.setTired(timeLow && !c.complete);
+  if (!info) return;
+  wrap.classList.toggle('is-low', info.low);
+  wrap.classList.toggle('is-blitz', info.blitz);
+  wrap.style.setProperty('--p', info.p.toFixed(4));
+  wrap.style.setProperty('--goal', info.goalP.toFixed(4));
+  $('#time-sun').textContent = ROUTINE_META[routine].emoji;
+  $('#time-text').textContent = info.left >= 60 ? `${Math.floor(info.left / 60)} h ${info.left % 60} min` : `${info.left} min`;
+  wrap.title = info.blitz ? 'Vor dem ⚡ fertig = Blitz-Bonus!' : 'Restzeit der Routine';
 }
 
 // ---------- Spieler-Level & Buddy ----------
