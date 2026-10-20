@@ -267,9 +267,9 @@ h1, h2, h3, p { margin: 0; }
   align-content: start;
   gap: clamp(3px, calc(1 * var(--vh)), 10px);
 }
-.task-list { --rh: 60px; --cw: 300px; overflow: hidden; } /* --rh/--cw: Zeilenhöhe/Spaltenbreite in px, setzt render.js */
+.task-list { --rh: 60px; --cw: 300px; } /* --rh/--cw: Zeilenhöhe/Spaltenbreite in px, setzt render.js */
 .task-list > li { min-height: 0; display: flex; }
-.task { min-height: 0; height: 100%; overflow: hidden; padding: 0 clamp(8px, 3vw, 14px) 0 clamp(6px, 2.5vw, 12px); gap: clamp(8px, 2.5vw, 14px); }
+.task { min-height: 0; height: 100%; padding: 0 clamp(8px, 3vw, 14px) 0 clamp(6px, 2.5vw, 12px); gap: clamp(8px, 2.5vw, 14px); }
 .task__icon { font-size: clamp(.85rem, calc(var(--rh) * .56), 2.2rem); width: 1.25em; }
 .task__label { font-size: clamp(.78rem, calc(var(--rh) * .31), var(--label-max, 1.18rem)); display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; }
 .task__check { width: clamp(18px, calc(var(--rh) * .64), 44px); height: clamp(18px, calc(var(--rh) * .64), 44px); border-width: clamp(2px, calc(var(--rh) * .045), 3px); }
