@@ -1,6 +1,6 @@
 // Service Worker: Offline-Betrieb. Bei jedem Release CACHE_VERSION (und VERSION in js/config.js) erhöhen.
 // Die Dateiliste kann mit `node tools/update-sw-assets.mjs` aktualisiert werden.
-const CACHE_VERSION = 'ticky-v1.4.1';
+const CACHE_VERSION = 'ticky-v1.5.0';
 const NETWORK_TIMEOUT_MS = 3000; // danach App-Shell aus dem Cache (schlechtes WLAN)
 
 const ASSETS = [
@@ -9,12 +9,7 @@ const ASSETS = [
   './manifest.webmanifest',
   './css/album.css',
   './css/base.css',
-  './css/themes/dino.css',
-  './css/themes/neon.css',
-  './css/themes/pixel.css',
-  './css/themes/schatz.css',
-  './css/themes/weltraum.css',
-  './css/themes/zauber.css',
+  './css/themes.css',
   './js/album.js',
   './js/audio.js',
   './js/celebrate.js',
@@ -113,15 +108,7 @@ const ASSETS = [
   './assets/figures/zauber/zauber_10.svg',
   './assets/figures/zauber/zauber_11.svg',
   './assets/figures/zauber/zauber_12.svg',
-  './assets/fonts/baloo-2-latin-700-normal.woff2',
-  './assets/fonts/baloo-2-latin-800-normal.woff2',
-  './assets/fonts/fredoka-latin-600-normal.woff2',
-  './assets/fonts/fredoka-latin-700-normal.woff2',
-  './assets/fonts/nunito-latin-600-normal.woff2',
-  './assets/fonts/nunito-latin-700-normal.woff2',
-  './assets/fonts/nunito-latin-800-normal.woff2',
-  './assets/fonts/pixelify-sans-latin-600-normal.woff2',
-  './assets/fonts/pixelify-sans-latin-700-normal.woff2',
+  './assets/fonts/inter-latin-var.woff2',
   './assets/icons/apple-touch-icon.png',
   './assets/icons/icon-192.png',
   './assets/icons/icon-512.png',

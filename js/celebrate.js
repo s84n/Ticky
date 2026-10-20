@@ -9,7 +9,7 @@ import { completeSound, fanfareSound, levelUpSound } from './audio.js';
 import { openWheel } from './rewards/wheel.js';
 import { runParade } from './rewards/parade.js';
 import { isEpic } from './data/figures.js';
-import { addFigure, applyUpgrade, trackSpin, focusOf, levelTitle, accessoryById } from './data/progression.js';
+import { addFigure, applyUpgrade, trackSpin, focusOf, levelInfo, levelTitle, accessoryById } from './data/progression.js';
 
 let hooks = { getRoutine: () => null, refreshChild: () => {} };
 const queue = [];
@@ -49,24 +49,32 @@ function showLevelUp(childId) {
   const titles = THEMES[child.theme].levelTitles;
   const oldTitle = levelTitle(titles, reward.levelBefore);
   const newTitle = levelTitle(titles, reward.levelAfter);
+  const info = levelInfo(child.xp);
   return new Promise(resolve => {
     const box = el('div', { class: 'levelup', 'data-theme': child.theme },
-      el('div', { class: 'levelup__badge', 'aria-hidden': 'true' }, String(reward.levelAfter)),
-      el('h2', { class: 'levelup__title' }, '⭐ LEVEL UP! ⭐'),
-      el('p', { class: 'levelup__text' }, `${child.name} ist jetzt Level ${reward.levelAfter}!`),
-      newTitle !== oldTitle ? el('p', { class: 'levelup__rank' }, `Neuer Titel: ${newTitle}`) : null,
-      giftLine(reward.gift),
-      el('button', { type: 'button', class: 'btn btn--primary btn--big', autofocus: true, onclick: () => close() }, 'Juhu! 🎉'));
+      el('div', { class: 'levelup__rays', 'aria-hidden': 'true' }),
+      el('p', { class: 'levelup__kicker' }, 'LEVEL UP!'),
+      el('div', { class: 'levelup__badge' }, el('span', {}, 'Level'), el('strong', {}, String(reward.levelAfter))),
+      el('p', { class: 'sr-only' }, `${child.name} ist jetzt Level ${reward.levelAfter}!`),
+      newTitle !== oldTitle ? el('div', { class: 'levelup__rank' }, el('span', {}, 'Neuer Titel'), el('strong', {}, newTitle)) : null,
+      giftCard(reward.gift),
+      info.need ? el('div', { class: 'levelup__xp' },
+        el('span', { class: 'levelup__bar' }, el('span', { style: { width: `${(info.into / info.need) * 100}%` } })),
+        el('span', {}, `${info.into} / ${info.need} XP bis Level ${info.level + 1}`)) : null,
+      el('button', { type: 'button', class: 'btn btn--primary btn--cta', autofocus: true, onclick: () => close() }, 'Juhu! 🎉'));
     levelUpSound();
     fireworks(2);
     confetti(60);
-    const { close } = openOverlay(box, { label: 'Level-Aufstieg', className: 'celebration-overlay', theme: child.theme, onClose: () => { hooks.refreshChild(childId); resolve(); } });
+    const { close } = openOverlay(box, { label: 'Level-Aufstieg', className: 'levelup-overlay', theme: child.theme, onClose: () => { hooks.refreshChild(childId); resolve(); } });
   });
 }
 
-function giftLine(accId) {
+/** Geschenk-Karte (goldener Rand) mit dem neuen Accessoire. */
+function giftCard(accId) {
   const acc = accessoryById(accId);
-  return acc ? el('p', { class: 'levelup__gift' }, `Geschenk: ${acc.icon} ${acc.label} für deine Figuren!`) : null;
+  return acc ? el('div', { class: 'gift-card' },
+    el('span', { class: 'gift-card__icon emoji', 'aria-hidden': 'true' }, acc.icon),
+    el('span', { class: 'gift-card__text' }, el('strong', {}, `Geschenk: ${acc.label}`), el('span', {}, 'Im Album kannst du deine Figuren damit schmücken.'))) : null;
 }
 
 /** Stellt ein Glücksrad für ein Kind in die Warteschlange (immer nur ein Rad gleichzeitig). */

@@ -19,11 +19,11 @@ export const UPGRADE_PITY = 2;
 
 /** Die Upgrade-Stufen. Jede Figur durchläuft einen Teil davon, immer in dieser Reihenfolge. */
 export const EVO_STEPS = {
-  farbe: { icon: '🎨', label: 'Neue Farbe', reveal: 'bekommt eine neue Farbe!' },
-  tempo: { icon: '⚡', label: 'Turbo', reveal: 'wird superschnell!' },
-  groesse: { icon: '📏', label: 'Wachstum', reveal: 'ist gewachsen!' },
-  trick: { icon: '💃', label: 'Trick', reveal: 'hat einen Trick gelernt!' },
-  verwandlung: { icon: '🌟', label: 'Verwandlung', reveal: 'hat sich verwandelt!' },
+  farbe: { icon: '🎨', label: 'Neue Farbe', short: 'Farbe', reveal: 'bekommt eine neue Farbe!' },
+  tempo: { icon: '⚡', label: 'Turbo', short: 'Turbo', reveal: 'wird superschnell!' },
+  groesse: { icon: '📏', label: 'Wachstum', short: 'Wachstum', reveal: 'ist gewachsen!' },
+  trick: { icon: '💃', label: 'Trick', short: 'Trick', reveal: 'hat einen Trick gelernt!' },
+  verwandlung: { icon: '🌟', label: 'Verwandlung', short: 'Verwandl.', reveal: 'hat sich verwandelt!' },
 };
 
 /** Je seltener die Figur, desto länger die Reise. */

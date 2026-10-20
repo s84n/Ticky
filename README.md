@@ -52,4 +52,4 @@ Hilfsskripte (nur für die Entwicklung):
 
 ## Lizenz
 
-Code: MIT. Schriften (Nunito, Pixelify Sans, Baloo 2, Fredoka): SIL Open Font License 1.1.
+Code: MIT. Schrift Inter (sowie die derzeit nicht geladenen Nunito, Pixelify Sans, Baloo 2, Fredoka): SIL Open Font License 1.1.

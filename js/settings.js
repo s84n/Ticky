@@ -18,47 +18,59 @@ export function parentLock() {
   return new Promise(resolve => {
     let ok = false;
     let a, b, answer = '';
-    const q = el('div', { class: 'lock__question', 'aria-live': 'polite' });
-    const ans = el('div', { class: 'lock__answer', 'aria-label': 'Deine Antwort' });
+    const q = el('span', { class: 'lock__question' });
+    const ans = el('span', { class: 'lock__answer', 'aria-label': 'Deine Antwort' });
+    const msg = el('p', { class: 'lock__msg', 'aria-live': 'polite' });
+    const show = () => { ans.textContent = answer || '?'; };
     function newQuestion() {
       do {
         a = 2 + Math.floor(cryptoRandom() * 8);
         b = 2 + Math.floor(cryptoRandom() * 8);
       } while (a * b < 10);
       answer = '';
-      q.textContent = `${a} × ${b} = ?`;
-      ans.textContent = '';
+      q.textContent = `${a} × ${b} =`;
+      show();
     }
     function press(d) {
       if (answer.length >= 2) return;
       answer += d;
-      ans.textContent = answer;
+      msg.textContent = '';
+      show();
+    }
+    function erase() {
+      answer = answer.slice(0, -1);
+      msg.textContent = '';
+      show();
     }
     function submit() {
       if (!answer) return;
-      if (Number(answer) === a * b) { ok = true; close(); return; }
+      if (Number(answer) === a * b) { ok = true; msg.textContent = 'Richtig – Eltern-Bereich öffnet …'; close(); return; }
       wrongSound();
       ans.classList.remove('is-wrong'); void ans.offsetWidth; ans.classList.add('is-wrong');
+      msg.textContent = 'Leider falsch – neue Aufgabe.';
       setTimeout(newQuestion, 450);
     }
     const keypad = el('div', { class: 'keypad' });
     for (const d of ['1', '2', '3', '4', '5', '6', '7', '8', '9']) keypad.append(el('button', { type: 'button', onclick: () => press(d) }, d));
     keypad.append(
-      el('button', { type: 'button', 'aria-label': 'Löschen', onclick: () => { answer = answer.slice(0, -1); ans.textContent = answer; } }, '⌫'),
+      el('button', { type: 'button', 'aria-label': 'Löschen', onclick: erase }, '⌫'),
       el('button', { type: 'button', onclick: () => press('0') }, '0'),
-      el('button', { type: 'button', 'aria-label': 'Bestätigen', style: { background: 'var(--ui-accent)', color: '#fff' }, onclick: submit }, 'OK'));
-    const box = el('div', { class: 'dialog lock' },
-      el('h2', {}, '🔒 Eltern-Bereich'),
-      el('p', { class: 'muted' }, 'Bitte rechne kurz:'),
-      q, ans, keypad,
-      el('button', { type: 'button', class: 'btn btn--ghost', onclick: () => close() }, 'Abbrechen'));
+      el('button', { type: 'button', class: 'keypad__ok', 'aria-label': 'Bestätigen', onclick: submit }, 'OK'));
+    const box = el('div', { class: 'lock' },
+      el('button', { type: 'button', class: 'icon-btn icon-btn--plain lock__close', 'aria-label': 'Abbrechen', onclick: () => close() }, '✕'),
+      el('div', { class: 'lock__head' },
+        el('span', { class: 'lock__kicker' }, '⚙️ Nur für Erwachsene'),
+        el('h2', {}, 'Löse die Aufgabe, um den Eltern-Bereich zu öffnen')),
+      el('div', { class: 'lock__task' }, q, ans),
+      msg,
+      keypad);
     box.addEventListener('keydown', e => {
       if (/^\d$/.test(e.key)) { press(e.key); e.preventDefault(); }
-      else if (e.key === 'Backspace') { answer = answer.slice(0, -1); ans.textContent = answer; }
+      else if (e.key === 'Backspace') erase();
       else if (e.key === 'Enter' && e.target.tagName !== 'BUTTON') submit();
     });
     newQuestion();
-    const { close } = openOverlay(box, { label: 'Eltern-Sperre', onClose: () => resolve(ok) });
+    const { close } = openOverlay(box, { label: 'Eltern-Sperre', className: 'lock-overlay', onClose: () => resolve(ok) });
   });
 }
 

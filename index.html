@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Ticky</title>
   <meta name="description" content="Morgen- und Abendroutinen für Kinder zum Abhaken. Alle Daten bleiben auf diesem Gerät.">
-  <meta name="theme-color" content="#1F2440">
-  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#161826">
+  <meta name="color-scheme" content="dark">
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./assets/icons/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="./assets/icons/apple-touch-icon.png">
@@ -14,25 +14,14 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="Ticky">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <link rel="preload" href="./assets/fonts/nunito-latin-800-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="./assets/fonts/inter-latin-var.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="./css/base.css">
-  <link rel="stylesheet" href="./css/themes/pixel.css">
-  <link rel="stylesheet" href="./css/themes/neon.css">
-  <link rel="stylesheet" href="./css/themes/zauber.css">
-  <link rel="stylesheet" href="./css/themes/dino.css">
-  <link rel="stylesheet" href="./css/themes/weltraum.css">
-  <link rel="stylesheet" href="./css/themes/schatz.css">
+  <link rel="stylesheet" href="./css/themes.css">
   <link rel="stylesheet" href="./css/album.css">
   <script type="module" src="./js/main.js"></script>
 </head>
 <body class="day">
-  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
-    <defs>
-      <linearGradient id="magic-grad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FDE68A"/><stop offset=".5" stop-color="#FBBF24"/><stop offset="1" stop-color="#F472B6"/></linearGradient>
-    </defs>
-  </svg>
   <div id="sky" class="sky" aria-hidden="true"></div>
-  <div id="ambient" class="ambient" aria-hidden="true"></div>
 
   <div id="app">
     <noscript><p class="noscript">Ticky braucht JavaScript.</p></noscript>
@@ -43,25 +32,27 @@
     <!-- Hauptansicht während einer Routine -->
     <section id="screen-main" class="screen main-screen" hidden>
       <header class="app-header">
-        <div class="app-header__title">
+        <div class="app-header__row">
           <h1 id="routine-title">Morgenroutine ☀️</h1>
-          <div class="global-progress" role="progressbar" aria-label="Fortschritt aller Kinder" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="global-progress">
-            <span class="global-progress__bar"><span class="global-progress__fill" id="global-fill"></span></span>
-            <span class="global-progress__count" id="global-count">0 / 0</span>
-          </div>
-          <div class="time-left" id="time-left" hidden>
-            <span class="time-left__track" aria-hidden="true">
-              <span class="time-left__fill" id="time-fill"></span>
-              <span class="time-left__goal emoji" id="time-goal">⚡</span>
-              <span class="time-left__sun emoji" id="time-sun">☀️</span>
-            </span>
-            <span class="time-left__text" id="time-text"></span>
-          </div>
-        </div>
-        <div class="app-header__actions">
           <button type="button" class="icon-btn" id="btn-end-manual" hidden aria-label="Routine beenden" title="Routine beenden">⏹️</button>
-          <button type="button" class="icon-btn trophy" id="btn-trophy" hidden aria-label="Gesamt-Feier anzeigen" title="Alle fertig!">🏆</button>
+          <button type="button" class="icon-btn trophy" id="btn-trophy" disabled aria-label="Gesamt-Feier anzeigen" title="Alle fertig!">🏆</button>
           <button type="button" class="icon-btn" id="btn-settings" aria-label="Eltern-Bereich" title="Eltern-Bereich">⚙️</button>
+        </div>
+        <div class="global-progress" role="progressbar" aria-label="Fortschritt aller Kinder" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="global-progress">
+          <span class="global-progress__fill" id="global-fill"></span>
+          <span class="sr-only" id="global-count">0 / 0</span>
+        </div>
+        <div class="time-left" id="time-left" hidden>
+          <div class="time-left__track" aria-hidden="true">
+            <span class="time-left__fuse" id="time-fill"></span>
+            <span class="time-left__goal" id="time-goal"><span class="emoji">⚡</span></span>
+            <span class="time-left__sun emoji" id="time-sun">☀️</span>
+          </div>
+          <div class="time-left__labels">
+            <span id="time-start"></span>
+            <span class="time-left__mid" id="time-text"></span>
+            <span id="time-end"></span>
+          </div>
         </div>
       </header>
       <main id="children-grid" class="children-grid"></main>
@@ -71,12 +62,16 @@
     <!-- Ruhe-Screen außerhalb der Routinezeiten -->
     <section id="screen-rest" class="screen rest-screen" hidden>
       <button type="button" class="icon-btn rest-settings" id="btn-settings-rest" aria-label="Eltern-Bereich" title="Eltern-Bereich">⚙️</button>
-      <div class="rest-scene" id="rest-scene" aria-hidden="true">☀️</div>
-      <p class="rest-next" id="rest-next"></p>
+      <div class="rest-top">
+        <div class="rest-scene emoji" id="rest-scene" aria-hidden="true">☀️</div>
+        <p class="rest-lead" id="rest-lead">Nächste Routine in</p>
+        <p class="rest-countdown" id="rest-countdown"></p>
+        <span class="tag tag--accent rest-tag" id="rest-tag"></span>
+      </div>
       <div class="rest-buddies" id="rest-buddies"></div>
       <div class="rest-actions">
-        <button type="button" class="btn btn--big" id="btn-start-morning">☀️ Morgenroutine jetzt starten</button>
-        <button type="button" class="btn btn--big btn--evening" id="btn-start-evening">🌙 Abendroutine jetzt starten</button>
+        <button type="button" class="btn btn--secondary" id="btn-start-morning">☀️ Morgen starten</button>
+        <button type="button" class="btn btn--ghost" id="btn-start-evening">🌙 Abend starten</button>
       </div>
     </section>
   </div>

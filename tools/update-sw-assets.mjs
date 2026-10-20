@@ -6,7 +6,8 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const INCLUDE = ['index.html', 'manifest.webmanifest', 'css', 'js', 'assets'];
-const SKIP = /\.(txt|md)$/;
+// Alte Style-Schriften liegen nur noch für ein späteres Nachrüsten im Repo und werden nicht gecacht
+const SKIP = /\.(txt|md)$|assets[\/\\]fonts[\/\\](?!inter-)/;
 
 function walk(p, out) {
   if (statSync(p).isDirectory()) for (const f of readdirSync(p).sort()) walk(join(p, f), out);

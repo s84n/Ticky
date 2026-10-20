@@ -2,7 +2,7 @@
 import { $, el, clear, confirmDialog, vibrate, isSingleCard } from './ui.js';
 import { state, load, save, flush, ensureToday, requestPersistence, replaceState } from './store.js';
 import { currentRoutine, isNight, toggleTask, toggleAll, timeInfo } from './routine.js';
-import { renderMain, updateChild, setActiveChild, renderRest, layoutGrid, buddyReact, invalidateRest, updateTime } from './render.js';
+import { renderMain, updateChild, setActiveChild, renderRest, layoutGrid, buddyReact, invalidateRest, updateTime, cardHint, hasTeam } from './render.js';
 import { openAlbum } from './album.js';
 import { startOnboarding } from './onboarding.js';
 import { parentLock, openSettings } from './settings.js';
@@ -19,7 +19,6 @@ let current = null;       // { routine, manual } | null
 let renderedKey = '';
 let tickTimer = null;
 const introPlayed = new Set();
-let lastHoldHint = 0;
 const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
 
 function reducedMotion() {
@@ -41,44 +40,19 @@ function showScreen(name) {
   for (const id of ['onboarding', 'main', 'rest']) $(`#screen-${id}`).hidden = id !== name;
 }
 
-// ---------- Hintergrund: Sternenhimmel & Ambient ----------
+// ---------- Hintergrund: Sternenhimmel ----------
 
+/** Ruhige Sterne oben am Himmel (abends und nachts). Sie stehen still: Die einzige Dauer-Animation gehört dem Team. */
 function renderSky(on) {
   const sky = clear($('#sky'));
-  if (!on || reducedMotion()) return;
-  const n = Math.round((window.matchMedia('(max-width: 699.98px)').matches ? 18 : 35) * (isLite() ? 0.5 : 1));
+  if (!on) return;
+  const n = isLite() ? 10 : 18;
   for (let i = 0; i < n; i++) {
-    const s = el('span', { class: 'star', style: { left: `${Math.random() * 100}%`, top: `${Math.random() * 70}%`, '--d': `${2 + Math.random() * 3}s`, '--delay': `${-Math.random() * 4}s` } });
-    if (Math.random() < 0.25) { s.style.width = '4px'; s.style.height = '4px'; }
-    sky.append(s);
+    sky.append(el('span', { class: 'star', style: {
+      left: `${(i * 53) % 97}%`, top: `${((i * 37) % 30) + 2}%`,
+      '--r': `${i % 3 ? 2 : 3}px`, opacity: String(0.25 + (i % 4) * 0.12),
+    } }));
   }
-}
-
-function renderAmbient() {
-  const amb = clear($('#ambient'));
-  if (!current || reducedMotion()) return;
-  const mobile = isSingleCard();
-  let emojis = [];
-  if (mobile) {
-    const active = state.children.find(c => c.id === state.ui.activeChildId) ?? state.children[0];
-    const list = THEMES[active?.theme ?? 'pixel'].ambient;
-    for (let i = 0; i < (isLite() ? 7 : 14); i++) emojis.push(list[i % list.length]);
-  } else {
-    for (const theme of new Set(state.children.map(c => c.theme))) {
-      const list = THEMES[theme].ambient;
-      for (let i = 0; i < (isLite() ? 3 : 5); i++) emojis.push(pick(list));
-    }
-  }
-  emojis.forEach((e, i) => {
-    amb.append(el('span', {
-      class: 'ambient-item',
-      style: {
-        left: `${(i / emojis.length) * 100 + Math.random() * 5}%`,
-        '--s': `${1.2 + Math.random() * 1.2}rem`, '--d': `${18 + Math.random() * 14}s`, '--delay': `${-Math.random() * 30}s`,
-        '--dx': `${(Math.random() - 0.5) * 120}px`, '--rot': `${(Math.random() - 0.5) * 90}deg`, '--o': `${0.25 + Math.random() * 0.25}`,
-      },
-    }, e));
-  });
 }
 
 // ---------- Router ----------
@@ -98,21 +72,19 @@ function tick(force = false) {
   document.body.classList.toggle('evening', evening);
   document.body.classList.toggle('night', night);
   document.body.classList.toggle('day', !evening && !night);
-  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', evening || night ? '#12153A' : '#FDF4EC');
 
   const key = cur ? `${cur.routine}|${cur.manual}|${today}` : `rest|${night}`;
   current = cur;
   if (cur) {
     if (force || key !== renderedKey || dirty) {
       renderMain(state, cur, handlers);
-      renderAmbient();
       renderSky(evening);
     }
-    updateTime(timeInfo(state.settings, cur, now), cur.routine);
+    updateTime(timeInfo(state.settings, cur, now), cur.routine, state.settings.routines[cur.routine]);
     showScreen('main');
   } else {
     renderRest(state, now, openChildAlbum);
-    if (force || key !== renderedKey) { clear($('#ambient')); renderSky(night); }
+    if (force || key !== renderedKey) renderSky(night);
     showScreen('rest');
   }
   renderedKey = key;
@@ -151,23 +123,24 @@ const handlers = {
     vibrate(30, state.settings);
     if (res.checked) {
       fx.burstAt(r.right - 40, r.top + r.height / 2, child.theme, 14);
-      const phrases = Math.random() < 0.65 ? THEMES[child.theme].praise : GENERIC_PRAISE;
-      fx.praiseAt(pick(phrases), r.left + r.width / 2, r.top, child.theme);
+      // Lob erscheint als Sprechblase einer Team-Figur, ohne Team als Hinweis unten in der Card
+      const phrase = res.completedNow ? 'Alles fertig! 🎉' : pick(Math.random() < 0.65 ? THEMES[child.theme].praise : GENERIC_PRAISE);
+      if (hasTeam(childId)) buddyReact(childId, res.completedNow ? 'party' : 'cheer', r.left + r.width / 2, phrase);
+      else cardHint(childId, phrase, 1400);
       if (!intro) tapSound(child.theme); else setTimeout(() => tapSound(child.theme), 500);
       if (res.remaining === 1) setTimeout(() => speak(pick(SPEECH_ALMOST).replace('{Name}', child.name)), 600);
-      buddyReact(childId, res.completedNow ? 'party' : 'cheer', r.left + r.width / 2);
       if (res.completedNow) childCompleted(child, current.routine, res.reward);
     } else {
       untapSound();
-      buddyReact(childId, 'oops');
+      if (hasTeam(childId)) buddyReact(childId, 'oops', null, 'Hoppla! 🙈');
+      else cardHint(childId, 'Hoppla! 🙈', 1400);
     }
   },
 
-  /** Kurzer Tipp auf eine erledigte Aufgabe: nichts ändern, nur zeigen, wie man zurücknimmt. */
+  /** Kurzer Tipp auf eine erledigte Aufgabe: nichts ändern, nur wackeln und zeigen, wie man zurücknimmt. */
   onHoldHint(childId, btn) {
-    btn.animate?.([{ transform: 'none' }, { transform: 'translateX(-5px)' }, { transform: 'translateX(5px)' }, { transform: 'translateX(-3px)' }, { transform: 'none' }], { duration: 360, easing: 'ease-out' });
-    const now = Date.now();
-    if (now - lastHoldHint > 6000) { lastHoldHint = now; fx.toast('✋ Schon erledigt! Zum Zurücknehmen lange drücken.'); }
+    btn.animate?.([{ transform: 'none' }, { transform: 'rotate(-1.5deg)' }, { transform: 'rotate(1.5deg)' }, { transform: 'rotate(-1deg)' }, { transform: 'none' }], { duration: 280, easing: 'linear' });
+    cardHint(childId, 'Lange drücken zum Zurücknehmen', 1600);
   },
 
   async onToggleAll(childId) {
@@ -199,7 +172,6 @@ const handlers = {
     state.ui.activeChildId = childId;
     save();
     setActiveChild(childId);
-    if (isSingleCard()) renderAmbient();
   },
 };
 
@@ -228,7 +200,7 @@ async function openParentArea() {
     onChange: () => tick(true),
     onSettingsChanged: () => { applySettings(); tick(true); },
     onImported: () => { applySettings(); startApp(); },
-    onReset: () => { clearInterval(tickTimer); current = null; renderedKey = ''; clear($('#ambient')); clear($('#sky')); document.body.className = 'day'; applySettings(); showOnboarding(); },
+    onReset: () => { clearInterval(tickTimer); current = null; renderedKey = ''; clear($('#sky')); document.body.className = 'day'; applySettings(); showOnboarding(); },
   });
 }
 
@@ -291,12 +263,9 @@ function wireStatic() {
   document.addEventListener('freeze', flush); // Android friert Apps im Hintergrund ein
   window.addEventListener('appinstalled', () => requestPersistence());
   motionQuery.addEventListener?.('change', () => { applySettings(); tick(true); });
-  let resizeTimer = null;
-  onLiteChange(() => { if (current) { renderAmbient(); renderSky(document.body.classList.contains('evening')); } });
+  onLiteChange(() => { if (current) renderSky(document.body.classList.contains('evening')); });
   window.addEventListener('resize', () => {
     updateViewportUnit();
-    clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(() => { if (current) renderAmbient(); }, 300);
     layoutGrid();
   });
 }

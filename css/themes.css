@@ -1,0 +1,16 @@
+/* =========================================================
+   Ticky – Kinder-Styles als Akzent in der Nocturne-Hülle
+   Jeder Style setzt nur --kc (Akzent), die Radien und indirekt die Art der Fortschrittsanzeige
+   (die Auswahl passiert in render.js). Kein eigener Hintergrund, keine eigene Schrift.
+   Die alten Style-Schriften liegen noch in assets/fonts/ und lassen sich später je [data-theme]
+   über font-family nachrüsten, ohne das Layout zu ändern.
+   ========================================================= */
+[data-theme="pixel"]    { --kc: oklch(0.74 0.15 150); --r-card: 6px;  --r-tile: 4px;  }
+[data-theme="neon"]     { --kc: oklch(0.76 0.13 220); --r-card: 14px; --r-tile: 12px; }
+[data-theme="zauber"]   { --kc: oklch(0.74 0.17 340); --r-card: 28px; --r-tile: 24px; }
+[data-theme="dino"]     { --kc: oklch(0.78 0.14 115); --r-card: 18px; --r-tile: 14px; }
+[data-theme="weltraum"] { --kc: oklch(0.72 0.14 280); --r-card: 20px; --r-tile: 16px; }
+[data-theme="schatz"]   { --kc: oklch(0.76 0.14 65);  --r-card: 12px; --r-tile: 10px; }
+
+/* Dino läuft nach rechts: Marker spiegeln, damit er in Laufrichtung schaut */
+.track[data-kind="dino"] .track__marker { --marker-flip: scaleX(-1); }

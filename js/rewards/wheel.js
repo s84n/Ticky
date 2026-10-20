@@ -2,13 +2,13 @@
 import { el, svg, openOverlay, vibrate } from '../ui.js';
 import { wheelOrder, figureWeights, withUpgradeSlot, drawIndex, segments, targetRotation, segmentAt, hasLuckBonus } from './draw.js';
 import { RARITIES, RARITY_ORDER } from '../data/figures.js';
-import { THEMES, RARE_WHEEL } from '../data/themes.js';
+import { THEMES } from '../data/themes.js';
 import { cryptoRandom } from '../util.js';
 import { tickSound, whooshSound, revealSound } from '../audio.js';
 import { fireworks, confetti, shake, burstAt, flash, isReduced } from '../fx.js';
 import { figureView } from '../figure-view.js';
 import { animationDone, bezier } from '../perf.js';
-import { focusOf, upgradeGuaranteed, UPGRADE_CHANCE, EVO_STEPS, nextStep, pathOf, stageOf, accessoryById } from '../data/progression.js';
+import { focusOf, upgradeGuaranteed, UPGRADE_CHANCE, UPGRADE_PITY, EVO_STEPS, nextStep, pathOf, stageOf, accessoryById } from '../data/progression.js';
 
 const ACCESSORY_LABEL = id => { const a = accessoryById(id); return a ? `${a.icon} ${a.label}` : 'Ein Accessoire'; };
 
@@ -21,13 +21,12 @@ const POINTER_TICK = [
 
 const R = 100; // Radius im SVG-Koordinatensystem (viewBox -100..100)
 
-const GLOW = {
-  standard: 'rgba(255,255,255,.35)',
-  magisch: 'rgba(168, 85, 247, .65)',
-  legendaer: 'rgba(255, 210, 80, .6)',
-  mythisch: 'rgba(239, 68, 68, .65)',
-  geheim: 'rgba(167, 139, 250, .8)',
-};
+/** Feldfarben nach design_handoff §4 2c. Standard nutzt den Farbton des Styles, alles andere die App-Palette. */
+const GOLD = 'var(--ticky-gold)', GOLD_2 = 'var(--ticky-gold-2)';
+const MYTH = ['oklch(0.62 0.2 25)', 'oklch(0.5 0.2 320)'];
+const SECRET = ['oklch(0.22 0.02 280)', 'oklch(0.45 0.18 300)'];
+const standardColors = hue => [`oklch(0.5 0.1 ${hue})`, `oklch(0.42 0.08 ${hue})`];
+const MAGIC = ['var(--color-accent)', 'var(--color-accent-600)'];
 
 function pt(angleDeg, r) {
   const a = (angleDeg * Math.PI) / 180;
@@ -41,70 +40,50 @@ function segPath(start, end, r) {
   return `M0 0 L${x1.toFixed(3)} ${y1.toFixed(3)} A${r} ${r} 0 ${large} 1 ${x2.toFixed(3)} ${y2.toFixed(3)} Z`;
 }
 
+/** Verlauf von innen nach außen (Farben als style, damit CSS-Variablen und oklch greifen). */
+const radial = (id, c1, c2) => svg('radialGradient', { id, cx: '0', cy: '0', r: '100', gradientUnits: 'userSpaceOnUse' },
+  svg('stop', { offset: '.15', style: `stop-color:${c1}` }), svg('stop', { offset: '1', style: `stop-color:${c2}` }));
+
 function buildWheelSvg(theme, figures, segs, owned, upgradeFig = null) {
-  const colors = THEMES[theme].wheel;
+  const std = standardColors(THEMES[theme].hue);
   const defs = svg('defs', {},
-    svg('filter', { id: 'w-sil' }, svg('feColorMatrix', { type: 'matrix', values: '0 0 0 0 0.05  0 0 0 0 0.05  0 0 0 0 0.12  0 0 0 0.75 0' })),
-    svg('pattern', { id: 'w-glitter', width: 12, height: 12, patternUnits: 'userSpaceOnUse' },
-      svg('circle', { cx: 3, cy: 3, r: 0.9, fill: 'rgba(255,255,255,.7)' }), svg('circle', { cx: 9, cy: 8, r: 0.6, fill: 'rgba(255,255,255,.5)' })),
-    svg('radialGradient', { id: 'w-gold', cx: '0', cy: '0', r: '100', gradientUnits: 'userSpaceOnUse' },
-      svg('stop', { offset: '0', 'stop-color': '#FFF6C8' }), svg('stop', { offset: '.55', 'stop-color': colors.legendaer[0] }), svg('stop', { offset: '1', 'stop-color': colors.legendaer[1] })),
-    svg('radialGradient', { id: 'w-myth', cx: '0', cy: '0', r: '100', gradientUnits: 'userSpaceOnUse' },
-      svg('stop', { offset: '.2', 'stop-color': '#FCA5A5' }), svg('stop', { offset: '.6', 'stop-color': RARE_WHEEL.mythisch[0] }), svg('stop', { offset: '1', 'stop-color': RARE_WHEEL.mythisch[1] })),
-    svg('radialGradient', { id: 'w-secret', cx: '0', cy: '0', r: '100', gradientUnits: 'userSpaceOnUse' },
-      svg('stop', { offset: '.2', 'stop-color': '#6D28D9' }), svg('stop', { offset: '.7', 'stop-color': RARE_WHEEL.geheim[1] }), svg('stop', { offset: '1', 'stop-color': RARE_WHEEL.geheim[0] })),
-    svg('radialGradient', { id: 'w-up', cx: '0', cy: '0', r: '100', gradientUnits: 'userSpaceOnUse' },
-      svg('stop', { offset: '0', 'stop-color': '#FFFBEA' }), svg('stop', { offset: '.6', 'stop-color': '#FFD34D' }), svg('stop', { offset: '1', 'stop-color': '#F59E0B' })));
+    svg('filter', { id: 'w-sil' }, svg('feColorMatrix', { type: 'matrix', values: '0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.55 0' })),
+    radial('w-up', GOLD, GOLD_2), radial('w-myth', MYTH[0], MYTH[1]), radial('w-secret', SECRET[0], SECRET[1]));
   const g = svg('g', {});
+  const slice = (start, end, fill) => g.append(svg('path', { d: segPath(start, end, R), style: `fill:${fill}`, stroke: 'rgba(22, 24, 38, .55)', 'stroke-width': 0.6 }));
   if (upgradeFig) {
     // Goldenes Upgrade-Feld (Index 0) mit der Figur, deren Reise gerade läuft
     const { start, end } = segs[0];
-    g.append(svg('path', { d: segPath(start, end, R), fill: 'url(#w-up)', stroke: 'rgba(255,255,255,.95)', 'stroke-width': 2, class: 'wheel-upgrade' }));
-    for (let k = 1; k < 6; k++) {
-      const [x, y] = pt(start + ((end - start) * k) / 6, R * 0.97);
-      g.append(svg('line', { x1: 0, y1: 0, x2: x, y2: y, stroke: 'rgba(255,255,255,.6)', 'stroke-width': 0.8 }));
-    }
+    slice(start, end, 'url(#w-up)');
     const mid = (start + end) / 2;
-    const [cx, cy] = pt(mid, R * 0.6);
-    const img = svg('image', { href: upgradeFig.svg, x: -19, y: -19, width: 38, height: 38, transform: `translate(${cx.toFixed(2)} ${cy.toFixed(2)}) rotate(${mid.toFixed(2)})` });
+    const [cx, cy] = pt(mid, R * 0.645);
+    const img = svg('image', { href: upgradeFig.svg, x: -13, y: -13, width: 26, height: 26, transform: `translate(${cx.toFixed(2)} ${cy.toFixed(2)}) rotate(${mid.toFixed(2)})` });
     img.append(svg('title', {}, `Upgrade für ${upgradeFig.name}`));
-    const [sx, sy] = pt(mid, R * 0.88);
-    g.append(img, svg('text', { x: sx.toFixed(2), y: sy.toFixed(2), 'font-size': 11, 'text-anchor': 'middle', 'dominant-baseline': 'central', class: 'wheel-rare-sym' }, '⭐'));
+    g.append(img);
     segs = segs.slice(1);
   }
   let stdIdx = 0, magIdx = 0;
   figures.forEach((fig, i) => {
     const { start, end } = segs[i];
-    let fill;
-    if (fig.rarity === 'legendaer') fill = 'url(#w-gold)';
-    else if (fig.rarity === 'mythisch') fill = 'url(#w-myth)';
-    else if (fig.rarity === 'geheim') fill = 'url(#w-secret)';
-    else if (fig.rarity === 'magisch') fill = colors.magisch[magIdx++ % 2];
-    else fill = colors.standard[stdIdx++ % 2];
-    g.append(svg('path', { d: segPath(start, end, R), fill, stroke: 'rgba(255,255,255,.85)', 'stroke-width': 1.2 }));
-    // Sehr schmale Felder (Mythisch, Geheim): statt Figur ein leuchtendes Symbol am Rand
-    if (end - start < 10) {
-      const [sx, sy] = pt((start + end) / 2, R * 0.86);
-      const sym = svg('text', { x: sx.toFixed(2), y: sy.toFixed(2), 'font-size': 9, 'text-anchor': 'middle', 'dominant-baseline': 'central', class: 'wheel-rare-sym' },
+    const fill = fig.rarity === 'legendaer' ? GOLD
+      : fig.rarity === 'mythisch' ? 'url(#w-myth)'
+        : fig.rarity === 'geheim' ? 'url(#w-secret)'
+          : fig.rarity === 'magisch' ? MAGIC[magIdx++ % 2] : std[stdIdx++ % 2];
+    slice(start, end, fill);
+    const mid = (start + end) / 2;
+    // Sehr seltene, schmale Felder (Mythisch, Geheim): statt Figur ein Symbol am Rand
+    if (fig.rarity === 'mythisch' || fig.rarity === 'geheim') {
+      const [sx, sy] = pt(mid, R * 0.89);
+      const sym = svg('text', { x: sx.toFixed(2), y: sy.toFixed(2), 'font-size': 7, 'text-anchor': 'middle', 'dominant-baseline': 'central', class: 'wheel-rare-sym' },
         fig.rarity === 'geheim' ? '❓' : '🔥');
       sym.append(svg('title', {}, owned[fig.id] ? fig.name : RARITIES[fig.rarity].label));
       g.append(sym);
       return;
     }
-    if (fig.rarity === 'magisch') g.append(svg('path', { d: segPath(start, end, R), fill: 'url(#w-glitter)' }));
-    if (fig.rarity === 'legendaer') {
-      for (let k = 1; k < 4; k++) {
-        const a = start + ((end - start) * k) / 4;
-        const [x, y] = pt(a, R * 0.96);
-        g.append(svg('line', { x1: 0, y1: 0, x2: x, y2: y, stroke: 'rgba(255,255,255,.55)', 'stroke-width': 0.8 }));
-      }
-    }
-    // Figur im Segment
-    const mid = (start + end) / 2;
-    const span = end - start;
-    const rr = R * 0.66;
-    const arc = (span * Math.PI / 180) * rr;
-    const size = Math.max(16, Math.min(34, arc * 0.85));
+    // Figur im Segment (nicht gewonnene als Silhouette)
+    const rr = R * 0.76;
+    const arc = ((end - start) * Math.PI / 180) * rr;
+    const size = Math.max(9, Math.min(17, arc * 0.85));
     const [cx, cy] = pt(mid, rr);
     const img = svg('image', {
       href: fig.svg, x: -size / 2, y: -size / 2, width: size, height: size,
@@ -114,14 +93,15 @@ function buildWheelSvg(theme, figures, segs, owned, upgradeFig = null) {
     img.append(svg('title', {}, owned[fig.id] ? fig.name : '???'));
     g.append(img);
   });
-  g.append(svg('circle', { cx: 0, cy: 0, r: R, fill: 'none', stroke: 'rgba(0,0,0,.25)', 'stroke-width': 2 }));
   const label = `Glücksrad mit ${figures.length} Figuren${upgradeFig ? ` und einem Upgrade-Feld für ${upgradeFig.name}` : ''}`;
   return svg('svg', { viewBox: '-100 -100 200 200', role: 'img', 'aria-label': label }, defs, g);
 }
 
-const pointerSvg = () => svg('svg', { class: 'wheel-pointer', viewBox: '0 0 44 56', 'aria-hidden': 'true' },
-  svg('path', { d: 'M22 54 L4 14 A18 18 0 1 1 40 14 Z', fill: '#FF3B5C', stroke: '#fff', 'stroke-width': 3, 'stroke-linejoin': 'round' }),
-  svg('circle', { cx: 22, cy: 16, r: 6, fill: '#fff' }));
+/** Legendenfarbe je Rarität (passend zu den Feldern). */
+const legendColor = (r, hue) => ({ standard: standardColors(hue)[0], magisch: MAGIC[0], legendaer: GOLD_2, mythisch: MYTH[0], geheim: SECRET[1] }[r]);
+
+const pointerSvg = () => svg('svg', { class: 'wheel-pointer', viewBox: '0 0 28 26', 'aria-hidden': 'true' },
+  svg('path', { d: 'M0 0 H28 L14 26 Z', style: 'fill:var(--color-text)' }));
 
 const pct = v => `${(v * 100).toLocaleString('de-DE', { maximumFractionDigits: 1 })} %`;
 
@@ -154,24 +134,29 @@ export function openWheel(child, { commit, onFinish, onCancel, settings }) {
   const wrap = el('div', { class: 'wheel-wrap' },
     el('div', { class: 'wheel-ring', 'aria-hidden': 'true' }), rotor, pointer,
     el('div', { class: 'wheel-hub', 'aria-hidden': 'true' }, child.avatar));
-  const spinBtn = el('button', { type: 'button', class: 'btn btn--primary btn--big wheel-spin', autofocus: true, onclick: spin }, 'DREHEN!');
-  const c = { ...THEMES[theme].wheel, ...RARE_WHEEL };
+  const spinBtn = el('button', { type: 'button', class: 'btn btn--primary btn--cta wheel-spin', autofocus: true, onclick: spin }, 'DREHEN!');
+  const hue = THEMES[theme].hue;
   const share = r => (r === 'legendaer' && luck ? 0.1 : RARITIES[r].chance / 100) * (1 - upChance);
   const legend = el('div', { class: 'legend', 'aria-hidden': 'true' },
-    upgradeFig ? el('span', { style: { '--c': '#FFD34D' } }, `⭐ Upgrade ${pct(upChance)}`) : null,
-    ...RARITY_ORDER.map(r => el('span', { style: { '--c': c[r][0] } }, `${RARITIES[r].label.replace(/\s.*$/, '')} ${pct(share(r))}`)));
-  let hint = luck ? '🍀 Glücksbonus aktiv: doppelte Chance auf Legendär!' : 'Tippe auf „DREHEN!“ oder wische über das Rad.';
+    upgradeFig ? el('span', { style: { '--c': GOLD } }, `Upgrade ${pct(upChance)}`) : null,
+    ...RARITY_ORDER.map(r => el('span', { style: { '--c': legendColor(r, hue) } }, `${RARITIES[r].label.replace(/\s.*$/, '')} ${pct(share(r))}`)));
+  // Hinweis-Pille: Garantie bzw. Upgrade-Feld hat Vorrang vor dem Glücksbonus
+  let hint = luck ? '🍀 Glücksbonus aktiv: doppelte Chance auf Legendär!' : null;
   if (upgradeFig) {
     const step = EVO_STEPS[nextStep(child, upgradeFig)];
+    const left = UPGRADE_PITY - (child.sinceUpgrade ?? 0);
     hint = guaranteed
-      ? `⭐ Diesmal ganz sicher: ${upgradeFig.name} bekommt ${step.icon} ${step.label}!`
-      : `⭐ Goldenes Feld: ${upgradeFig.name} bekommt ${step.icon} ${step.label}!`;
+      ? `${step.icon} Diesmal ganz sicher: ${upgradeFig.name} bekommt ${step.label}!`
+      : left === 1
+        ? `${step.icon} Noch 1 Dreh – dann ganz sicher ein Upgrade für ${upgradeFig.name}`
+        : `${step.icon} Goldenes Feld: ${upgradeFig.name} bekommt ${step.label}!`;
   }
   const stage = el('div', { class: 'wheel-stage' },
-    el('h2', { class: 'wheel-title' }, `${child.name}, dreh am Rad!`),
-    wrap, spinBtn,
-    el('p', { class: 'wheel-hint' }, hint),
-    legend);
+    el('div', { class: 'wheel-head' },
+      el('span', { class: 'wheel-kicker' }, `${THEMES[theme].avatars[0]} ${THEMES[theme].name} · ${figures.length} Figuren`),
+      el('h2', { class: 'wheel-title' }, `${child.name}, dreh am Rad!`),
+      hint ? el('span', { class: 'wheel-hint' }, hint) : el('span', { class: 'wheel-hint wheel-hint--plain' }, 'Tippe auf „DREHEN!“ oder wische über das Rad.')),
+    wrap, legend, spinBtn);
 
   document.querySelectorAll('.banner').forEach(b => b.remove()); // Champion-Banner nicht über dem Rad
   const { overlay, close, setDismissible } = openOverlay(stage, {
@@ -198,6 +183,7 @@ export function openWheel(child, { commit, onFinish, onCancel, settings }) {
   function runSpin() {
     spun = true;
     spinBtn.disabled = true;
+    spinBtn.textContent = '…';
     setDismissible(false);
     // 1) Ziehung
     const idx = guaranteed ? 0 : drawIndex(drawWeights, cryptoRandom);
@@ -209,10 +195,10 @@ export function openWheel(child, { commit, onFinish, onCancel, settings }) {
     whooshSound();
     const from = rotation;
     rotation = target;
-    const dur = isReduced() ? 1200 : 4600;
+    const dur = isReduced() ? 600 : 4500; // reduzierte Bewegung: in 600 ms per Ease-out aufs Ziel
     // Drehung als Web-Animation: läuft auf dem Compositor und bleibt flüssig, auch wenn der Hauptthread zu tun hat.
     const anim = rotor.animate?.([{ transform: `rotate(${from}deg)` }, { transform: `rotate(${target}deg)` }],
-      { duration: dur, easing: 'cubic-bezier(.12,.67,.1,1)', fill: 'forwards' });
+      { duration: dur, easing: isReduced() ? 'ease-out' : 'cubic-bezier(.12,.67,.1,1)', fill: 'forwards' });
     if (anim) rotor.style.transform = `rotate(${target}deg)`;
     else {
       rotor.classList.add('is-spinning');
@@ -253,42 +239,38 @@ export function openWheel(child, { commit, onFinish, onCancel, settings }) {
     const upgrade = result.kind === 'upgrade' ? gain?.upgrade : null;
     const rar = RARITIES[fig.rarity];
     const epic = upgrade === 'verwandlung' || ['legendaer', 'mythisch', 'geheim'].includes(fig.rarity);
-    const wrapFig = el('div', { class: 'reveal__figure-wrap', 'data-rarity': fig.rarity },
-      epic ? el('div', { class: 'reveal__rays' }) : null,
-      el('div', { class: 'reveal__glow', style: { '--glow': upgrade ? 'rgba(255, 211, 77, .75)' : GLOW[fig.rarity] } }),
-      figureView(fig, child, { className: 'reveal__figure' }));
-    const btn = el('button', { type: 'button', class: 'btn btn--primary btn--big', onclick: () => { finished = true; close(); onFinish(result); } }, 'Los, feiern! 🎉');
-    const lines = [];
+    const btn = el('button', { type: 'button', class: 'btn btn--primary btn--cta reveal__btn', onclick: () => { finished = true; close(); onFinish(result); } }, 'Los, feiern! 🎉');
+    let badge, name;
+    const sub = [];
     if (upgrade) {
       const step = EVO_STEPS[upgrade];
-      lines.push(
-        el('div', { class: 'reveal__badge reveal__badge--upgrade' }, `${step.icon} ${step.label}`),
-        el('h2', { class: 'reveal__title reveal__title--upgrade' }, upgrade === 'verwandlung' ? 'VERWANDLUNG!' : 'UPGRADE!'),
-        el('div', { class: 'reveal__name' }, `${fig.name} ${step.reveal}`),
-        journeyLine(fig));
+      badge = upgrade === 'verwandlung' ? 'VERWANDLUNG!' : 'UPGRADE!';
+      name = `${fig.name} ${step.reveal} ${step.icon}`;
+      sub.push(journeyLine(fig));
     } else {
+      badge = rar.reveal;
+      name = fig.name;
       const count = child.figures[fig.id] ?? 1;
-      lines.push(
-        el('div', { class: 'reveal__badge', 'data-rarity': fig.rarity }, rar.label),
-        el('h2', { class: 'reveal__title', 'data-rarity': fig.rarity }, rar.reveal),
-        el('div', { class: 'reveal__name' }, fig.name));
       if (gain?.isNew) {
         const inTeam = child.team?.includes(fig.id);
-        lines.push(el('div', { class: 'reveal__count' }, inTeam ? 'Neu! Sie läuft ab jetzt bei deinen Aufgaben mit.' : 'Neu! Sie wartet in deinem Album.'));
-        const len = pathOf(fig).length;
-        lines.push(el('div', { class: 'reveal__dust' }, `⭐ Ihre Upgrade-Reise beginnt: ${len} Upgrades warten!`));
+        sub.push(el('p', { class: 'reveal__sub' }, inTeam ? 'Neu! Sie läuft ab jetzt bei deinen Aufgaben mit.' : 'Neu! Sie wartet in deinem Album – dein Team ist voll.'),
+          el('p', { class: 'reveal__extra' }, `⭐ Ihre Upgrade-Reise beginnt: ${pathOf(fig).length} Upgrades warten!`));
+      } else if (gain?.upgrade) {
+        const step = EVO_STEPS[gain.upgrade];
+        sub.push(el('p', { class: 'reveal__sub' }, `Schon ${count}× gewonnen – dafür gibt's ein Upgrade: ${step.icon} ${step.label}!`), journeyLine(fig));
+      } else if (gain?.gift) {
+        sub.push(el('p', { class: 'reveal__sub' }, `Schon ${count}× gewonnen – Geschenk: ${ACCESSORY_LABEL(gain.gift)} für deine Figuren!`));
       } else {
-        lines.push(el('div', { class: 'reveal__count' }, `Schon ${count}× gewonnen`));
-        if (gain?.upgrade) {
-          const step = EVO_STEPS[gain.upgrade];
-          lines.push(el('div', { class: 'reveal__dust' }, `Doppelt = Upgrade: ${step.icon} ${step.label}!`), journeyLine(fig));
-        } else if (gain?.gift) {
-          const acc = ACCESSORY_LABEL(gain.gift);
-          lines.push(el('div', { class: 'reveal__dust' }, `Doppelt = Geschenk: ${acc} für deine Figuren!`));
-        }
+        sub.push(el('p', { class: 'reveal__sub' }, `Schon ${count}× gewonnen`));
       }
     }
-    const box = el('div', { class: 'reveal' }, wrapFig, ...lines, btn);
+    const box = el('div', { class: 'reveal', 'data-rarity': upgrade ? 'upgrade' : fig.rarity },
+      el('p', { class: 'reveal__badge' }, badge),
+      el('div', { class: 'reveal__tile' },
+        epic ? el('div', { class: 'reveal__rays', 'aria-hidden': 'true' }) : null,
+        figureView(fig, child, { className: 'reveal__figure' })),
+      el('h2', { class: 'reveal__name' }, name),
+      ...sub, btn);
     stage.replaceChildren(box);
     setDismissible(true);
     btn.focus();
@@ -333,13 +315,12 @@ export function openWheel(child, { commit, onFinish, onCancel, settings }) {
     }
   }
 
-  /** „Upgrade 2 von 4“ bzw. „Reise geschafft!“ als kleine Punktreihe. */
+  /** „Upgrade 2 von 3 – als Nächstes: 📏 Wachstum.“ bzw. „Reise geschafft!“ */
   function journeyLine(fig) {
     const path = pathOf(fig);
     const stage = stageOf(child, fig.id);
-    return el('div', { class: 'reveal__journey' },
-      el('span', { class: 'evo-dots', 'aria-hidden': 'true' }, ...path.map((st, i) => el('span', { class: `evo-dot${i < stage ? ' is-on' : ''}` }, EVO_STEPS[st].icon))),
-      el('span', {}, stage >= path.length ? 'Reise geschafft! 🏆' : `Upgrade ${stage} von ${path.length}`));
+    const next = EVO_STEPS[path[stage]];
+    return el('p', { class: 'reveal__extra' }, next ? `Upgrade ${stage} von ${path.length} – als Nächstes: ${next.icon} ${next.label}.` : 'Reise geschafft! 🏆');
   }
 
   return { overlay, close };

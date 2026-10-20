@@ -1,9 +1,13 @@
-// Style-Definitionen. Farben, die JS braucht (Partikel, Flash, Rad); alles Visuelle sonst in css/themes/*.css.
+// Style-Definitionen. Farben, die JS braucht (Partikel, Flash); alles Visuelle sonst in css/themes.css und css/base.css.
 // progress: Art der Fortschrittsanzeige auf der Card (xp | neon | magic | track).
+// kc/hue/short: Akzentfarbe, Farbton und Kurzbeschreibung für die Nocturne-Optik (design_handoff).
 // world: Name als Untertitel im Album (props: Deko der früheren Figurenwelt, derzeit ungenutzt). levelTitles: Titel fürs Spieler-Level (alle 4 Level ein neuer).
 export const THEMES = {
   pixel: {
     id: 'pixel',
+    kc: 'oklch(0.74 0.15 150)', // Akzent in der Nocturne-Hülle (= --kc in css/themes.css)
+    hue: 150, // Farbton für Standard-Felder im Rad
+    short: 'Blöcke & XP',
     name: 'Pixel-Abenteuer',
     tagline: 'Blöcke, Erz und XP',
     primary: '#5D8C3E',
@@ -14,13 +18,15 @@ export const THEMES = {
     praise: ['Gut gebaut! 🧱', 'Level up! ⬆️', 'Diamant gefunden! 💎', 'Block-Meister! 🟩', 'Episch! ⚡'],
     ambient: ['🌲', '🪨', '🌿', '🪵', '💎', '⚡', '🏔️'],
     avatars: ['⛏️', '🧱', '🌲', '🐷', '💎', '🗡️'],
-    wheel: { standard: ['#5D8C3E', '#4A7A30'], magisch: ['#7C5CD6', '#2BB3B1'], legendaer: ['#F5C542', '#E0A21A'] },
     progress: 'xp',
     world: { name: 'Pixel-Wiese', props: ['🌲', '🪨', '🌼', '🌲', '🍄', '🪵'] },
     levelTitles: ['Neuling', 'Sammler', 'Baumeister', 'Entdecker', 'Höhlenforscher', 'Meisterbauer', 'Pixel-Held', 'Block-Legende'],
   },
   neon: {
     id: 'neon',
+    kc: 'oklch(0.76 0.13 220)',
+    hue: 220,
+    short: 'Sterne & Level',
     name: 'Neon-Arcade',
     tagline: 'Glow, Combos, Highscore',
     primary: '#00B2FF',
@@ -31,13 +37,15 @@ export const THEMES = {
     praise: ['GG! 🎮', 'Epic Win! 🏆', 'Level geschafft! 🎯', 'Highscore! 🕹️', 'Combo! 💥'],
     ambient: ['⭐', '💫', '🎮', '💥', '🔶', '🔷', '🎯', '🌀'],
     avatars: ['🎮', '🤖', '🕹️', '🚀', '👾', '🦖'],
-    wheel: { standard: ['#1B2A4A', '#13203A'], magisch: ['#8B3DFF', '#00C2B8'], legendaer: ['#FFCC00', '#F0A500'] },
     progress: 'neon',
     world: { name: 'Arcade-Halle', props: ['🕹️', '🎰', '💡', '🕹️', '🎯', '💎'] },
     levelTitles: ['Rookie', 'Player', 'Combo-Profi', 'Highscorer', 'Arcade-Ass', 'Champion', 'Neon-Star', 'Arcade-Legende'],
   },
   zauber: {
     id: 'zauber',
+    kc: 'oklch(0.74 0.17 340)',
+    hue: 340,
+    short: 'Glitzer & Regenbogen',
     name: 'Einhorn-Zauber',
     tagline: 'Glitzer, Feen, Regenbogen',
     primary: '#D946EF',
@@ -48,13 +56,15 @@ export const THEMES = {
     praise: ['Zauberhaft! ✨', 'Magisch! 🦄', 'Regenbogen-Power! 🌈', 'Glitzer! 💖', 'Feen-Kraft! 🧚'],
     ambient: ['✨', '⭐', '💫', '🌸', '💖', '🌟', '🦋', '🌈'],
     avatars: ['🦄', '🧚', '🌈', '🦋', '🐱', '🌸'],
-    wheel: { standard: ['#F9A8D4', '#F0ABFC'], magisch: ['#8B5CF6', '#2DD4BF'], legendaer: ['#FBBF24', '#F59E0B'] },
     progress: 'magic',
     world: { name: 'Zauberwald', props: ['🌳', '🍄', '🌷', '🌸', '🌳', '🦋'] },
     levelTitles: ['Zauberlehrling', 'Feenfreund', 'Glitzerfee', 'Sternenfänger', 'Regenbogen-Magier', 'Einhorn-Reiter', 'Zaubermeister', 'Märchen-Legende'],
   },
   dino: {
     id: 'dino',
+    kc: 'oklch(0.78 0.14 115)',
+    hue: 115,
+    short: 'Spuren zum Vulkan',
     name: 'Dino-Expedition',
     tagline: 'Dschungel, Spuren, Vulkan',
     primary: '#4D8B1F',
@@ -65,7 +75,6 @@ export const THEMES = {
     praise: ['Rooaar! 🦖', 'Dino-stark! 🦕', 'Fossil gefunden! 🦴', 'Spur entdeckt! 🐾', 'Ur-gut! 🌋'],
     ambient: ['🌿', '🍃', '🌴', '🦴', '🥚', '🪨', '🌋'],
     avatars: ['🦖', '🦕', '🥚', '🌋', '🦴', '🌴'],
-    wheel: { standard: ['#6B9E3A', '#558A2A'], magisch: ['#0EA5A4', '#7C5CD6'], legendaer: ['#FB923C', '#EA580C'] },
     progress: 'track',
     track: { marker: '🦖', goal: '🌋', done: 'Vulkan erreicht! 🌋', label: (d, t) => `${d} / ${t} Spuren` },
     world: { name: 'Dino-Dschungel', props: ['🌴', '🌿', '🪨', '🌴', '🥚', '🌋'] },
@@ -73,6 +82,9 @@ export const THEMES = {
   },
   weltraum: {
     id: 'weltraum',
+    kc: 'oklch(0.72 0.14 280)',
+    hue: 280,
+    short: 'Planet zu Planet',
     name: 'Sternenreise',
     tagline: 'Raketen, Planeten, Sterne',
     primary: '#6366F1',
@@ -83,7 +95,6 @@ export const THEMES = {
     praise: ['Abheben! 🚀', 'Sternklasse! 🌟', 'Neuer Planet! 🪐', 'Volle Schubkraft! ☄️', 'Kosmisch! ✨'],
     ambient: ['⭐', '🪐', '☄️', '🌟', '✨', '🛰️', '🌙'],
     avatars: ['🚀', '👽', '🪐', '🌙', '👩‍🚀', '🛸'],
-    wheel: { standard: ['#312E81', '#1E3A8A'], magisch: ['#0891B2', '#7C3AED'], legendaer: ['#FDE047', '#F59E0B'] },
     progress: 'track',
     track: { marker: '🚀', goal: '🌟', done: 'Ziel erreicht! 🌟', label: (d, t) => `Planet ${Math.min(d + 1, t)} von ${t}` },
     world: { name: 'Mondbasis', props: ['🛰️', '🪐', '🌑', '🛸', '🪨', '📡'] },
@@ -91,6 +102,9 @@ export const THEMES = {
   },
   schatz: {
     id: 'schatz',
+    kc: 'oklch(0.76 0.14 65)',
+    hue: 65,
+    short: 'Segeln zum Schatz',
     name: 'Schatzinsel',
     tagline: 'Piraten, Karte, Gold',
     primary: '#B45309',
@@ -101,7 +115,6 @@ export const THEMES = {
     praise: ['Ahoi! 🏴‍☠️', 'Goldrichtig! 🪙', 'Land in Sicht! 🏝️', 'Schatz gefunden! 💰', 'Volle Fahrt! ⛵'],
     ambient: ['🪙', '🐚', '⚓', '🦜', '🌊', '💎', '🗺️'],
     avatars: ['🏴‍☠️', '🦜', '⚓', '🗺️', '🦀', '⛵'],
-    wheel: { standard: ['#D6A866', '#C4914B'], magisch: ['#0E7490', '#7C3AED'], legendaer: ['#FACC15', '#CA8A04'] },
     progress: 'track',
     track: { marker: '⛵', goal: '❌', doneGoal: '💰', done: 'Schatz gefunden! 💰', label: (d, t) => `Noch ${t - d} bis zum Schatz` },
     world: { name: 'Pirateninsel', props: ['🌴', '🐚', '⚓', '🌴', '🪨', '🦀'] },
@@ -110,9 +123,6 @@ export const THEMES = {
 };
 
 export const THEME_IDS = Object.keys(THEMES);
-
-/** Rad-Farben der neuen Raritäten (für alle Styles gleich). */
-export const RARE_WHEEL = { mythisch: ['#DC2626', '#7C3AED'], geheim: ['#111827', '#4C1D95'] };
 
 export const GENERIC_PRAISE = ['Super! 🌟', 'Toll gemacht! 👍', 'Klasse! 🎉', 'Weiter so! 💪', 'Prima! ✨', 'Bravo! 👏'];
 

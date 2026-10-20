@@ -11,14 +11,18 @@ export function newChildDraft(index = 0) {
   return { id: randomId('c'), name: '', theme, avatar: THEMES[theme].avatars[0], tasks: defaultTaskSelection(), figures: {}, sinceLegendary: 0, sinceUpgrade: 0, xp: 0, wardrobe: [], evo: {}, acc: {}, team: [], focus: null };
 }
 
-/** Mini-Vorschau-Card im Look eines Styles. */
-export function miniCard(theme, name) {
-  const nameEl = el('div', { class: 'mini-card__name' }, name || 'Name');
-  const card = el('div', { class: 'mini-card', 'data-theme': theme },
-    nameEl,
-    el('div', { class: 'mini-card__task' }, el('span', { class: 'emoji' }, '🪥'), el('span', {}, 'Zähneputzen')),
-    el('div', { class: 'mini-card__style' }, THEMES[theme].name));
-  return { card, setName: n => { nameEl.textContent = n || 'Name'; } };
+/** Style-Kachel: Avatar, Name und live eingesetzter Kindername mit Kurzbeschreibung. Radius = Card-Radius des Styles. */
+function themeTile(theme, name) {
+  const t = THEMES[theme];
+  const preview = el('span', { class: 'theme-tile__preview' });
+  const avatar = el('span', { class: 'theme-tile__avatar emoji', 'aria-hidden': 'true' }, t.avatars[0]);
+  const setName = n => { preview.textContent = `${n || 'Name'} · ${t.short}`; };
+  setName(name);
+  return {
+    parts: [el('span', { class: 'theme-tile__mark', 'aria-hidden': 'true' }), avatar, el('span', { class: 'theme-tile__name' }, t.name), preview],
+    setName,
+    setAvatar: a => { avatar.textContent = a; },
+  };
 }
 
 /**
@@ -52,11 +56,13 @@ export function basicsEditor(draft, ctx = {}) {
   // Style
   const tiles = el('div', { class: 'theme-tiles', role: 'radiogroup', 'aria-label': 'Style wählen' });
   const avatarRow = el('div', { class: 'avatar-row', role: 'radiogroup', 'aria-label': 'Avatar wählen' });
+  const tileOf = new Map();
   for (const t of THEME_IDS) {
-    const prev = miniCard(t, sanitizeName(draft.name));
+    const prev = themeTile(t, sanitizeName(draft.name));
     previews.push(prev);
+    tileOf.set(t, prev);
     const tile = el('button', {
-      type: 'button', class: 'theme-tile', role: 'radio', 'aria-checked': String(draft.theme === t), 'aria-label': THEMES[t].name,
+      type: 'button', class: 'theme-tile', 'data-theme': t, role: 'radio', 'aria-checked': String(draft.theme === t), 'aria-label': THEMES[t].name,
       onclick: () => {
         const changed = draft.theme !== t;
         draft.theme = t;
@@ -65,22 +71,23 @@ export function basicsEditor(draft, ctx = {}) {
         renderAvatars();
         ctx.onChange?.();
       },
-    }, prev.card);
+    }, prev.parts);
     tiles.append(tile);
   }
-  root.append(el('div', { class: 'field' }, el('span', { class: 'field__label' }, 'Style'), tiles));
+  root.append(el('div', { class: 'field' }, el('span', { class: 'field__label' }, 'Wähle deine Welt'), tiles));
 
   function renderAvatars() {
+    for (const [t, tile] of tileOf) tile.setAvatar(t === draft.theme ? draft.avatar : THEMES[t].avatars[0]); // gewählte Kachel zeigt den gewählten Avatar
     clear(avatarRow);
     for (const a of THEMES[draft.theme].avatars) {
       avatarRow.append(el('button', {
-        type: 'button', class: 'avatar-choice', role: 'radio', 'aria-checked': String(draft.avatar === a), 'aria-label': `Avatar ${a}`,
+        type: 'button', class: 'avatar-choice', 'data-theme': draft.theme, role: 'radio', 'aria-checked': String(draft.avatar === a), 'aria-label': `Avatar ${a}`,
         onclick: () => { draft.avatar = a; renderAvatars(); ctx.onChange?.(); },
       }, a));
     }
   }
   renderAvatars();
-  root.append(el('div', { class: 'field' }, el('span', { class: 'field__label' }, 'Avatar'), avatarRow));
+  root.append(el('div', { class: 'field' }, el('span', { class: 'field__label' }, 'Dein Zeichen'), avatarRow));
 
   updateHints();
   return {

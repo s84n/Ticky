@@ -1,4 +1,4 @@
-// Effekte: Partikel, Screen-Flash, Toasts, Lob-Bubbles, Banner, Feuerwerk, Konfetti.
+// Effekte: Partikel, Screen-Flash, Toasts, Banner, Feuerwerk, Konfetti.
 // Alle Partikel teilen sich EIN Canvas. Jede Partikelsorte wird einmal samt Leuchten als Sprite vorgerendert,
 // danach kostet ein Partikel pro Frame nur noch ein drawImage – keine DOM-Knoten, Filter oder Ebenen.
 import { THEMES } from './data/themes.js';
@@ -261,13 +261,6 @@ export function flash(color) {
   setTimeout(() => node.remove(), 1200);
 }
 
-export function praiseAt(text, x, y, theme) {
-  const node = el('div', { class: 'praise', 'data-theme': theme, style: { left: `${x}px`, top: `${y}px` } }, text);
-  layer().append(node);
-  node.addEventListener('animationend', () => node.remove(), { once: true });
-  setTimeout(() => node.remove(), 2000);
-}
-
 export function banner(text, theme) {
   const node = el('div', { class: 'banner', 'data-theme': theme }, text);
   document.body.append(node);
@@ -343,11 +336,13 @@ export function dust(x, y) {
   ], { duration: 600, ease: EASE.out });
 }
 
+const SHAKE = [
+  { translate: '0 0' }, { translate: '-8px 3px', offset: 0.2 }, { translate: '7px -4px', offset: 0.4 },
+  { translate: '-5px 2px', offset: 0.6 }, { translate: '4px -2px', offset: 0.8 }, { translate: '0 0' },
+];
+
+/** Bildschirm-Wackeln als Web-Animation auf `translate`: stört weder transform noch die CSS-Animationen (z. B. das Einblenden der Overlays). */
 export function shake() {
   if (reduced()) return;
-  document.body.classList.remove('shake');
-  requestAnimationFrame(() => requestAnimationFrame(() => {
-    document.body.classList.add('shake');
-    setTimeout(() => document.body.classList.remove('shake'), 600);
-  }));
+  for (const node of [$('#app'), ...document.querySelectorAll('.overlay')]) node?.animate?.(SHAKE, { duration: 500, easing: 'ease-out' });
 }

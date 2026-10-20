@@ -3,7 +3,7 @@
 /** Gesamtchance pro Rarität in Prozent. Wird gleichmäßig auf die Figuren der Rarität verteilt. */
 export const RARITIES = {
   standard:  { label: 'Standard', reveal: 'Gefunden!', chance: 68, short: '68 %' },
-  magisch:   { label: 'Magisch ✨', reveal: 'Magisch!', chance: 25, short: '25 %' },
+  magisch:   { label: 'Magisch ✨', reveal: 'Magisch! ✨', chance: 25, short: '25 %' },
   legendaer: { label: 'Legendär 🌟', reveal: 'LEGENDÄR!', chance: 5, short: '5 %' },
   mythisch:  { label: 'Mythisch 🔥', reveal: 'MYTHISCH!', chance: 1.5, short: '1,5 %' },
   geheim:    { label: 'Geheim ❓', reveal: 'GEHEIM!!', chance: 0.5, short: '0,5 %' },

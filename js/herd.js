@@ -30,6 +30,14 @@ export function mountHerd(meadow, child, { onOpen } = {}) {
     actors = [];
   }
 
+  /** Rechter Rand der Laufstrecke in %: Das Team läuft nicht unter den Reise-Chip. */
+  function maxX() {
+    const chip = meadow.querySelector('.meadow__focus');
+    const w = meadow.clientWidth;
+    if (!chip) return 92;
+    return w ? Math.max(30, Math.min(92, (chip.offsetLeft / w) * 100 - 7)) : 64;
+  }
+
   function later(a, fn, ms) {
     clearTimeout(a.timer);
     a.timer = setTimeout(() => { if (meadow.isConnected) fn(); }, ms);
@@ -40,20 +48,20 @@ export function mountHerd(meadow, child, { onOpen } = {}) {
     clear(meadow);
     const team = (child.team ?? []).map(figureById).filter(Boolean);
     if (!team.length) {
-      meadow.append(el('button', { type: 'button', class: 'meadow__empty', onclick: () => onOpen?.() }, '🎡 Schaff deine Aufgaben – dann zieht hier jemand ein!'));
+      meadow.append(el('button', { type: 'button', class: 'meadow__empty', onclick: () => onOpen?.() }, 'Schaff deine Aufgaben – dann zieht hier jemand ein! 🌱'));
       return;
     }
     team.forEach((fig, i) => {
       const a = {
         fig, timer: null,
-        x: ((i + 0.5) / team.length) * 80 + 10 + rand(-6, 6),
+        x: ((i + 0.5) / team.length) * (focusOf(child) ? 56 : 80) + 10 + rand(-4, 4),
         fast: hasStep(child, fig, 'tempo'),
         trick: hasStep(child, fig, 'trick'),
       };
       a.node = el('button', {
         type: 'button', class: `herd-actor${hasStep(child, fig, 'groesse') ? ' is-big' : ''}${i === 0 ? ' is-leader' : ''}${fig.motion === 'fly' ? ' is-fly' : ''}`,
-        'aria-label': fig.name, onclick: () => greet(a),
-      }, figureView(fig, child, { alt: '' }));
+        'aria-label': i === 0 ? `${fig.name}, Anführer` : fig.name, onclick: () => greet(a),
+      }, i === 0 ? el('span', { class: 'herd-crown emoji', 'aria-hidden': 'true' }, '👑') : null, figureView(fig, child, { alt: '' }));
       setPos(a, 0);
       meadow.append(a.node);
       actors.push(a);
@@ -67,7 +75,7 @@ export function mountHerd(meadow, child, { onOpen } = {}) {
         'aria-label': `Upgrade-Reise von ${focus.name}: ${stageOf(child, focus.id)} von ${pathOf(focus).length}. Als Nächstes ${step.label}.`,
       },
         el('img', { src: focus.svg, alt: '' }),
-        el('span', {}, `${stageOf(child, focus.id)}/${pathOf(focus).length}`),
+        el('span', {}, `${stageOf(child, focus.id)}/${pathOf(focus).length} →`),
         el('span', { class: 'emoji', 'aria-hidden': 'true' }, step.icon)));
     }
   }
@@ -90,7 +98,7 @@ export function mountHerd(meadow, child, { onOpen } = {}) {
   }
 
   function wander(a) {
-    moveTo(a, rand(8, 92), () => {
+    moveTo(a, rand(8, maxX()), () => {
       if (a.fast && Math.random() < 0.35) play(a, 'is-salto', 750);
       else if (a.trick && Math.random() < 0.3) play(a, 'is-trick', 1300);
       later(a, () => wander(a), tired ? rand(4000, 9000) : rand(1200, 5200));
@@ -136,10 +144,10 @@ export function mountHerd(meadow, child, { onOpen } = {}) {
   }
 
   function bubble(a, text) {
-    a.node.querySelector('.world-bubble')?.remove();
-    const b = el('span', { class: 'world-bubble' }, text);
+    a.node.querySelector('.herd-bubble')?.remove();
+    const b = el('span', { class: 'herd-bubble' }, text);
     a.node.append(b);
-    setTimeout(() => b.remove(), 1800);
+    setTimeout(() => b.remove(), 1400);
   }
 
   function greet(a) {
@@ -148,28 +156,31 @@ export function mountHerd(meadow, child, { onOpen } = {}) {
     bubble(a, Math.random() < 0.5 ? a.fig.name : pick(GREETINGS));
   }
 
-  /** 'cheer': eine Figur flitzt unter die abgehakte Aufgabe (clientX) und jubelt. 'party': alle feiern. */
-  function react(kind, clientX = null) {
+  /**
+   * 'cheer': eine Figur flitzt unter die abgehakte Aufgabe (clientX) und jubelt. 'party': alle feiern. 'oops': zurückgenommen.
+   * text: Sprechblase (z. B. die Lob-Phrase), sonst eine zufällige.
+   */
+  function react(kind, clientX = null, text = null) {
     if (!actors.length) return;
     if (kind === 'party') {
       actors.forEach((a, i) => setTimeout(() => play(a, a.trick ? 'is-trick' : a.fast ? 'is-salto' : 'is-happy', 1300), i * 160));
-      bubble(actors[0], pick(['Juhuuu!', 'Geschafft!', '🎉🎉🎉', 'Super!']));
+      bubble(actors[0], text ?? pick(['Juhuuu!', 'Geschafft!', '🎉🎉🎉', 'Super!']));
       return;
     }
     if (kind === 'oops') {
       const a = pick(actors);
       play(a, 'is-oops', 700);
-      bubble(a, pick(['Oh! 🙈', 'Hoppla!', '🤔', 'Nochmal?']));
+      bubble(a, text ?? pick(['Hoppla! 🙈', 'Oh! 🙈', '🤔', 'Nochmal?']));
       return;
     }
     const a = pick(actors);
     // Die anderen hüpfen vor Freude mit, wer gerade müde ist, wird kurz wach
     actors.forEach((o, i) => { if (o !== a) setTimeout(() => play(o, 'is-happy', 900), 120 + i * 140); });
     if (tired) { bubble(a, pick(WAKE)); yawnLater(); }
-    else if (Math.random() < 0.45) bubble(a, pick(CHEERS));
+    else bubble(a, text ?? pick(CHEERS));
     if (isReduced() || clientX === null) { play(a, 'is-happy', 900); return; }
     const r = meadow.getBoundingClientRect();
-    const x = Math.min(92, Math.max(8, ((clientX - r.left) / r.width) * 100));
+    const x = Math.min(maxX(), Math.max(8, ((clientX - r.left) / r.width) * 100));
     moveTo(a, x, () => {
       play(a, 'is-happy', 900);
       later(a, () => wander(a), rand(1500, 3500));
