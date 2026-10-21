@@ -126,6 +126,10 @@ h1, h2, h3, h4 { font-family: var(--font-heading); font-weight: 500; line-height
 .btn--small { min-height: 36px; padding: 0 12px; font-size: 13px; }
 .btn--big { min-height: 56px; padding: 0 20px; font-size: 17px; }
 .btn--cta { min-height: 58px; padding: 0 32px; font-size: 18px; }
+/* Knopf, der sich nach --auto selbst drückt: Restzeit als schrumpfender Balken am unteren Rand */
+.btn--auto { position: relative; overflow: hidden; }
+.btn--auto::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 4px; background: currentColor; opacity: .6; transform-origin: left; animation: auto-press var(--auto, 8s) linear forwards; }
+body.reduce-motion .btn--auto::after { animation-duration: var(--auto, 8s) !important; }
 .btn-row { display: flex; flex-wrap: wrap; gap: 10px; }
 .btn-row--end { justify-content: flex-end; }
 
@@ -168,6 +172,10 @@ input[type="time"].input { color-scheme: dark; }
 .segmented button { border: 0; background: transparent; padding: 0 12px; min-height: 38px; font-size: 13px; }
 .segmented button + button { border-left: 1px solid var(--color-divider); }
 .segmented button[aria-pressed="true"] { color: var(--color-accent); box-shadow: inset 0 0 0 1px var(--color-accent); }
+.slider-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; }
+.slider-row__ctrl { display: flex; align-items: center; gap: 10px; flex: 1; max-width: 300px; }
+.range { flex: 1; min-width: 120px; height: 28px; accent-color: var(--color-accent); }
+.range-value { min-width: 44px; text-align: right; font-size: 14px; color: var(--color-neutral-300); font-variant-numeric: tabular-nums; }
 
 .tag { display: inline-flex; align-items: center; gap: 4px; padding: 5px 10px; border-radius: 6px; font-size: 13px; letter-spacing: .02em; }
 .tag--accent { background: var(--color-accent-800); color: var(--color-accent-100); }
@@ -583,11 +591,10 @@ body.day .sky { background: linear-gradient(180deg, color-mix(in oklch, var(--ti
 .wheel-wrap { --wheel: min(82vw, 310px, max(150px, calc(100 * var(--vh) - 380px))); position: relative; flex: none; width: var(--wheel); height: var(--wheel); margin-top: 30px; touch-action: none; }
 .wheel-ring { position: absolute; inset: 0; border-radius: 50%; box-shadow: 0 0 0 6px var(--color-neutral-800), 0 0 0 7px var(--color-neutral-600), 0 20px 50px rgba(0, 0, 0, .6); }
 .wheel-rotor { position: absolute; inset: 0; border-radius: 50%; overflow: hidden; will-change: transform; }
-.wheel-rotor svg { width: 100%; height: 100%; }
+.wheel-rotor canvas { display: block; width: 100%; height: 100%; }
 .wheel-rotor.is-spinning { transition: transform 4.5s cubic-bezier(.12,.67,.1,1); }
 .wheel-pointer { position: absolute; left: 50%; top: -14px; z-index: 3; width: 28px; height: 26px; transform: translateX(-50%); transform-origin: 50% 0; filter: drop-shadow(0 2px 4px rgba(0, 0, 0, .6)); will-change: transform; }
 .wheel-hub { position: absolute; left: 50%; top: 50%; z-index: 2; width: 27.7%; height: 27.7%; transform: translate(-50%, -50%); border-radius: 50%; background: var(--color-bg); box-shadow: 0 0 0 1px var(--color-neutral-600); display: grid; place-items: center; font-family: var(--emoji); font-size: calc(var(--wheel) * .1); }
-.wheel-figure-img, .wheel-rare-sym { pointer-events: none; }
 .legend { display: flex; flex-wrap: wrap; gap: 8px 12px; align-self: stretch; padding-top: 26px; font-size: 12px; color: var(--color-neutral-300); }
 .legend span { display: inline-flex; align-items: center; gap: 6px; }
 .legend span::before { content: ''; width: 11px; height: 11px; border-radius: 3px; background: var(--c); }
@@ -642,6 +649,13 @@ body.day .sky { background: linear-gradient(180deg, color-mix(in oklch, var(--ti
 .celebration__sub { font-size: 18px; color: var(--color-neutral-300); }
 .celebration__kids { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
 .celebration-overlay { background: radial-gradient(circle at 50% 35%, var(--color-accent-900), var(--color-bg) 65%); }
+/* Alle Teams zusammen: Figuren springen nacheinander herein und hüpfen dann versetzt im Takt */
+.celebration__party { --size: clamp(52px, calc(72vw / max(var(--n, 1), 4)), 120px); display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: center; gap: 4px 10px; width: 100%; max-width: 1100px; padding-top: 30px; }
+.party-fig { width: var(--size); flex: none; transform-origin: 50% 100%; animation: party-in .5s cubic-bezier(.3,1.6,.5,1) calc(var(--i) * 90ms) both, party-hop .8s ease-in-out calc(.5s + var(--i) * 90ms) infinite; }
+.party-fig[data-motion="fly"] { animation-name: party-in, party-float; animation-duration: .5s, 1.6s; }
+.party-avatar { display: grid; place-items: center; height: var(--size); font-size: calc(var(--size) * .7); line-height: 1; }
+@media (max-height: 560px) { .celebration { gap: 10px; } .celebration__party { --size: clamp(44px, calc(70vw / max(var(--n, 1), 4)), 80px); padding-top: 18px; } }
+.lite .party-fig { animation-name: party-in, party-float; animation-duration: .5s, 1.6s; }
 
 /* ---------- Level-Aufstieg ---------- */
 .levelup { position: relative; display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 480px; height: calc(100 * var(--vh)); margin: 0 auto; padding: calc(50px + var(--safe-t)) 24px calc(38px + var(--safe-b)); text-align: center; overflow: hidden; }
@@ -671,6 +685,17 @@ body.day .sky { background: linear-gradient(180deg, color-mix(in oklch, var(--ti
 @media (max-height: 700px) { .levelup { padding-top: calc(24px + var(--safe-t)); } .levelup__badge { width: 130px; height: 130px; margin-top: 14px; } .levelup__badge strong { font-size: 56px; } .levelup__rank { margin-top: 14px; } .gift-card { margin-top: 16px; } }
 
 /* ---------- Install-Banner ---------- */
+/* ---------- Demo-Modus ---------- */
+/* Oben mittig zwischen Titel und Knöpfen; schmal (Tabs unten) über der Tab-Leiste */
+.demo-bar { position: fixed; left: 50%; top: calc(10px + var(--safe-t)); transform: translateX(-50%); z-index: 60; display: flex; border-radius: 999px; border: 1px dashed var(--ticky-gold); background: var(--color-neutral-900); box-shadow: var(--shadow-md); overflow: hidden; }
+.demo-bar button { min-height: 40px; padding: 0 14px; border: 0; background: transparent; font-size: 13px; font-weight: 600; }
+.demo-bar__main { color: var(--ticky-gold); }
+.demo-bar__end { border-left: 1px solid var(--color-neutral-700) !important; color: var(--color-neutral-300); }
+.demo-note { padding: 10px 14px; border-radius: var(--radius-md); border: 1px dashed var(--ticky-gold); color: var(--ticky-gold); font-size: 14px; }
+.demo-panel { display: grid; gap: 12px; }
+@media (max-width: 699.98px), (max-height: 499.98px) { .demo-bar { top: auto; bottom: calc(var(--tab-h) + 10px + var(--safe-b)); } }
+.demo-panel h3 { margin-top: 6px; font-size: 15px; }
+.demo-panel__kids { flex-wrap: wrap; }
 .install-banner { position: fixed; left: var(--gutter); right: var(--gutter); bottom: calc(var(--tab-h) + 16px + var(--safe-b)); z-index: 60; display: flex; align-items: center; gap: 12px; max-width: 560px; margin: 0 auto; padding: 14px; border-radius: var(--radius-lg); background: var(--color-surface); box-shadow: var(--shadow-lg); animation: toast-in .3s ease-out; }
 .install-banner__icon { width: 48px; height: 48px; border-radius: 12px; flex: none; }
 .install-banner__text { flex: 1; font-size: 14px; color: var(--color-neutral-300); }
@@ -695,6 +720,10 @@ body.day .sky { background: linear-gradient(180deg, color-mix(in oklch, var(--ti
 @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
 @keyframes pop { 0% { transform: scale(.4); } 60% { transform: scale(1.3); } 100% { transform: scale(1); } }
 @keyframes fade-in { from { opacity: 0; } }
+@keyframes auto-press { to { transform: scaleX(0); } }
+@keyframes party-in { from { opacity: 0; transform: translateY(60px) scale(.4); } }
+@keyframes party-hop { 0%, 100% { transform: translateY(0) scale(1.06, .94); } 15% { transform: translateY(-4px) scale(.96, 1.05); } 50% { transform: translateY(-28%) scale(1); } 85% { transform: translateY(0) scale(1.04, .96); } }
+@keyframes party-float { 0%, 100% { transform: translateY(0) rotate(-4deg); } 50% { transform: translateY(-14%) rotate(4deg); } }
 @keyframes fade-out { to { opacity: 0; } }
 @keyframes pop-in { from { opacity: 0; transform: scale(.96) translateY(6px); } }
 @keyframes flash { from { opacity: 1; } to { opacity: 0; } }

@@ -1,5 +1,7 @@
 // Ablauf rund um das Fertigwerden: Kind-Abschluss → Glücksrad → Parade → ggf. Gesamt-Feier.
-import { el, openOverlay } from './ui.js';
+import { el, openOverlay, autoPress } from './ui.js';
+import { figureView } from './figure-view.js';
+import { isLite } from './perf.js';
 import { state, save, spinKey } from './store.js';
 import { THEMES } from './data/themes.js';
 import { overallStats, spinStatus } from './routine.js';
@@ -8,8 +10,11 @@ import { toast, flash, shower, banner, fireworks, confetti } from './fx.js';
 import { completeSound, fanfareSound, levelUpSound } from './audio.js';
 import { openWheel } from './rewards/wheel.js';
 import { runParade } from './rewards/parade.js';
-import { isEpic } from './data/figures.js';
-import { addFigure, applyUpgrade, trackSpin, focusOf, levelInfo, levelTitle, accessoryById } from './data/progression.js';
+import { isEpic, figureById } from './data/figures.js';
+import { addFigure, applyUpgrade, trackSpin, focusOf, levelInfo, levelTitle, accessoryById, ACCESSORY_IDS, TEAM_MAX } from './data/progression.js';
+
+// Nach dieser Zeit schließen sich Level-up und Gesamt-Feier von selbst (Tippen schließt sofort).
+const LEVELUP_MS = 8000, CELEBRATION_MS = 10000;
 
 let hooks = { getRoutine: () => null, refreshChild: () => {} };
 const queue = [];
@@ -17,6 +22,7 @@ let busy = false;
 const celebratedAll = new Set();
 const incoming = new Set(); // Kinder, deren Rad gleich automatisch öffnet
 const pendingLevelUps = new Map(); // childId → reward (Level-Aufstieg wird nach Rad und Parade gefeiert)
+const forcedRarity = new Map(); // Demo: childId → gewünschtes Rad-Ergebnis
 
 export function initCelebrate(h) { hooks = { ...hooks, ...h }; }
 
@@ -62,6 +68,7 @@ function showLevelUp(childId) {
         el('span', { class: 'levelup__bar' }, el('span', { style: { width: `${(info.into / info.need) * 100}%` } })),
         el('span', {}, `${info.into} / ${info.need} XP bis Level ${info.level + 1}`)) : null,
       el('button', { type: 'button', class: 'btn btn--primary btn--cta', autofocus: true, onclick: () => close() }, 'Juhu! 🎉'));
+    autoPress(box.lastChild, LEVELUP_MS);
     levelUpSound();
     fireworks(2);
     confetti(60);
@@ -105,7 +112,7 @@ async function processQueue() {
       // Ein Fehler im Ablauf darf die Warteschlange nie dauerhaft blockieren (sonst öffnet der Knopf kein Rad mehr).
       try { await spinFlow(child, routine); }
       catch (e) { console.error('Glücksrad-Ablauf fehlgeschlagen', e); }
-      finally { current = null; abortCurrent = null; hooks.refreshChild(id); }
+      finally { current = null; abortCurrent = null; forcedRarity.delete(id); hooks.refreshChild(id); }
     }
   } finally {
     busy = false;
@@ -124,6 +131,7 @@ function spinFlow(child, routine) {
     try {
       openWheel(child, {
         settings: state.settings,
+        forceRarity: forcedRarity.get(child.id) ?? null,
         commit(result) {
           // Ergebnis sofort speichern: Neustart während der Animation ergibt kein zweites Rad.
           const c = state.children.find(x => x.id === child.id);
@@ -173,18 +181,65 @@ function maybeCelebrateAll() {
   setTimeout(openAllCelebration, 500);
 }
 
-/** Gesamt-Feier: alle Kinder fertig. Über 🏆 erneut aufrufbar. */
+/** Gesamt-Feier: alle Kinder fertig. Die Teams aller Kinder hüpfen gemeinsam über den Bildschirm. Über 🏆 erneut aufrufbar. */
 export function openAllCelebration() {
+  const perChild = isLite() ? 1 : TEAM_MAX; // Sparmodus: nur der Anführer jedes Teams
+  const party = el('div', { class: 'celebration__party', 'aria-hidden': 'true' });
+  let i = 0;
+  for (const c of state.children) {
+    const team = (c.team ?? []).map(figureById).filter(Boolean).slice(0, perChild);
+    const actors = team.length ? team.map(f => figureView(f, c, { alt: '' })) : [el('span', { class: 'party-avatar emoji' }, c.avatar)];
+    for (const a of actors) {
+      a.classList.add('party-fig');
+      a.style.setProperty('--i', i++);
+      party.append(a);
+    }
+  }
+  party.style.setProperty('--n', i);
   const kids = el('div', { class: 'celebration__kids' }, ...state.children.map(c =>
     el('div', { class: 'summary-chip', 'data-theme': c.theme }, el('span', { class: 'emoji', 'aria-hidden': 'true' }, c.avatar), el('span', {}, c.name))));
+  const btn = el('button', { type: 'button', class: 'btn btn--primary btn--big', autofocus: true, onclick: () => close() }, 'Super! 🎉');
   const box = el('div', { class: 'celebration' },
     el('h2', { class: 'celebration__title' }, '🏆 Alle fertig! 🏆'),
     el('p', { class: 'celebration__sub' }, 'Großartig gemacht!'),
-    kids,
-    el('button', { type: 'button', class: 'btn btn--primary btn--big', autofocus: true, onclick: () => close() }, 'Super! 🎉'));
+    party, kids, btn);
+  autoPress(btn, CELEBRATION_MS);
   fanfareSound();
-  fireworks(3);
-  confetti(80);
-  const timer = setInterval(() => { fireworks(2); confetti(30); }, 1800);
-  const { close } = openOverlay(box, { label: 'Alle fertig', className: 'celebration-overlay', onClose: () => clearInterval(timer) });
+  fireworks(2, { delayStep: 500 });
+  confetti(50);
+  const { close } = openOverlay(box, { label: 'Alle fertig', className: 'celebration-overlay' });
+}
+
+// ---------- Demo-Modus ----------
+
+let savedCelebrated = null;
+
+/** Demo an/aus: Was in der Demo gefeiert wurde, zählt danach nicht (die echte „Alle fertig“-Feier kommt trotzdem). */
+export function setDemoCelebrations(on) {
+  if (on) savedCelebrated = new Set(celebratedAll);
+  else if (savedCelebrated) {
+    celebratedAll.clear();
+    for (const k of savedCelebrated) celebratedAll.add(k);
+    savedCelebrated = null;
+  }
+  pendingLevelUps.clear();
+  forcedRarity.clear();
+}
+
+/** Demo: Glücksrad für ein Kind, optional mit festem Ergebnis (Rarität oder 'upgrade'). */
+export function demoSpin(childId, rarity = null) {
+  const routine = hooks.getRoutine();
+  if (!routine || wheelComing(childId)) return;
+  state.spins[spinKey(localDate(), routine, childId)] = 'pending';
+  if (rarity) forcedRarity.set(childId, rarity);
+  requestSpin(childId);
+}
+
+/** Demo: Level-Aufstieg um eine Stufe, mit Geschenk. */
+export function demoLevelUp(childId) {
+  const child = state.children.find(c => c.id === childId);
+  if (!child) return;
+  const level = levelInfo(child.xp).level;
+  pendingLevelUps.set(childId, { xp: 0, levelBefore: level, levelAfter: level + 1, gift: ACCESSORY_IDS[Math.floor(Math.random() * ACCESSORY_IDS.length)] });
+  showLevelUp(childId);
 }

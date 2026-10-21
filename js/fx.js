@@ -2,7 +2,7 @@
 // Alle Partikel teilen sich EIN Canvas. Jede Partikelsorte wird einmal samt Leuchten als Sprite vorgerendert,
 // danach kostet ein Partikel pro Frame nur noch ein drawImage – keine DOM-Knoten, Filter oder Ebenen.
 import { THEMES } from './data/themes.js';
-import { el, $ } from './ui.js';
+import { el, $, isSingleCard } from './ui.js';
 import { pick } from './util.js';
 import { isLite, degrade, bezier } from './perf.js';
 
@@ -11,8 +11,18 @@ let reduced = () => false;
 export function setReducedMotionGetter(fn) { reduced = fn; }
 export const isReduced = () => reduced();
 const isMobile = () => window.matchMedia('(max-width: 699.98px)').matches;
-const scaleCount = n => Math.max(1, Math.round(n * (isMobile() ? 0.5 : 1) * (isLite() ? 0.6 : 1)));
-const budget = () => (isLite() ? 70 : 150);
+// Drei oder mehr Kinder nebeneinander (Tablet quer): Effekte laufen oft gleichzeitig, also jeweils sparsamer.
+let crowdedAt = 0, crowdedVal = false;
+function crowded() {
+  const now = performance.now();
+  if (now - crowdedAt > 1000) {
+    crowdedAt = now;
+    crowdedVal = !isSingleCard() && document.querySelectorAll('#children-grid .child-card').length >= 3;
+  }
+  return crowdedVal;
+}
+const scaleCount = n => Math.max(1, Math.round(n * (isMobile() ? 0.5 : 1) * (isLite() ? 0.6 : 1) * (crowded() ? 0.6 : 1)));
+const budget = () => (isLite() ? 70 : crowded() ? 100 : 150);
 const layer = () => $('#fx-layer');
 const rand = (a, b) => a + Math.random() * (b - a);
 const EMOJI_FONT = '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif';

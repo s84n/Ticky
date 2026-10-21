@@ -133,6 +133,17 @@ document.addEventListener('keydown', e => {
   }
 });
 
+/**
+ * Drückt den Knopf nach ms von selbst (z. B. „Juhu!“ nach dem Level-up), damit Eltern nicht jede Meldung wegtippen müssen.
+ * Ein schrumpfender Balken im Knopf zeigt die Restzeit. Gibt eine Funktion zum Abbrechen zurück.
+ */
+export function autoPress(btn, ms) {
+  btn.classList.add('btn--auto');
+  btn.style.setProperty('--auto', `${ms}ms`);
+  const t = setTimeout(() => { if (btn.isConnected) btn.click(); }, ms);
+  return () => clearTimeout(t);
+}
+
 /** Bestätigungsdialog. Gibt Promise<boolean> zurück. */
 export function confirmDialog(message, { ok = 'Ja', cancel = 'Abbrechen', danger = false, title = null } = {}) {
   return new Promise(resolve => {

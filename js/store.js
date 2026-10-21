@@ -26,6 +26,8 @@ export function createDefaultState() {
       vibration: true,
       timer: true,
       reducedMotion: 'auto',
+      liteMode: 'auto',
+      volume: 80,
     },
     children: [],
     customTasks: {},
@@ -61,6 +63,8 @@ export function normalizeState(raw, today = localDate()) {
   }
   for (const k of ['sound', 'speech', 'vibration', 'timer']) if (typeof st[k] === 'boolean') out.settings[k] = st[k];
   if (['auto', 'on', 'off'].includes(st.reducedMotion)) out.settings.reducedMotion = st.reducedMotion;
+  if (['auto', 'on', 'off'].includes(st.liteMode)) out.settings.liteMode = st.liteMode;
+  if (Number.isInteger(st.volume) && st.volume >= 0 && st.volume <= 100) out.settings.volume = st.volume;
 
   // Eigene Aufgaben
   if (isObj(s.customTasks)) {
@@ -244,6 +248,7 @@ export let state = createDefaultState();
 const listeners = new Set();
 let mirrorTimer = null;
 let dirty = false; // nur speichern, wenn sich etwas geändert hat (sonst überschreibt z. B. pagehide frischere Daten)
+let demo = false; // Demo-Modus: nichts wird gespeichert
 
 const IDB_NAME = 'ticky';
 const IDB_STORE = 'kv';
@@ -325,7 +330,7 @@ export function save() {
 }
 
 export function saveNow() {
-  if (!dirty) return;
+  if (!dirty || demo) return;
   // Ein leerer Zustand (Onboarding noch nicht fertig) überschreibt nie gespeicherte Daten. Löschen nur über resetAll().
   if (!state.setupDone) return;
   dirty = false;
@@ -376,6 +381,24 @@ export function resetAll() {
   idb('readwrite', s => s.delete(STORAGE_KEY)).catch(() => {});
   dirty = false;
   state = createDefaultState();
+  for (const fn of listeners) fn(state);
+}
+
+// ---------- Demo-Modus ----------
+// Alles läuft wie gewohnt im Speicher, aber nichts wird geschrieben. Beim Beenden wird der gespeicherte Stand
+// neu geladen: Level, Figuren, Fortschritt und Einstellungen sind wieder genau wie vorher.
+
+export const isDemo = () => demo;
+
+export function startDemo() {
+  flush(); // offene Änderungen vorher sichern
+  demo = true;
+}
+
+export async function endDemo() {
+  demo = false;
+  dirty = false;
+  await load();
   for (const fn of listeners) fn(state);
 }
 

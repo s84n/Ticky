@@ -1,12 +1,12 @@
 // Eltern-Bereich (⚙️) inkl. Eltern-Sperre.
 import { el, clear, openOverlay, confirmDialog, alertDialog } from './ui.js';
-import { state, save, saveNow, exportBackup, parseBackup, replaceState, resetAll, removeChild, removeCustomTask, MAX_CHILDREN, requestPersistence } from './store.js';
+import { state, save, saveNow, exportBackup, parseBackup, replaceState, resetAll, removeChild, removeCustomTask, MAX_CHILDREN, requestPersistence, isDemo } from './store.js';
 import { THEMES } from './data/themes.js';
 import { ROUTINES, ROUTINE_META } from './data/task-catalog.js';
 import { validateTimes, goalOf } from './routine.js';
 import { basicsEditor, tasksEditor, newChildDraft, customTaskForm } from './child-editor.js';
 import { localDate, cryptoRandom, deepClone, parseTime } from './util.js';
-import { wrongSound, popSound } from './audio.js';
+import { wrongSound, popSound, setVolume, unlockAudio } from './audio.js';
 import { toast } from './fx.js';
 import { VERSION, REPO_URL } from './config.js';
 import { levelInfo, BLITZ_XP } from './data/progression.js';
@@ -78,7 +78,8 @@ export function parentLock() {
 
 /**
  * Öffnet den Eltern-Bereich. hooks: { onChange() – Hauptansicht neu aufbauen, onReset() – zurück ins Onboarding,
- *   onImported() – nach Import neu starten, onSettingsChanged() – Optionen (Bewegung etc.) anwenden }
+ *   onImported() – nach Import neu starten, onSettingsChanged(opts) – Optionen (Bewegung etc.) anwenden,
+ *   onDemo() – Demo-Modus starten }
  */
 export function openSettings(hooks) {
   const body = el('div');
@@ -91,7 +92,8 @@ export function openSettings(hooks) {
 
   function render() {
     clear(body);
-    body.append(childrenSection(), customSection(), timesSection(), optionsSection(), dataSection(), infoSection());
+    if (isDemo()) body.append(el('p', { class: 'demo-note' }, '🧪 Demo-Modus aktiv: Änderungen hier werden beim Beenden der Demo verworfen.'));
+    body.append(childrenSection(), customSection(), timesSection(), optionsSection(), demoSection(), dataSection(), infoSection());
   }
 
   function changed() {
@@ -271,12 +273,40 @@ export function openSettings(hooks) {
       }, l));
     }
     sec.append(el('div', { class: 'switch' }, el('span', {}, 'Animationen reduzieren'), seg));
+
+    // Lautstärke: wirkt sofort, ein kurzer Ton zum Probehören nach dem Loslassen
+    const vol = el('input', { type: 'range', class: 'range', min: 0, max: 100, step: 5, value: state.settings.volume, 'aria-label': 'Lautstärke' });
+    const volText = el('span', { class: 'range-value' }, `${state.settings.volume} %`);
+    vol.addEventListener('input', () => { volText.textContent = `${vol.value} %`; setVolume(vol.value / 100); });
+    vol.addEventListener('change', () => { state.settings.volume = Number(vol.value); save(); unlockAudio(); popSound(); });
+    sec.append(el('label', { class: 'slider-row' }, el('span', {}, 'Lautstärke'), el('span', { class: 'slider-row__ctrl' }, vol, volText)));
+
+    // Sparmodus: weniger gleichzeitige Effekte, kleinere Leuchteffekte – für schwächere Tablets
+    const lite = el('div', { class: 'segmented', role: 'group', 'aria-label': 'Sparmodus' });
+    for (const [v, l] of [['auto', 'Automatisch'], ['on', 'An'], ['off', 'Aus']]) {
+      lite.append(el('button', {
+        type: 'button', 'aria-pressed': String(state.settings.liteMode === v),
+        onclick: () => { state.settings.liteMode = v; save(); hooks.onSettingsChanged?.({ freshLite: true }); render(); },
+      }, l));
+    }
+    sec.append(el('div', { class: 'switch' }, el('span', {}, 'Sparmodus (für schwächere Geräte)'), lite),
+      el('p', { class: 'muted' }, 'Weniger Partikel und Leuchteffekte, ruhigere Figuren. „Automatisch“ schaltet ihn ein, wenn das Gerät schwach ist oder Effekte ruckeln.'));
     return sec;
   }
 
-  // 5. Daten
+  // 5. Demo-Modus
+  function demoSection() {
+    const sec = el('section', { class: 'settings-section' }, el('h3', {}, '🧪 Demo-Modus'));
+    sec.append(el('p', { class: 'muted' }, 'Zum Ausprobieren von Glücksrad, Level-up und Feiern. Alles funktioniert wie sonst, aber nichts wird gespeichert: Beim Beenden sind Level, Figuren und Fortschritt wieder genau wie vorher.'));
+    if (isDemo()) sec.append(el('p', {}, 'Die Demo läuft bereits. Beenden über „Demo beenden“ unten links.'));
+    else sec.append(el('button', { type: 'button', class: 'btn btn--primary', onclick: () => { close(); hooks.onDemo?.(); } }, '🧪 Demo starten'));
+    return sec;
+  }
+
+  // 6. Daten
   function dataSection() {
     const sec = el('section', { class: 'settings-section' }, el('h3', {}, '💾 Daten'));
+    if (isDemo()) return sec.appendChild(el('p', { class: 'muted' }, 'Backup und Zurücksetzen sind im Demo-Modus gesperrt.')).parentNode;
     sec.append(el('p', { class: 'muted' }, 'Alle Daten liegen nur auf diesem Gerät (doppelt gespeichert). Beim Löschen der App- oder Browserdaten geht alles verloren – ein Backup hilft, auch beim Umzug auf ein anderes Gerät.'));
     const status = el('p', { class: 'muted' }, 'Speicherschutz wird geprüft …');
     sec.append(status);
@@ -333,7 +363,7 @@ export function openSettings(hooks) {
     return sec;
   }
 
-  // 6. Info
+  // 7. Info
   function infoSection() {
     return el('section', { class: 'settings-section' },
       el('h3', {}, 'ℹ️ Info'),

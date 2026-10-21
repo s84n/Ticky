@@ -2,8 +2,16 @@
 let ctx = null;
 let master = null;
 let isEnabled = () => true;
+let volume = 0.8; // Einstellung 0..1; 0,8 ergibt den Standardpegel
+const MAX_GAIN = 2;
 
 export function setSoundEnabledGetter(fn) { isEnabled = fn; }
+
+/** Lautstärke 0..1 (Regler im Eltern-Bereich). */
+export function setVolume(v) {
+  volume = Math.min(1, Math.max(0, v));
+  if (master) master.gain.value = volume * MAX_GAIN;
+}
 
 /** Muss nach einer Nutzergeste aufgerufen werden (Autoplay-Policy). */
 export function unlockAudio() {
@@ -12,9 +20,17 @@ export function unlockAudio() {
       const AC = window.AudioContext || window.webkitAudioContext;
       if (!AC) return;
       ctx = new AC();
+      // Lauter als früher (Tablet-Lautsprecher sind leise); der Kompressor fängt Spitzen ab, damit nichts übersteuert.
+      const comp = ctx.createDynamicsCompressor();
+      comp.threshold.value = -18;
+      comp.knee.value = 12;
+      comp.ratio.value = 6;
+      comp.attack.value = 0.003;
+      comp.release.value = 0.2;
       master = ctx.createGain();
-      master.gain.value = 0.55;
-      master.connect(ctx.destination);
+      master.gain.value = volume * MAX_GAIN;
+      master.connect(comp);
+      comp.connect(ctx.destination);
     }
     if (ctx.state === 'suspended') ctx.resume();
   } catch { /* kein Audio */ }

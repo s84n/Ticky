@@ -1,5 +1,5 @@
 // Glücksrad: Ziehung zuerst (crypto), dann Animation auf den berechneten Zielwinkel; anschließend Reveal.
-import { el, svg, openOverlay, vibrate } from '../ui.js';
+import { el, svg, openOverlay, vibrate, autoPress } from '../ui.js';
 import { wheelOrder, figureWeights, withUpgradeSlot, drawIndex, segments, targetRotation, segmentAt, hasLuckBonus } from './draw.js';
 import { RARITIES, RARITY_ORDER } from '../data/figures.js';
 import { THEMES } from '../data/themes.js';
@@ -7,8 +7,11 @@ import { cryptoRandom } from '../util.js';
 import { tickSound, whooshSound, revealSound } from '../audio.js';
 import { fireworks, confetti, shake, burstAt, flash, isReduced } from '../fx.js';
 import { figureView } from '../figure-view.js';
-import { animationDone, bezier } from '../perf.js';
+import { animationDone, bezier, isLite } from '../perf.js';
 import { focusOf, upgradeGuaranteed, UPGRADE_CHANCE, UPGRADE_PITY, EVO_STEPS, nextStep, pathOf, stageOf, accessoryById } from '../data/progression.js';
+
+/** So lange bleibt der Gewinn stehen, bevor es von selbst weitergeht (besondere Gewinne etwas länger). */
+const REVEAL_MS = 9000, REVEAL_EPIC_MS = 12000;
 
 const ACCESSORY_LABEL = id => { const a = accessoryById(id); return a ? `${a.icon} ${a.label}` : 'Ein Accessoire'; };
 
@@ -19,7 +22,8 @@ const POINTER_TICK = [
   { transform: 'translateX(-50%) rotate(0deg)' },
 ];
 
-const R = 100; // Radius im SVG-Koordinatensystem (viewBox -100..100)
+const R = 100; // Radius in Rad-Einheiten (Mittelpunkt 0/0, Rand bei ±100)
+const EMOJI_FONT = '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif';
 
 /** Feldfarben nach design_handoff §4 2c. Standard nutzt den Farbton des Styles, alles andere die App-Palette. */
 const GOLD = 'var(--ticky-gold)', GOLD_2 = 'var(--ticky-gold-2)';
@@ -28,73 +32,145 @@ const SECRET = ['oklch(0.22 0.02 280)', 'oklch(0.45 0.18 300)'];
 const standardColors = hue => [`oklch(0.5 0.1 ${hue})`, `oklch(0.42 0.08 ${hue})`];
 const MAGIC = ['var(--color-accent)', 'var(--color-accent-600)'];
 
+/** oklch → rgb, damit das Canvas die Farben auch auf älteren Browsern (ohne oklch-Unterstützung) sicher malt. */
+function oklchToRgb(L, C, H) {
+  const h = (H * Math.PI) / 180;
+  const a = C * Math.cos(h), b = C * Math.sin(h);
+  const l = (L + 0.3963377774 * a + 0.2158037573 * b) ** 3;
+  const m = (L - 0.1055613458 * a - 0.0638541728 * b) ** 3;
+  const s = (L - 0.0894841775 * a - 1.2914855480 * b) ** 3;
+  const enc = x => {
+    x = Math.min(1, Math.max(0, x));
+    return Math.round(255 * (x <= 0.0031308 ? 12.92 * x : 1.055 * x ** (1 / 2.4) - 0.055));
+  };
+  return `rgb(${enc(4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s)}, ${enc(-1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s)}, ${enc(-0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s)})`;
+}
+
+/** Löst var(--x) über die Design-Tokens auf und rechnet oklch in rgb um. */
+function paint(color) {
+  const v = /^var\((--[\w-]+)\)$/.exec(color);
+  if (v) color = getComputedStyle(document.documentElement).getPropertyValue(v[1]).trim();
+  const o = /^oklch\(\s*([\d.]+)(%?)\s+([\d.]+)\s+([\d.]+)/.exec(color);
+  if (o) return oklchToRgb(o[2] ? o[1] / 100 : +o[1], +o[3], +o[4]);
+  return color || '#888';
+}
+
+const rad = deg => ((deg - 90) * Math.PI) / 180; // 0° = oben, im Uhrzeigersinn
+
 function pt(angleDeg, r) {
   const a = (angleDeg * Math.PI) / 180;
   return [r * Math.sin(a), -r * Math.cos(a)];
 }
 
-function segPath(start, end, r) {
-  const [x1, y1] = pt(start, r);
-  const [x2, y2] = pt(end, r);
-  const large = end - start > 180 ? 1 : 0;
-  return `M0 0 L${x1.toFixed(3)} ${y1.toFixed(3)} A${r} ${r} 0 ${large} 1 ${x2.toFixed(3)} ${y2.toFixed(3)} Z`;
+/** Lädt ein Figurenbild fertig dekodiert; null, wenn es nicht lädt. */
+function loadImage(src) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => Promise.resolve(img.decode?.()).catch(() => {}).then(() => resolve(img));
+    img.onerror = () => resolve(null);
+    img.src = src;
+  });
 }
 
-/** Verlauf von innen nach außen (Farben als style, damit CSS-Variablen und oklch greifen). */
-const radial = (id, c1, c2) => svg('radialGradient', { id, cx: '0', cy: '0', r: '100', gradientUnits: 'userSpaceOnUse' },
-  svg('stop', { offset: '.15', style: `stop-color:${c1}` }), svg('stop', { offset: '1', style: `stop-color:${c2}` }));
+/** Schwarze, halbtransparente Silhouette (für noch nicht gewonnene Figuren). */
+function silhouette(img, px) {
+  const c = document.createElement('canvas');
+  c.width = c.height = px;
+  const x = c.getContext('2d');
+  x.drawImage(img, 0, 0, px, px);
+  x.globalCompositeOperation = 'source-in';
+  x.fillStyle = 'rgba(0, 0, 0, .55)';
+  x.fillRect(0, 0, px, px);
+  return c;
+}
 
-function buildWheelSvg(theme, figures, segs, owned, upgradeFig = null) {
-  const std = standardColors(THEMES[theme].hue);
-  const defs = svg('defs', {},
-    svg('filter', { id: 'w-sil' }, svg('feColorMatrix', { type: 'matrix', values: '0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.55 0' })),
-    radial('w-up', GOLD, GOLD_2), radial('w-myth', MYTH[0], MYTH[1]), radial('w-secret', SECRET[0], SECRET[1]));
-  const g = svg('g', {});
-  const slice = (start, end, fill) => g.append(svg('path', { d: segPath(start, end, R), style: `fill:${fill}`, stroke: 'rgba(22, 24, 38, .55)', 'stroke-width': 0.6 }));
+/**
+ * Malt das Rad in ein Canvas. Ein einziges Bitmap, das sich nur noch dreht: keine SVG-Verweise (Verläufe, Filter),
+ * die auf schwachen Geräten beim Drehen verloren gehen, und kein erneutes Rastern pro Frame.
+ */
+function drawWheel(canvas, { theme, figures, segs, owned, upgradeFig, images }) {
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+  const k = canvas.width / (2 * R);
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.setTransform(k, 0, 0, k, canvas.width / 2, canvas.height / 2);
+  const std = standardColors(THEMES[theme].hue).map(paint);
+  const magic = MAGIC.map(paint);
+  const radial = (c1, c2) => {
+    const g = ctx.createRadialGradient(0, 0, 0, 0, 0, R);
+    g.addColorStop(0.15, paint(c1));
+    g.addColorStop(1, paint(c2));
+    return g;
+  };
+  const slice = (start, end, fill) => {
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.arc(0, 0, R, rad(start), rad(end));
+    ctx.closePath();
+    ctx.fillStyle = fill;
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(22, 24, 38, .55)';
+    ctx.lineWidth = 0.6;
+    ctx.stroke();
+  };
+  const figure = (src, mid, r, size, sil) => {
+    const img = images.get(src);
+    if (!img) return;
+    const [cx, cy] = pt(mid, r);
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate((mid * Math.PI) / 180);
+    ctx.drawImage(sil ? silhouette(img, Math.ceil(size * k)) : img, -size / 2, -size / 2, size, size);
+    ctx.restore();
+  };
   if (upgradeFig) {
     // Goldenes Upgrade-Feld (Index 0) mit der Figur, deren Reise gerade läuft
     const { start, end } = segs[0];
-    slice(start, end, 'url(#w-up)');
-    const mid = (start + end) / 2;
-    const [cx, cy] = pt(mid, R * 0.645);
-    const img = svg('image', { href: upgradeFig.svg, x: -13, y: -13, width: 26, height: 26, transform: `translate(${cx.toFixed(2)} ${cy.toFixed(2)}) rotate(${mid.toFixed(2)})` });
-    img.append(svg('title', {}, `Upgrade für ${upgradeFig.name}`));
-    g.append(img);
+    slice(start, end, radial(GOLD, GOLD_2));
+    figure(upgradeFig.svg, (start + end) / 2, R * 0.645, 26, false);
     segs = segs.slice(1);
   }
   let stdIdx = 0, magIdx = 0;
   figures.forEach((fig, i) => {
     const { start, end } = segs[i];
-    const fill = fig.rarity === 'legendaer' ? GOLD
-      : fig.rarity === 'mythisch' ? 'url(#w-myth)'
-        : fig.rarity === 'geheim' ? 'url(#w-secret)'
-          : fig.rarity === 'magisch' ? MAGIC[magIdx++ % 2] : std[stdIdx++ % 2];
+    const fill = fig.rarity === 'legendaer' ? paint(GOLD)
+      : fig.rarity === 'mythisch' ? radial(MYTH[0], MYTH[1])
+        : fig.rarity === 'geheim' ? radial(SECRET[0], SECRET[1])
+          : fig.rarity === 'magisch' ? magic[magIdx++ % 2] : std[stdIdx++ % 2];
     slice(start, end, fill);
     const mid = (start + end) / 2;
     // Sehr seltene, schmale Felder (Mythisch, Geheim): statt Figur ein Symbol am Rand
     if (fig.rarity === 'mythisch' || fig.rarity === 'geheim') {
       const [sx, sy] = pt(mid, R * 0.89);
-      const sym = svg('text', { x: sx.toFixed(2), y: sy.toFixed(2), 'font-size': 7, 'text-anchor': 'middle', 'dominant-baseline': 'central', class: 'wheel-rare-sym' },
-        fig.rarity === 'geheim' ? '❓' : '🔥');
-      sym.append(svg('title', {}, owned[fig.id] ? fig.name : RARITIES[fig.rarity].label));
-      g.append(sym);
+      ctx.font = `7px ${EMOJI_FONT}`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#fff';
+      ctx.fillText(fig.rarity === 'geheim' ? '❓' : '🔥', sx, sy);
       return;
     }
     // Figur im Segment (nicht gewonnene als Silhouette)
     const rr = R * 0.76;
     const arc = ((end - start) * Math.PI / 180) * rr;
-    const size = Math.max(9, Math.min(17, arc * 0.85));
-    const [cx, cy] = pt(mid, rr);
-    const img = svg('image', {
-      href: fig.svg, x: -size / 2, y: -size / 2, width: size, height: size,
-      transform: `translate(${cx.toFixed(2)} ${cy.toFixed(2)}) rotate(${mid.toFixed(2)})`,
-      class: 'wheel-figure-img', filter: owned[fig.id] ? null : 'url(#w-sil)',
-    });
-    img.append(svg('title', {}, owned[fig.id] ? fig.name : '???'));
-    g.append(img);
+    figure(fig.svg, mid, rr, Math.max(9, Math.min(17, arc * 0.85)), !owned[fig.id]);
   });
+}
+
+/** Canvas fürs Rad: Felder sofort, Figuren, sobald ihre Bilder dekodiert sind. */
+function buildWheel(theme, figures, segs, owned, upgradeFig = null) {
   const label = `Glücksrad mit ${figures.length} Figuren${upgradeFig ? ` und einem Upgrade-Feld für ${upgradeFig.name}` : ''}`;
-  return svg('svg', { viewBox: '-100 -100 200 200', role: 'img', 'aria-label': label }, defs, g);
+  const canvas = el('canvas', { role: 'img', 'aria-label': label });
+  // Feste Auflösung passend zur größten Radgröße (310 px); CSS skaliert auf die tatsächliche Größe.
+  canvas.width = canvas.height = Math.round(310 * Math.min(window.devicePixelRatio || 1, isLite() ? 1.5 : 2));
+  const images = new Map();
+  const opts = { theme, figures, segs, owned, upgradeFig, images };
+  drawWheel(canvas, opts);
+  const srcs = [...new Set([...figures.filter(f => f.rarity !== 'mythisch' && f.rarity !== 'geheim'), upgradeFig].filter(Boolean).map(f => f.svg))];
+  Promise.all(srcs.map(src => loadImage(src).then(img => { if (img) images.set(src, img); })))
+    .then(() => drawWheel(canvas, opts))
+    .catch(e => console.error('Glücksrad-Bilder', e));
+  return canvas;
 }
 
 /** Legendenfarbe je Rarität (passend zu den Feldern). */
@@ -110,8 +186,9 @@ const pct = v => `${(v * 100).toLocaleString('de-DE', { maximumFractionDigits: 1
  * Ergebnis: { kind: 'figure', fig } oder { kind: 'upgrade', fig } (goldenes Feld: Upgrade für die verfolgte Figur).
  * commit(result, luckUsed) wird SOFORT nach der Ziehung aufgerufen (Ergebnis speichern, Farm-Schutz) und liefert
  * den Gewinn für die Anzeige. onFinish(result) nach „Los, feiern!“.
+ * forceRarity (nur Demo-Modus): Ergebnis dieser Rarität bzw. 'upgrade' statt Zufall.
  */
-export function openWheel(child, { commit, onFinish, onCancel, settings }) {
+export function openWheel(child, { commit, onFinish, onCancel, settings, forceRarity = null }) {
   const theme = child.theme;
   const figures = wheelOrder(theme);
   const upgradeFig = focusOf(child);
@@ -129,7 +206,7 @@ export function openWheel(child, { commit, onFinish, onCancel, settings }) {
   let result = null;
   let gain = null; // Gewinn aus commit()
 
-  const rotor = el('div', { class: 'wheel-rotor' }, buildWheelSvg(theme, figures, segs, child.figures, upgradeFig));
+  const rotor = el('div', { class: 'wheel-rotor' }, buildWheel(theme, figures, segs, child.figures, upgradeFig));
   const pointer = pointerSvg();
   const wrap = el('div', { class: 'wheel-wrap' },
     el('div', { class: 'wheel-ring', 'aria-hidden': 'true' }), rotor, pointer,
@@ -186,7 +263,7 @@ export function openWheel(child, { commit, onFinish, onCancel, settings }) {
     spinBtn.textContent = '…';
     setDismissible(false);
     // 1) Ziehung
-    const idx = guaranteed ? 0 : drawIndex(drawWeights, cryptoRandom);
+    const idx = forcedIndex() ?? (guaranteed ? 0 : drawIndex(drawWeights, cryptoRandom));
     result = upgradeFig && idx === 0 ? { kind: 'upgrade', fig: upgradeFig } : { kind: 'figure', fig: figures[idx - off] };
     gain = commit(result, luck);
     // 2) Animation zum Zielsegment
@@ -234,12 +311,20 @@ export function openWheel(child, { commit, onFinish, onCancel, settings }) {
     setTimeout(done, dur + 1200); // Fallback, falls kein Ende-Ereignis kommt (z. B. Tab im Hintergrund)
   }
 
+  /** Demo: Feld der gewünschten Rarität (zufällig unter mehreren) oder das Upgrade-Feld. */
+  function forcedIndex() {
+    if (!forceRarity) return null;
+    if (forceRarity === 'upgrade') return upgradeFig ? 0 : null;
+    const hits = figures.flatMap((f, i) => (f.rarity === forceRarity ? [i + off] : []));
+    return hits.length ? hits[Math.floor(cryptoRandom() * hits.length)] : null;
+  }
+
   function reveal() {
     const { fig } = result;
     const upgrade = result.kind === 'upgrade' ? gain?.upgrade : null;
     const rar = RARITIES[fig.rarity];
     const epic = upgrade === 'verwandlung' || ['legendaer', 'mythisch', 'geheim'].includes(fig.rarity);
-    const btn = el('button', { type: 'button', class: 'btn btn--primary btn--cta reveal__btn', onclick: () => { finished = true; close(); onFinish(result); } }, 'Los, feiern! 🎉');
+    const btn = el('button', { type: 'button', class: 'btn btn--primary btn--cta reveal__btn', onclick: () => { if (finished) return; finished = true; close(); onFinish(result); } }, 'Los, feiern! 🎉');
     let badge, name;
     const sub = [];
     if (upgrade) {
@@ -274,6 +359,7 @@ export function openWheel(child, { commit, onFinish, onCancel, settings }) {
     stage.replaceChildren(box);
     setDismissible(true);
     btn.focus();
+    autoPress(btn, epic ? REVEAL_EPIC_MS : REVEAL_MS);
     revealSound(upgrade === 'verwandlung' ? 'mythisch' : upgrade ? 'legendaer' : fig.rarity, theme);
     const cx = innerWidth / 2, cy = innerHeight * 0.38;
     if (upgrade === 'verwandlung') {

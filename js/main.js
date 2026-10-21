@@ -10,10 +10,11 @@ import { initCelebrate, childCompleted, requestSpin, openAllCelebration } from '
 import { THEMES, GENERIC_PRAISE, SPEECH_ALMOST } from './data/themes.js';
 import { pick, localDate } from './util.js';
 import * as fx from './fx.js';
-import { unlockAudio, setSoundEnabledGetter, tapSound, untapSound, introJingle } from './audio.js';
+import { unlockAudio, setSoundEnabledGetter, tapSound, untapSound, introJingle, setVolume } from './audio.js';
 import { speak, setSpeechEnabledGetter } from './speech.js';
 import { initPwa, showInstallHint } from './pwa.js';
-import { isLite, onLiteChange } from './perf.js';
+import { isLite, onLiteChange, setLiteMode } from './perf.js';
+import { enterDemo } from './demo.js';
 
 let current = null;       // { routine, manual } | null
 let renderedKey = '';
@@ -26,8 +27,10 @@ function reducedMotion() {
   return m === 'on' || (m === 'auto' && motionQuery.matches);
 }
 
-function applySettings() {
+function applySettings({ freshLite = false } = {}) {
   document.body.classList.toggle('reduce-motion', reducedMotion());
+  setLiteMode(state.settings.liteMode, { fresh: freshLite });
+  setVolume(state.settings.volume / 100);
 }
 
 // Ältere Browser (z. B. iOS < 15.4, Chrome < 108) kennen dvh nicht: dann misst JS die echte Fensterhöhe.
@@ -198,7 +201,17 @@ async function openParentArea() {
   if (!(await parentLock())) return;
   openSettings({
     onChange: () => tick(true),
-    onSettingsChanged: () => { applySettings(); tick(true); },
+    onSettingsChanged: opts => { applySettings(opts); tick(true); },
+    onDemo: () => enterDemo({
+      getRoutine: () => current?.routine ?? null,
+      // Ohne laufende Routine (Ruhe-Screen) startet die Demo die passende bzw. die Morgenroutine
+      ensureRoutine: () => {
+        if (!current) state.ui.manualRoutine = { routine: new Date().getHours() >= 14 ? 'evening' : 'morning', date: localDate() };
+        tick(true);
+      },
+      refresh: () => tick(true),
+      restart: () => { applySettings(); invalidateRest(); startApp(); },
+    }),
     onImported: () => { applySettings(); startApp(); },
     onReset: () => { clearInterval(tickTimer); current = null; renderedKey = ''; clear($('#sky')); document.body.className = 'day'; applySettings(); showOnboarding(); },
   });

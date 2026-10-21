@@ -10,18 +10,31 @@ function guess() {
   return mem <= 2 || cores <= 4;
 }
 
+let mode = 'auto'; // Einstellung „Sparmodus“: auto | on | off
 let lite = guess();
 document.documentElement.classList.toggle('lite', lite);
 
 export const isLite = () => lite;
 
-/** Wird aufgerufen, wenn das Gerät im Betrieb überfordert ist. Bleibt für dieses Gerät gespeichert. */
-export function degrade() {
-  if (lite) return;
-  lite = true;
-  document.documentElement.classList.add('lite');
-  try { localStorage.setItem(KEY, '1'); } catch { /* egal */ }
+function set(v) {
+  if (v === lite) return;
+  lite = v;
+  document.documentElement.classList.toggle('lite', lite);
   for (const fn of listeners) fn();
+}
+
+/** Sparmodus aus den Einstellungen. fresh: automatische Erkennung neu beginnen (gemerktes Ruckeln vergessen). */
+export function setLiteMode(m, { fresh = false } = {}) {
+  mode = m;
+  if (fresh) { try { localStorage.removeItem(KEY); } catch { /* egal */ } }
+  set(m === 'on' ? true : m === 'off' ? false : guess());
+}
+
+/** Wird aufgerufen, wenn das Gerät im Betrieb überfordert ist. Bleibt für dieses Gerät gespeichert (nur bei „Automatisch“). */
+export function degrade() {
+  if (lite || mode !== 'auto') return;
+  try { localStorage.setItem(KEY, '1'); } catch { /* egal */ }
+  set(true);
 }
 
 export function onLiteChange(fn) { listeners.add(fn); }
