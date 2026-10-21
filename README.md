@@ -10,7 +10,9 @@ Ticky ist eine installierbare Web-App (PWA), mit der Kinder ihre Morgen- und Abe
 - **Upgrade-Reise:** Jede neue Figur bringt eine Reise mit (Standard 2, Magisch 3, Legendär 4, Mythisch/Geheim 5 Stufen): 🎨 neue Farbe → ⚡ Turbo → 📏 Wachstum → 💃 Trick → 🌟 Verwandlung. Solange eine Reise läuft, hat das Rad ein goldenes Upgrade-Feld (35 %), spätestens beim 3. Dreh kommt das Upgrade sicher. Doppelte Figuren geben ein Upgrade für sich selbst
 - **Album:** Alle Figuren, Team zusammenstellen, Anführer und verfolgte Reise wählen, Accessoires anziehen
 - **Spieler-Level:** Jede fertige Routine bringt XP. Das Level bleibt dauerhaft, mit Titeln je Style und einem Accessoire (Krone, Zylinder …) als Geschenk beim Aufstieg
-- Eltern-Bereich mit Rechen-Sperre, Backup-Export und -Import
+- **Alle fertig:** Wenn alle Kinder fertig sind, feiern ihre Teams gemeinsam auf dem ganzen Bildschirm. Gewinn-, Level-up- und Feier-Anzeigen gehen nach ein paar Sekunden von selbst zu
+- Eltern-Bereich mit Rechen-Sperre, Lautstärke-Regler, Sparmodus für schwächere Tablets, Backup-Export und -Import
+- **Demo-Modus:** Glücksrad (auch mit festem Ergebnis), Level-up und Feiern ausprobieren, ohne dass sich Level, Figuren oder Fortschritt ändern. Beim Beenden ist alles wie vorher
 - Funktioniert vollständig offline
 
 ## Datenschutz
