@@ -1,5 +1,5 @@
 // Sammelalbum: alle Figuren eines Kindes, Team (3 Figuren auf dem Aufgaben-Bildschirm) zusammenstellen,
-// Upgrade-Reise verfolgen und Accessoires anziehen.
+// Upgrade-Reise verfolgen, Sterne ansehen und Accessoires anziehen.
 import { el, clear, openOverlay } from './ui.js';
 import { state, save } from './store.js';
 import { THEMES } from './data/themes.js';
@@ -7,7 +7,7 @@ import { RARITIES, figureById } from './data/figures.js';
 import { wheelOrder } from './rewards/draw.js';
 import {
   levelInfo, levelTitle, ACCESSORIES, EVO_STEPS, TEAM_MAX, UPGRADE_PITY, pathOf, stageOf, nextStep, journeyOpen, focusOf,
-  accessoryOf, equipAccessory, toggleTeam, makeLeader, setFocus,
+  accessoryOf, equipAccessory, toggleTeam, makeLeader, setFocus, STAR_PERKS, STAR_MAX, starsOf,
 } from './data/progression.js';
 import { figureView } from './figure-view.js';
 import { popSound, wrongSound } from './audio.js';
@@ -25,6 +25,9 @@ function stageLine(child, fig) {
   });
   return row;
 }
+
+/** Ab dem 2. Stern bekommt die Figur im Album einen Goldrahmen. */
+const framed = (child, fig) => starsOf(child, fig.id) >= 2 ? ' has-frame' : '';
 
 /** Wann kommt das nächste Upgrade spätestens? (Garantie nach UPGRADE_PITY Drehs ohne Upgrade) */
 function pityText(child) {
@@ -60,7 +63,7 @@ export function openAlbum(childId, { onChange } = {}) {
     for (let i = 0; i < TEAM_MAX; i++) {
       const fig = team[i];
       slots.append(fig
-        ? el('button', { type: 'button', class: `album-team__slot${i === 0 ? ' is-leader' : ''}`, onclick: () => openSheet(fig), 'aria-label': `${fig.name}${i === 0 ? ', Anführer' : ''}` },
+        ? el('button', { type: 'button', class: `album-team__slot${i === 0 ? ' is-leader' : ''}${framed(child, fig)}`, onclick: () => openSheet(fig), 'aria-label': `${fig.name}${i === 0 ? ', Anführer' : ''}` },
           i === 0 ? el('span', { class: 'album-team__crown emoji', 'aria-hidden': 'true' }, '👑') : null,
           figureView(fig, child, { alt: '' }),
           el('span', { class: 'album-team__label' }, i === 0 ? 'Anführer' : 'Team'))
@@ -91,13 +94,14 @@ export function openAlbum(childId, { onChange } = {}) {
       const secret = !has && fig.rarity === 'geheim';
       const stage = stageOf(child, fig.id);
       const done = has && stage >= pathOf(fig).length;
+      const stars = starsOf(child, fig.id);
       grid.append(el('button', {
-        type: 'button', role: 'listitem', class: `album-slot${has ? '' : ' is-missing'}${sheetFig === fig ? ' is-selected' : ''}`, 'data-rarity': fig.rarity,
+        type: 'button', role: 'listitem', class: `album-slot${has ? '' : ' is-missing'}${sheetFig === fig ? ' is-selected' : ''}${has ? framed(child, fig) : ''}`, 'data-rarity': fig.rarity,
         'aria-label': has ? `${fig.name}, ${RARITIES[fig.rarity].label}` : `Noch nicht entdeckt, ${RARITIES[fig.rarity].label}`,
         onclick: () => openSheet(fig),
       },
         secret ? el('span', { class: 'album-slot__secret', 'aria-hidden': 'true' }, '?') : figureView(fig, child, { alt: '', silhouette: !has }),
-        has ? el('span', { class: 'album-slot__count' }, done ? '🏆' : `${stage}/${pathOf(fig).length}`) : null,
+        has ? el('span', { class: `album-slot__count${stars ? ' is-stars' : ''}` }, stars ? `★${stars}` : done ? '🏆' : `${stage}/${pathOf(fig).length}`) : null,
         child.team?.includes(fig.id) ? el('span', { class: 'album-slot__team emoji', 'aria-hidden': 'true' }, '🏃') : null));
     }
     body.append(el('section', { class: 'album__sec' }, el('h3', {}, 'Alle Figuren · tippen für Details'), grid));
@@ -130,7 +134,7 @@ export function openAlbum(childId, { onChange } = {}) {
       el('span', { class: 'album-sheet__grip', 'aria-hidden': 'true' }),
       el('button', { type: 'button', class: 'icon-btn icon-btn--plain album-sheet__close', 'aria-label': 'Schließen', onclick: closeSheet }, '✕'),
       el('div', { class: 'album-sheet__head' },
-        el('div', { class: 'album-sheet__hero' },
+        el('div', { class: `album-sheet__hero${has ? framed(child, fig) : ''}` },
           secret ? el('span', { class: 'album-slot__secret', 'aria-hidden': 'true' }, '?') : figureView(fig, child, { alt: has ? fig.name : '', silhouette: !has })),
         el('div', { class: 'album-sheet__title' },
           el('h3', {}, has ? fig.name : secret ? '???' : 'Noch nicht entdeckt'),
@@ -152,8 +156,19 @@ export function openAlbum(childId, { onChange } = {}) {
     sheet.append(el('div', { class: 'album-stages' }, ...pathOf(fig).map((st, i) =>
       el('span', { class: `album-stage${i < stage ? ' is-on' : ''}`, title: EVO_STEPS[st].label },
         el('span', { class: 'emoji', 'aria-hidden': 'true' }, EVO_STEPS[st].icon), el('span', {}, EVO_STEPS[st].short)))));
+    const stars = starsOf(child, fig.id);
+    if (!open) {
+      // Sterne: was jeder Stern bringt, erreichte leuchten
+      sheet.append(el('div', { class: 'album-stars' }, ...STAR_PERKS.map((perk, i) =>
+        el('span', { class: `album-star${i < stars ? ' is-on' : ''}`, title: perk.label },
+          el('span', { class: 'album-star__star', 'aria-hidden': 'true' }, i < stars ? '★' : '☆'),
+          el('span', { class: 'emoji', 'aria-hidden': 'true' }, perk.icon), el('span', {}, perk.label)))));
+    }
+    const nextPerk = STAR_PERKS[stars];
     sheet.append(el('p', { class: 'album-sheet__hint' }, !open
-      ? 'Reise geschafft! 🏆 Wenn du sie nochmal gewinnst, gibt es ein Accessoire.'
+      ? stars >= STAR_MAX
+        ? 'Alle Sterne gesammelt! 🌟 Wenn du sie nochmal gewinnst, gibt es ein Accessoire.'
+        : `Reise geschafft! 🏆 ${stars} von ${STAR_MAX} Sternen. Gewinnst du sie nochmal, bekommt sie einen Stern: ${nextPerk.icon} ${nextPerk.label}.`
       : isFocus ? 'Diese Reise läuft gerade: Das goldene Feld im Glücksrad gehört ihr.' : 'Gewinnst du sie nochmal, bekommt sie sofort ein Upgrade.'));
 
     // Accessoires

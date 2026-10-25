@@ -3,7 +3,7 @@
 import { localDate, daysBetween, parseTime } from './util.js';
 import { THEME_IDS, THEMES } from './data/themes.js';
 import { TASK_CATALOG, ROUTINES } from './data/task-catalog.js';
-import { ACCESSORY_IDS, TEAM_MAX, pathOf, pickFocus, focusOf } from './data/progression.js';
+import { ACCESSORY_IDS, TEAM_MAX, STAR_MAX, pathOf, pickFocus, focusOf } from './data/progression.js';
 import { RARITY_ORDER, figureById } from './data/figures.js';
 
 export const STORAGE_KEY = 'ticky_v1';
@@ -104,15 +104,19 @@ export function normalizeState(raw, today = localDate()) {
       const wardrobe = Array.isArray(c.wardrobe) ? [...new Set(c.wardrobe.filter(a => ACCESSORY_IDS.includes(a)))] : [];
       const evo = {};
       const acc = {};
+      const stars = {};
       for (const fid of Object.keys(figures)) {
         const fig = figureById(fid);
         const stage = isObj(c.evo) ? c.evo[fid] : undefined;
         if (fig && Number.isInteger(stage) && stage > 0) evo[fid] = Math.min(stage, pathOf(fig).length);
+        // Sterne gibt es nur nach fertiger Reise
+        const n = isObj(c.stars) ? c.stars[fid] : undefined;
+        if (fig && evo[fid] === pathOf(fig).length && Number.isInteger(n) && n > 0) stars[fid] = Math.min(n, STAR_MAX);
         const a = isObj(c.acc) ? c.acc[fid] : undefined;
         if (wardrobe.includes(a)) acc[fid] = a;
       }
       const team = Array.isArray(c.team) ? [...new Set(c.team.filter(id => typeof id === 'string' && figures[id]))].slice(0, TEAM_MAX) : [];
-      const kid = { id: c.id, name, theme, avatar, tasks, figures, sinceLegendary, sinceUpgrade, xp, wardrobe, evo, acc, team, focus: null };
+      const kid = { id: c.id, name, theme, avatar, tasks, figures, sinceLegendary, sinceUpgrade, xp, wardrobe, evo, acc, stars, team, focus: null };
       kid.focus = typeof c.focus === 'string' && figures[c.focus] ? c.focus : null;
       if (!focusOf(kid)) kid.focus = pickFocus(kid);
       out.children.push(kid);

@@ -2,6 +2,7 @@
 import { el, $ } from '../ui.js';
 import { sparkle, dust, confetti, isReduced } from '../fx.js';
 import { decorateFigure } from '../figure-view.js';
+import { hasStep, starsOf } from '../data/progression.js';
 import { isLite, animationDone } from '../perf.js';
 
 const svgCache = new Map();
@@ -56,14 +57,17 @@ export async function runParade(fig, child = null) {
     return;
   }
 
+  // Upgrades sieht man auch hier: Wachstum = größer, Turbo = flitzt doppelt so schnell hin und zurück
+  const big = hasStep(child, fig, 'groesse');
+  const turbo = hasStep(child, fig, 'tempo');
   const base = Math.min(innerWidth * 0.3, 170);
-  const size = Math.round(base * (rare ? 1.7 : legendary ? 1.5 : 1));
-  const passes = fig.rarity === 'geheim' ? 3 : legendary ? 2 : 1;
+  const size = Math.round(base * (rare ? 1.7 : legendary ? 1.5 : 1) * (big ? 1.25 : 1));
+  const passes = (fig.rarity === 'geheim' ? 3 : legendary ? 2 : 1) * (turbo ? 2 : 1);
   let ltr = Math.random() < 0.5;
   if (legendary) confetti(rare ? 150 : 110);
 
   for (let p = 0; p < passes; p++) {
-    const opts = { legendary, magic, rainbow: fig.rarity === 'geheim', fire: fig.rarity === 'mythisch', child };
+    const opts = { legendary, magic, rainbow: fig.rarity === 'geheim' || starsOf(child, fig.id) >= 5, fire: fig.rarity === 'mythisch', child, turbo, sparkly: starsOf(child, fig.id) >= 1 };
     const tasks = [runPass(layer, svgNode.cloneNode(true), fig, size, ltr, { ...opts, echo: false })];
     if (magic && !isLite()) tasks.push(runPass(layer, svgNode.cloneNode(true), fig, size, ltr, { ...opts, echo: true, delay: 180 }));
     await Promise.all(tasks);
@@ -71,16 +75,16 @@ export async function runParade(fig, child = null) {
   }
 }
 
-async function runPass(layer, svgNode, fig, size, ltr, { legendary, magic, rainbow, fire, child, echo, delay = 0 }) {
+async function runPass(layer, svgNode, fig, size, ltr, { legendary, magic, rainbow, fire, child, turbo, sparkly, echo, delay = 0 }) {
   if (delay) await wait(delay);
-  const inner = decorateFigure(el('div', { class: 'parade-inner fig' }, svgNode), fig, echo ? null : child);
+  const inner = decorateFigure(el('div', { class: `parade-inner fig${turbo && !echo ? ' is-dashing' : ''}` }, svgNode), fig, echo ? null : child);
   const actor = el('div', { class: `parade-actor${ltr ? '' : ' is-flipped'}${echo ? ' is-echo' : ''}`, 'data-motion': fig.motion, style: { '--size': `${size}px` } }, inner);
   layer.append(actor);
 
   const W = innerWidth, H = innerHeight;
   const x0 = ltr ? -size - 20 : W + 20;
   const x1 = ltr ? W + 20 : -size - 20;
-  const duration = 5000;
+  const duration = turbo ? 2300 : 5000;
   let yBase;
   if (fig.motion === 'fly') yBase = H * 0.18;
   else yBase = H * 0.72 - size;
@@ -96,11 +100,11 @@ async function runPass(layer, svgNode, fig, size, ltr, { legendary, magic, rainb
       { transform: 'translateY(0) scale(1.04, .96)' },
       { transform: 'translateY(-10px) scale(.97, 1.03)' },
       { transform: 'translateY(0) scale(1.04, .96)' },
-    ], { duration: 360, iterations: Infinity, easing: 'ease-in-out' });
+    ], { duration: turbo ? 220 : 360, iterations: Infinity, easing: 'ease-in-out' });
   } else if (fig.motion === 'hop') {
     const hopH = Math.min(H * 0.25, 180);
     const frames = [];
-    const hops = 5;
+    const hops = turbo ? 3 : 5;
     const period = 1 / hops;
     for (let i = 0; i < hops; i++) {
       const o = i * period;
@@ -136,6 +140,8 @@ async function runPass(layer, svgNode, fig, size, ltr, { legendary, magic, rainb
       if (fig.motion === 'walk' && !legendary && !magic) dust(tailX, r.bottom - 8);
       else if (fig.motion === 'walk') { dust(tailX, r.bottom - 8); sparkle(tailX, r.top + r.height * 0.5, trailColor, legendary ? 10 : 7); }
       else if (fig.motion === 'fly' || legendary || magic) sparkle(tailX, r.top + r.height * 0.55, trailColor, legendary ? 10 : 7);
+      // ✨ Stern-Glitzer: zusätzliche goldene Spur
+      if (sparkly) sparkle(tailX, r.top + r.height * (0.3 + Math.random() * 0.5), rainbow ? trailColor : '#FFE27A', 6);
     }
     requestAnimationFrame(loop);
   };

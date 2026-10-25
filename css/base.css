@@ -413,6 +413,8 @@ body.day .sky { background: linear-gradient(180deg, color-mix(in oklch, var(--ti
 .rest-buddy__stage { position: relative; flex: none; min-width: 92px; display: flex; align-items: flex-end; gap: 2px; }
 .rest-buddy__stage .fig { width: 38px; flex: none; }
 .rest-buddy__stage .fig.is-side { width: 24px; opacity: .85; }
+.rest-buddy__stage .fig[data-evo~="groesse"] { width: 44px; }
+.rest-buddy__stage .fig.is-side[data-evo~="groesse"] { width: 28px; }
 .rest-buddies.is-night .rest-buddy__stage .fig { opacity: .85; }
 .rest-buddies.is-night .rest-buddy__stage .fig.is-side { opacity: .6; }
 .rest-buddy__avatar { font-size: 32px; }
@@ -656,6 +658,10 @@ body.day .sky { background: linear-gradient(180deg, color-mix(in oklch, var(--ti
 .party-avatar { display: grid; place-items: center; height: var(--size); font-size: calc(var(--size) * .7); line-height: 1; }
 @media (max-height: 560px) { .celebration { gap: 10px; } .celebration__party { --size: clamp(44px, calc(70vw / max(var(--n, 1), 4)), 80px); padding-top: 18px; } }
 .lite .party-fig { animation-name: party-in, party-float; animation-duration: .5s, 1.6s; }
+/* Upgrades auch in der Feier: Wachstum größer, Turbo hüpft im doppelten Takt */
+.party-fig[data-evo~="groesse"] { width: calc(var(--size) * 1.2); }
+.celebration__party .party-fig[data-evo~="tempo"] { animation-duration: .5s, .4s; }
+.celebration__party .party-fig[data-evo~="tempo"][data-motion="fly"], .lite .celebration__party .party-fig[data-evo~="tempo"] { animation-duration: .5s, .8s; }
 
 /* ---------- Level-Aufstieg ---------- */
 .levelup { position: relative; display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 480px; height: calc(100 * var(--vh)); margin: 0 auto; padding: calc(50px + var(--safe-t)) 24px calc(38px + var(--safe-b)); text-align: center; overflow: hidden; }
@@ -706,9 +712,54 @@ body.day .sky { background: linear-gradient(180deg, color-mix(in oklch, var(--ti
 .fig > .fig__img, .fig > svg { display: block; width: 100%; height: 100%; }
 .fig.is-silhouette > .fig__img { filter: brightness(0) opacity(.4); }
 .fig__acc { position: absolute; left: var(--hx, 50%); top: var(--hy, 10%); transform: translate(-50%, -70%); font-family: var(--emoji); font-size: 1.4em; font-size: 30cqw; line-height: 1; pointer-events: none; z-index: 2; }
-.fig > .fig__img, .fig > svg { filter: var(--f-hue, ) var(--f-glow, ); transition: filter .4s; }
+/* Farbe + Verwandlung als ein Filter. Ohne diese Upgrades gar keiner (spart auf schwachen Geräten), die Platzhalter
+   sind echte No-ops statt leerer var()-Fallbacks, die manche Browser als ungültig verwerfen. */
+.fig > .fig__img, .fig > svg { transition: filter .6s, scale .6s cubic-bezier(.3,1.6,.5,1); }
+.fig[data-evo~="farbe"], .fig[data-evo~="verwandlung"] { --f-hue: hue-rotate(0deg); --f-glow: opacity(1); }
+.fig[data-evo~="farbe"] > .fig__img, .fig[data-evo~="farbe"] > svg,
+.fig[data-evo~="verwandlung"] > .fig__img, .fig[data-evo~="verwandlung"] > svg { filter: var(--f-hue) var(--f-glow); }
 .fig[data-evo~="farbe"] { --f-hue: hue-rotate(var(--hue, 180deg)) saturate(1.3); }
+/* Weiße/graue Figuren: erst einfärben (Sepia), dann in den Farbton der Figur drehen */
+.fig[data-evo~="farbe"][data-tint="pale"] { --f-hue: brightness(.85) sepia(1) saturate(5) hue-rotate(var(--hue, 180deg)); }
+.fig[data-evo~="farbe"][data-tint="dark"] { --f-hue: hue-rotate(var(--hue, 180deg)) saturate(1.5) drop-shadow(0 0 3px oklch(0.72 0.2 var(--hue, 180deg))); }
 .fig[data-evo~="verwandlung"] { --f-glow: drop-shadow(0 0 2px #fff) drop-shadow(0 0 8px oklch(0.83 0.14 85 / .9)); }
+/* Turbo: Speed-Lines hinter der Figur, solange sie flitzt (Team in Bewegung, Parade, Enthüllung) */
+.fig.is-dashing::after {
+  --line: linear-gradient(90deg, transparent, rgb(255 255 255 / .85));
+  content: ''; position: absolute; top: 28%; bottom: 22%; right: 82%; width: 55%; z-index: -1; pointer-events: none;
+  background: var(--line) 0 0 / 70% max(1px, 3cqw) no-repeat, var(--line) 100% 50% / 100% max(1px, 3cqw) no-repeat, var(--line) 40% 100% / 60% max(1px, 3cqw) no-repeat;
+  animation: speed-lines .28s linear infinite;
+}
+.herd-actor.is-left .fig.is-dashing::after, .parade-actor.is-flipped .fig.is-dashing::after { right: auto; left: 82%; scale: -1 1; }
+.fig[data-evo~="tempo"].is-dashing > .fig__img, .fig[data-evo~="tempo"].is-dashing > svg { animation: dash-bob .22s ease-in-out infinite; }
+/* Wachstum in der Enthüllung: wächst sichtbar beim Umschalten */
+.reveal__figure[data-evo~="groesse"] > .fig__img { scale: 1.18; }
+.reveal__figure[data-new="trick"].is-upgraded > .fig__img { animation: actor-trick 1.3s ease-in-out 2; }
+.fig.is-upgraded { animation: upgrade-pop .7s cubic-bezier(.3,1.6,.5,1); }
+/* Stern-Effekte (figure-view.js legt die Ebenen an, sichtbar nur, wenn der Effekt in data-perks steht) */
+.fig__perk { position: absolute; display: none; pointer-events: none; }
+.fig__fx { inset: 0; z-index: 1; -webkit-mask: var(--mask) center / contain no-repeat; mask: var(--mask) center / contain no-repeat; }
+/* ✨ Glitzer: funkelnde Punkte rund um die Figur (zwei Gruppen im Wechsel) */
+.fig[data-perks~="glitzer"] > .fig__twinkle { display: block; inset: -10%; z-index: 1; }
+.fig__twinkle::before, .fig__twinkle::after { content: ''; position: absolute; inset: 0; animation: twinkle 1.8s ease-in-out infinite; }
+.fig__twinkle::before { background: radial-gradient(circle at 12% 22%, #FFF6C8 0 2.4cqw, transparent 3.2cqw), radial-gradient(circle at 86% 36%, #FFE27A 0 2cqw, transparent 2.8cqw), radial-gradient(circle at 70% 88%, #fff 0 1.8cqw, transparent 2.6cqw); }
+.fig__twinkle::after { background: radial-gradient(circle at 30% 6%, #fff 0 1.8cqw, transparent 2.6cqw), radial-gradient(circle at 92% 72%, #FFF6C8 0 2.4cqw, transparent 3.2cqw), radial-gradient(circle at 8% 70%, #FFE27A 0 2cqw, transparent 2.8cqw); animation-delay: -.9s; }
+/* 💫 Goldschimmer: ein heller Streifen wandert über die Figur */
+.fig[data-perks~="schimmer"] > .fig__shine { display: block; background: linear-gradient(105deg, transparent 38%, rgb(255 236 170 / .9) 50%, transparent 62%) 0 0 / 300% 100% no-repeat; animation: shine 3.2s ease-in-out infinite; }
+/* 🌠 Sternbegleiter: ein goldener Stern kreist um die Figur */
+.fig[data-perks~="begleiter"] > .fig__orbit { display: block; inset: -14%; z-index: 3; animation: orbit 3.6s linear infinite; }
+.fig__orbit::before { content: '✦'; position: absolute; left: 50%; top: 0; translate: -50% -50%; font-size: max(9px, 22cqw); line-height: 1; color: #FFD34D; text-shadow: 0 0 4cqw #FFB020; }
+/* 🌈 Regenbogen: die Farben laufen durch die Figur (Farbmodus: Form und Helligkeit bleiben) */
+.fig[data-perks~="regenbogen"] > .fig__rainbow { display: block; opacity: .8; mix-blend-mode: color; background: linear-gradient(90deg, #F87171, #FBBF24, #A3E635, #38BDF8, #A78BFA, #F472B6, #F87171) 0 0 / 200% 100%; animation: rainbow-slide 4s linear infinite; }
+/* Die Masken-Ebenen machen jede Bewegung des Bilds mit (Spiegeln, Turbo-Wippen, Wachstum, Trick) */
+.herd-actor.is-left .fig__fx, .parade-actor.is-flipped .fig__fx { transform: scaleX(-1); }
+.fig[data-evo~="tempo"].is-dashing > .fig__shine { animation: shine 3.2s ease-in-out infinite, dash-bob .22s ease-in-out infinite; }
+.fig[data-evo~="tempo"].is-dashing > .fig__rainbow { animation: rainbow-slide 4s linear infinite, dash-bob .22s ease-in-out infinite; }
+.reveal__figure[data-evo~="groesse"] > .fig__fx { scale: 1.18; }
+.reveal__figure[data-new="trick"].is-upgraded > .fig__fx { animation: actor-trick 1.3s ease-in-out 2; }
+/* Schwache Geräte / reduzierte Bewegung: ruhiger Goldton statt wanderndem Streifen, Regenbogen steht */
+.lite .fig__shine, body.reduce-motion .fig__shine { animation: none !important; background: rgb(255 226 140 / .3); }
+.lite .fig__rainbow { animation: none; }
 .fig[data-evo~="verwandlung"]::before {
   content: ''; position: absolute; inset: -16%; z-index: -1; border-radius: 50%; pointer-events: none;
   background: repeating-conic-gradient(from 0deg, color-mix(in oklch, var(--ticky-gold) 55%, transparent) 0 12deg, transparent 12deg 30deg);
@@ -717,6 +768,13 @@ body.day .sky { background: linear-gradient(180deg, color-mix(in oklch, var(--ti
 .fig.is-silhouette::before, .fig.is-silhouette::after { content: none; }
 
 /* ---------- Keyframes ---------- */
+@keyframes twinkle { 0%, 100% { opacity: 0; transform: scale(.6); } 50% { opacity: 1; transform: scale(1); } }
+@keyframes shine { 0% { background-position: 100% 0; } 55%, 100% { background-position: 0 0; } }
+@keyframes orbit { to { transform: rotate(1turn); } }
+@keyframes rainbow-slide { to { background-position: -200% 0; } }
+@keyframes speed-lines { from { transform: translateX(20%); opacity: 1; } to { transform: translateX(-30%); opacity: .2; } }
+@keyframes dash-bob { 0%, 100% { translate: 0 0; rotate: -4deg; } 50% { translate: 0 -6%; rotate: 2deg; } }
+@keyframes upgrade-pop { 0% { transform: scale(1); } 35% { transform: scale(1.25); } 100% { transform: scale(1); } }
 @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
 @keyframes pop { 0% { transform: scale(.4); } 60% { transform: scale(1.3); } 100% { transform: scale(1); } }
 @keyframes fade-in { from { opacity: 0; } }

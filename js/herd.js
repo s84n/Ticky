@@ -1,8 +1,9 @@
 // Das Team (bis zu 3 Figuren) läuft unten auf der Kinder-Card über eine Wiese und reagiert aufs Abhaken.
-// Upgrades wirken hier: Turbo = schneller + Saltos, Wachstum = größer, Trick = eigene Einlage, Verwandlung = Aura.
+// Upgrades wirken hier: Turbo = flitzt mit Speed-Lines, sprintet und schlägt Saltos, Wachstum = größer,
+// Trick = eigene Einlage, Verwandlung = Aura. Ab dem 1. Stern bleibt beim Laufen eine Glitzerspur zurück.
 import { el, clear } from './ui.js';
 import { figureById } from './data/figures.js';
-import { hasStep, focusOf, nextStep, stageOf, pathOf, EVO_STEPS } from './data/progression.js';
+import { hasStep, focusOf, nextStep, stageOf, pathOf, starsOf, EVO_STEPS } from './data/progression.js';
 import { figureView } from './figure-view.js';
 import { isReduced } from './fx.js';
 import { popSound } from './audio.js';
@@ -13,6 +14,8 @@ const CHEERS = ['Super!', 'Yeah!', '⭐', 'Toll!', 'Weiter so!', 'Juhu!', '💪'
 const YAWNS = ['Gähn… 😴', '😪', 'Ich werd müde…', 'Schnell, bitte!', '⏰', 'Beeil dich!'];
 const WAKE = ['Ich bin wach! 😃', 'Weiter geht’s!', '⚡'];
 const rand = (a, b) => a + Math.random() * (b - a);
+/** So viel schneller läuft eine Figur mit Turbo. */
+const TURBO = 2.6;
 
 /**
  * Baut das Team in `meadow` auf. onOpen() öffnet das Album (Tipp auf die leere Wiese oder die Reise-Anzeige).
@@ -25,7 +28,7 @@ export function mountHerd(meadow, child, { onOpen } = {}) {
   let yawnTimer = null;
 
   function stop() {
-    for (const a of actors) clearTimeout(a.timer);
+    for (const a of actors) { clearTimeout(a.timer); clearInterval(a.glitter); }
     clearTimeout(yawnTimer);
     actors = [];
   }
@@ -57,6 +60,8 @@ export function mountHerd(meadow, child, { onOpen } = {}) {
         x: ((i + 0.5) / team.length) * (focusOf(child) ? 56 : 80) + 10 + rand(-4, 4),
         fast: hasStep(child, fig, 'tempo'),
         trick: hasStep(child, fig, 'trick'),
+        sparkly: starsOf(child, fig.id) >= 1,
+        glitter: null,
       };
       a.node = el('button', {
         type: 'button', class: `herd-actor${hasStep(child, fig, 'groesse') ? ' is-big' : ''}${i === 0 ? ' is-leader' : ''}${fig.motion === 'fly' ? ' is-fly' : ''}`,
@@ -89,19 +94,27 @@ export function mountHerd(meadow, child, { onOpen } = {}) {
   /** Läuft zu x (%), danach cb. */
   function moveTo(a, x, cb, speed = tired ? 0.55 : 1) {
     const dist = Math.abs(x - a.x);
-    const dur = Math.max(0.5, (dist * 0.09) / speed / (a.fast ? 1.8 : 1));
+    const dur = Math.max(a.fast ? 0.3 : 0.5, (dist * 0.09) / speed / (a.fast ? TURBO : 1));
+    const inner = a.node.querySelector('.fig');
     a.node.classList.toggle('is-left', x < a.x);
     a.node.classList.add('is-moving');
+    inner.classList.toggle('is-dashing', a.fast);
     a.x = x;
     setPos(a, dur);
-    later(a, () => { a.node.classList.remove('is-moving'); cb?.(); }, dur * 1000);
+    clearInterval(a.glitter);
+    if (a.sparkly) a.glitter = setInterval(() => glitter(a), a.fast ? 90 : 160);
+    later(a, () => { clearInterval(a.glitter); a.node.classList.remove('is-moving'); inner.classList.remove('is-dashing'); cb?.(); }, dur * 1000);
   }
 
   function wander(a) {
-    moveTo(a, rand(8, maxX()), () => {
-      if (a.fast && Math.random() < 0.35) play(a, 'is-salto', 750);
+    // Turbo sprintet ab und zu einmal quer über die ganze Wiese
+    const sprint = a.fast && !tired && Math.random() < 0.4;
+    const x = sprint ? (a.x > maxX() / 2 ? rand(6, 14) : rand(maxX() - 8, maxX())) : rand(8, maxX());
+    moveTo(a, x, () => {
+      if (a.fast && Math.random() < 0.45) play(a, 'is-salto', 750);
       else if (a.trick && Math.random() < 0.3) play(a, 'is-trick', 1300);
-      later(a, () => wander(a), tired ? rand(4000, 9000) : rand(1200, 5200));
+      const pause = a.fast ? rand(700, 3000) : rand(1200, 5200);
+      later(a, () => wander(a), tired ? rand(4000, 9000) : pause);
     });
   }
 
@@ -141,6 +154,18 @@ export function mountHerd(meadow, child, { onOpen } = {}) {
       a.node.append(h);
       setTimeout(() => h.remove(), 1400);
     }
+  }
+
+  /** Ein Glitzerkorn an der aktuellen Position der Figur (sie läuft per transform, daher aus dem Layout gelesen). */
+  function glitter(a) {
+    if (!meadow.isConnected) { clearInterval(a.glitter); return; }
+    const m = meadow.getBoundingClientRect();
+    const r = a.node.getBoundingClientRect();
+    const g = el('span', { class: 'herd-glitter', 'aria-hidden': 'true', style: {
+      left: `${r.left - m.left + r.width * rand(0.3, 0.7)}px`, top: `${r.top - m.top + r.height * rand(0.35, 0.95)}px`,
+    } });
+    meadow.append(g);
+    setTimeout(() => g.remove(), 900);
   }
 
   function bubble(a, text) {

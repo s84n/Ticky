@@ -359,7 +359,7 @@ export const hasTeam = childId => (cards.get(childId)?.child.team?.length ?? 0) 
 /** Alles, was das Aussehen des Teams bestimmt. Ändert es sich, wird das Team neu aufgebaut. */
 function herdKey(child) {
   const team = child.team ?? [];
-  return JSON.stringify([team, team.map(id => [child.evo?.[id] ?? 0, child.acc?.[id] ?? null]), child.focus, child.evo?.[child.focus] ?? 0]);
+  return JSON.stringify([team, team.map(id => [child.evo?.[id] ?? 0, child.stars?.[id] ?? 0, child.acc?.[id] ?? null]), child.focus, child.evo?.[child.focus] ?? 0]);
 }
 
 /** Team reagiert: 'cheer' (Aufgabe abgehakt, clientX = Position der Aufgabe), 'party' (Routine fertig) oder 'oops'. text: Sprechblase. */

@@ -5,7 +5,7 @@ import { localDate, daysBetween } from '../js/util.js';
 import { toggleTask, toggleAll, autoRoutine, currentRoutine, nextRoutine, isNight, validateTimes, autoGoal, goalOf, timeInfo } from '../js/routine.js';
 import {
   levelInfo, levelTitle, awardRoutine, addFigure, applyUpgrade, trackSpin, upgradeGuaranteed, hasStep, journeyOpen,
-  toggleTeam, makeLeader, setFocus, focusOf, equipAccessory, accessoryOf,
+  toggleTeam, makeLeader, setFocus, focusOf, pickFocus, addStar, starsOf, perksOf, STAR_MAX, STAR_PERKS, equipAccessory, accessoryOf,
   XP_PER_TASK, XP_ROUTINE_BONUS, BLITZ_XP, MAX_LEVEL, ACCESSORY_IDS, TEAM_MAX, EVO_PATHS, UPGRADE_PITY,
 } from '../js/data/progression.js';
 import { figureById } from '../js/data/figures.js';
@@ -177,7 +177,7 @@ const kid = () => ({ figures: {}, wardrobe: [], evo: {}, acc: {}, team: [], focu
 
 test('Neue Figur: kommt ins Team (max. 3), seltenste offene Reise wird verfolgt', () => {
   const c = kid();
-  assert.deepEqual(addFigure(c, figureById('pixel_01')), { isNew: true, upgrade: null, gift: null });
+  assert.deepEqual(addFigure(c, figureById('pixel_01')), { isNew: true, upgrade: null, star: null, gift: null });
   assert.equal(c.focus, 'pixel_01');
   addFigure(c, figureById('pixel_10')); // legendär → wird verfolgt
   assert.equal(c.focus, 'pixel_10');
@@ -186,6 +186,17 @@ test('Neue Figur: kommt ins Team (max. 3), seltenste offene Reise wird verfolgt'
   addFigure(c, figureById('pixel_03'));
   assert.deepEqual(c.team, ['pixel_01', 'pixel_10', 'pixel_02']);
   assert.equal(TEAM_MAX, 3);
+});
+
+test('Reise: Figuren im Team gehen vor, eine seltene Figur im Album löst sie nicht ab', () => {
+  const c = kid();
+  for (const id of ['pixel_01', 'pixel_02', 'pixel_03']) addFigure(c, figureById(id));
+  addFigure(c, figureById('pixel_10')); // legendär, aber das Team ist voll
+  assert.deepEqual(c.team, ['pixel_01', 'pixel_02', 'pixel_03']);
+  assert.ok(c.team.includes(c.focus));
+  assert.ok(c.team.includes(pickFocus(c)));
+  c.team = ['pixel_10'];
+  assert.equal(pickFocus(c), 'pixel_10');
 });
 
 test('Upgrade-Reise: Länge je Rarität, Reihenfolge, danach nächste Reise', () => {
@@ -205,16 +216,33 @@ test('Upgrade-Reise: Länge je Rarität, Reihenfolge, danach nächste Reise', ()
   assert.equal(c.focus, 'neon_01'); // nächste offene Reise
 });
 
-test('Doppelte Figur: Upgrade für sie, nach fertiger Reise ein Accessoire', () => {
+test('Doppelte Figur: Upgrade für sie, nach fertiger Reise Sterne, danach Accessoires', () => {
   const c = kid();
   const fig = figureById('zauber_01');
   addFigure(c, fig);
-  assert.deepEqual(addFigure(c, fig), { isNew: false, upgrade: 'farbe', gift: null });
-  assert.deepEqual(addFigure(c, fig), { isNew: false, upgrade: 'tempo', gift: null });
+  assert.deepEqual(addFigure(c, fig), { isNew: false, upgrade: 'farbe', star: null, gift: null });
+  assert.deepEqual(addFigure(c, fig), { isNew: false, upgrade: 'tempo', star: null, gift: null });
+  for (let n = 1; n <= STAR_MAX; n++) assert.deepEqual(addFigure(c, fig), { isNew: false, upgrade: null, star: n, gift: null });
+  assert.deepEqual(perksOf(c, fig.id), STAR_PERKS.map(p => p.id));
   const r = addFigure(c, fig, () => 0);
-  assert.equal(r.upgrade, null);
+  assert.equal(r.star, null);
   assert.equal(r.gift, ACCESSORY_IDS[0]);
-  assert.equal(c.figures.zauber_01, 4);
+  assert.equal(c.figures.zauber_01, 4 + STAR_MAX);
+  assert.equal(starsOf(c, fig.id), STAR_MAX);
+  assert.equal(STAR_MAX, 5);
+});
+
+test('Sterne: nur nach fertiger Reise, Normalisierung repariert sie', () => {
+  const c = kid();
+  const fig = figureById('neon_10');
+  addFigure(c, fig);
+  assert.equal(addStar(c, fig), null); // Reise noch offen
+  const s = normalizeState({ schemaVersion: 3, setupDone: true, children: [child('c_a', {
+    figures: { pixel_01: 3, pixel_02: 1, pixel_10: 1 },
+    evo: { pixel_01: 2, pixel_10: 1 },
+    stars: { pixel_01: 9, pixel_02: 2, pixel_10: 1, pixel_05: 3 },
+  })] });
+  assert.deepEqual(s.children[0].stars, { pixel_01: 5 });
 });
 
 test('Garantie: nach zwei Drehs ohne Upgrade kommt es sicher', () => {

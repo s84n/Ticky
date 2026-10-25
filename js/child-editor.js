@@ -8,7 +8,7 @@ import { taskInfo } from './render.js';
 
 export function newChildDraft(index = 0) {
   const theme = THEME_IDS[index % THEME_IDS.length];
-  return { id: randomId('c'), name: '', theme, avatar: THEMES[theme].avatars[0], tasks: defaultTaskSelection(), figures: {}, sinceLegendary: 0, sinceUpgrade: 0, xp: 0, wardrobe: [], evo: {}, acc: {}, team: [], focus: null };
+  return { id: randomId('c'), name: '', theme, avatar: THEMES[theme].avatars[0], tasks: defaultTaskSelection(), figures: {}, sinceLegendary: 0, sinceUpgrade: 0, xp: 0, wardrobe: [], evo: {}, acc: {}, stars: {}, team: [], focus: null };
 }
 
 /** Style-Kachel: Avatar, Name und live eingesetzter Kindername mit Kurzbeschreibung. Radius = Card-Radius des Styles. */

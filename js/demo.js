@@ -6,7 +6,8 @@ import { state, startDemo, endDemo, isDemo, spinKey } from './store.js';
 import { localDate } from './util.js';
 import { THEMES } from './data/themes.js';
 import { RARITIES } from './data/figures.js';
-import { focusOf } from './data/progression.js';
+import { focusOf, starReady } from './data/progression.js';
+import { wheelOrder } from './rewards/draw.js';
 import { childCompleted, openAllCelebration, demoSpin, demoLevelUp, setDemoCelebrations, isBusy } from './celebrate.js';
 import { toast } from './fx.js';
 
@@ -77,7 +78,8 @@ function openPanel() {
       el('button', { type: 'button', class: 'btn', onclick: run(() => demoSpin(child.id)) }, '🎲 Zufall'),
       ...['magisch', 'legendaer', 'mythisch', 'geheim'].map(r =>
         el('button', { type: 'button', class: 'btn', onclick: run(() => demoSpin(child.id, r)) }, RARITIES[r].label)),
-      focusOf(child) ? el('button', { type: 'button', class: 'btn', onclick: run(() => demoSpin(child.id, 'upgrade')) }, '⭐ Upgrade') : null);
+      focusOf(child) ? el('button', { type: 'button', class: 'btn', onclick: run(() => demoSpin(child.id, 'upgrade')) }, '⭐ Upgrade') : null,
+      wheelOrder(child.theme).some(f => starReady(child, f)) ? el('button', { type: 'button', class: 'btn', onclick: run(() => demoSpin(child.id, 'stern')) }, '🌟 Stern') : null);
 
     body.append(
       el('p', { class: 'muted' }, `Alles hier ist nur ein Test – ${THEMES[child.theme].name}-Figuren, Level und XP von ${child.name} bleiben nach der Demo unverändert.`),

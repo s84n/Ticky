@@ -139,7 +139,7 @@ function spinFlow(child, routine) {
           const hadTarget = !!focusOf(c);
           let gain;
           if (result.kind === 'upgrade') {
-            gain = { isNew: false, upgrade: applyUpgrade(c, result.fig), gift: null };
+            gain = { isNew: false, upgrade: applyUpgrade(c, result.fig), star: null, gift: null };
           } else {
             gain = addFigure(c, result.fig);
             c.sinceLegendary = isEpic(result.fig.rarity) ? 0 : (c.sinceLegendary ?? 0) + 1;

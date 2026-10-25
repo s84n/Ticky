@@ -35,6 +35,19 @@ export const EVO_PATHS = {
   geheim: ['farbe', 'tempo', 'groesse', 'trick', 'verwandlung'],
 };
 
+/**
+ * Sterne: Nach der fertigen Reise bringt jedes weitere Duplikat einen Stern (bis STAR_MAX).
+ * Jeder Stern schaltet einen sichtbaren Effekt frei, immer in dieser Reihenfolge. Danach gibt es Accessoires.
+ */
+export const STAR_MAX = 5;
+export const STAR_PERKS = [
+  { id: 'glitzer', icon: '✨', label: 'Glitzer', reveal: 'glitzert und zieht eine Glitzerspur hinter sich her!' },
+  { id: 'rahmen', icon: '🖼️', label: 'Goldrahmen', reveal: 'bekommt einen goldenen Rahmen im Album!' },
+  { id: 'schimmer', icon: '💫', label: 'Goldschimmer', reveal: 'schimmert jetzt golden!' },
+  { id: 'begleiter', icon: '🌠', label: 'Sternbegleiter', reveal: 'hat jetzt einen Stern, der um sie kreist!' },
+  { id: 'regenbogen', icon: '🌈', label: 'Regenbogen', reveal: 'leuchtet in allen Regenbogenfarben!' },
+];
+
 /** Accessoires: einmal freigeschaltet, für alle Figuren des Kindes nutzbar. */
 export const ACCESSORIES = [
   { id: 'krone', icon: '👑', label: 'Krone' },
@@ -111,13 +124,19 @@ export function focusOf(child) {
   return fig && journeyOpen(child, fig) ? fig : null;
 }
 
-/** Wählt die nächste offene Reise: die seltenste Figur zuerst. */
+/**
+ * Rang für die automatische Reise-Wahl: Figuren im Team zuerst (nur deren Upgrades sieht man bei den Aufgaben),
+ * danach die seltenste.
+ */
+const focusRank = (child, fig) => (child.team?.includes(fig.id) ? RARITY_ORDER.length : 0) + RARITY_ORDER.indexOf(fig.rarity);
+
+/** Wählt die nächste offene Reise: Team vor Album, seltene Figuren zuerst. */
 export function pickFocus(child) {
   let best = null;
   for (const id of Object.keys(child.figures)) {
     const fig = figureById(id);
     if (!fig || !journeyOpen(child, fig)) continue;
-    if (!best || RARITY_ORDER.indexOf(fig.rarity) > RARITY_ORDER.indexOf(best.rarity)) best = fig;
+    if (!best || focusRank(child, fig) > focusRank(child, best)) best = fig;
   }
   return best?.id ?? null;
 }
@@ -132,14 +151,34 @@ export function applyUpgrade(child, fig) {
   return step;
 }
 
+// ---------- Sterne ----------
+
+export const starsOf = (child, figId) => child?.stars?.[figId] ?? 0;
+
+/** Freigeschaltete Stern-Effekte einer Figur (Liste von Perk-ids). */
+export const perksOf = (child, figId) => STAR_PERKS.slice(0, starsOf(child, figId)).map(p => p.id);
+
+/** Bekäme die Figur beim nächsten Gewinn einen Stern? */
+export const starReady = (child, fig) => !!child.figures[fig.id] && !journeyOpen(child, fig) && starsOf(child, fig.id) < STAR_MAX;
+
+/** Gibt einer Figur mit fertiger Reise einen Stern. Gibt die neue Sternzahl zurück oder null (Reise offen oder schon voll). */
+export function addStar(child, fig) {
+  if (!starReady(child, fig)) return null;
+  const n = starsOf(child, fig.id);
+  child.stars ??= {};
+  child.stars[fig.id] = n + 1;
+  return n + 1;
+}
+
 /** Erzwingt die Garantie (nach UPGRADE_PITY Drehs ohne Upgrade)? */
 export const upgradeGuaranteed = child => (child.sinceUpgrade ?? 0) >= UPGRADE_PITY;
 
 /**
  * Bucht eine gewonnene Figur ein.
- * Neu: kommt ins Team (falls Platz) und ihre Reise wird verfolgt, wenn sie seltener ist als die aktuelle.
- * Doppelt: gibt ein Upgrade für genau diese Figur; ist ihre Reise fertig, ein neues Accessoire.
- * Gibt { isNew, upgrade, gift } zurück.
+ * Neu: kommt ins Team (falls Platz) und ihre Reise wird verfolgt, wenn sie mindestens so selten ist wie die aktuelle
+ * (eine Figur, die nur im Album wartet, löst keine Reise im Team ab).
+ * Doppelt: gibt ein Upgrade für genau diese Figur; ist ihre Reise fertig, einen Stern; bei vollen Sternen ein Accessoire.
+ * Gibt { isNew, upgrade, star, gift } zurück.
  */
 export function addFigure(child, fig, rnd = Math.random) {
   const had = child.figures[fig.id] ?? 0;
@@ -148,11 +187,12 @@ export function addFigure(child, fig, rnd = Math.random) {
   if (!had) {
     if (child.team.length < TEAM_MAX) child.team.push(fig.id);
     const cur = focusOf(child);
-    if (journeyOpen(child, fig) && (!cur || RARITY_ORDER.indexOf(fig.rarity) >= RARITY_ORDER.indexOf(cur.rarity))) child.focus = fig.id;
-    return { isNew: true, upgrade: null, gift: null };
+    if (journeyOpen(child, fig) && (!cur || focusRank(child, fig) >= focusRank(child, cur))) child.focus = fig.id;
+    return { isNew: true, upgrade: null, star: null, gift: null };
   }
   const upgrade = applyUpgrade(child, fig);
-  return { isNew: false, upgrade, gift: upgrade ? null : giftAccessory(child, rnd) };
+  const star = upgrade ? null : addStar(child, fig);
+  return { isNew: false, upgrade, star, gift: upgrade || star ? null : giftAccessory(child, rnd) };
 }
 
 /** Zählt einen Dreh für die Garantie mit. hadTarget: Gab es beim Dreh ein Upgrade-Feld? */

@@ -6,9 +6,9 @@ import { THEMES } from '../data/themes.js';
 import { cryptoRandom } from '../util.js';
 import { tickSound, whooshSound, revealSound } from '../audio.js';
 import { fireworks, confetti, shake, burstAt, flash, isReduced } from '../fx.js';
-import { figureView } from '../figure-view.js';
+import { figureView, playUpgrade } from '../figure-view.js';
 import { animationDone, bezier, isLite } from '../perf.js';
-import { focusOf, upgradeGuaranteed, UPGRADE_CHANCE, UPGRADE_PITY, EVO_STEPS, nextStep, pathOf, stageOf, accessoryById } from '../data/progression.js';
+import { focusOf, upgradeGuaranteed, UPGRADE_CHANCE, UPGRADE_PITY, EVO_STEPS, STAR_PERKS, STAR_MAX, starReady, nextStep, pathOf, stageOf, accessoryById } from '../data/progression.js';
 
 /** So lange bleibt der Gewinn stehen, bevor es von selbst weitergeht (besondere Gewinne etwas länger). */
 const REVEAL_MS = 9000, REVEAL_EPIC_MS = 12000;
@@ -311,10 +311,14 @@ export function openWheel(child, { commit, onFinish, onCancel, settings, forceRa
     setTimeout(done, dur + 1200); // Fallback, falls kein Ende-Ereignis kommt (z. B. Tab im Hintergrund)
   }
 
-  /** Demo: Feld der gewünschten Rarität (zufällig unter mehreren) oder das Upgrade-Feld. */
+  /** Demo: Feld der gewünschten Rarität (zufällig unter mehreren), das Upgrade-Feld oder eine Figur, die einen Stern bekommt. */
   function forcedIndex() {
     if (!forceRarity) return null;
     if (forceRarity === 'upgrade') return upgradeFig ? 0 : null;
+    if (forceRarity === 'stern') {
+      const i = figures.findIndex(f => starReady(child, f));
+      return i < 0 ? null : i + off;
+    }
     const hits = figures.flatMap((f, i) => (f.rarity === forceRarity ? [i + off] : []));
     return hits.length ? hits[Math.floor(cryptoRandom() * hits.length)] : null;
   }
@@ -322,8 +326,9 @@ export function openWheel(child, { commit, onFinish, onCancel, settings, forceRa
   function reveal() {
     const { fig } = result;
     const upgrade = result.kind === 'upgrade' ? gain?.upgrade : null;
+    const star = gain?.star ?? null; // Duplikat nach fertiger Reise: neuer Stern
     const rar = RARITIES[fig.rarity];
-    const epic = upgrade === 'verwandlung' || ['legendaer', 'mythisch', 'geheim'].includes(fig.rarity);
+    const epic = upgrade === 'verwandlung' || star === STAR_MAX || ['legendaer', 'mythisch', 'geheim'].includes(fig.rarity);
     const btn = el('button', { type: 'button', class: 'btn btn--primary btn--cta reveal__btn', onclick: () => { if (finished) return; finished = true; close(); onFinish(result); } }, 'Los, feiern! 🎉');
     let badge, name;
     const sub = [];
@@ -332,6 +337,13 @@ export function openWheel(child, { commit, onFinish, onCancel, settings, forceRa
       badge = upgrade === 'verwandlung' ? 'VERWANDLUNG!' : 'UPGRADE!';
       name = `${fig.name} ${step.reveal} ${step.icon}`;
       sub.push(journeyLine(fig));
+      if (!child.team?.includes(fig.id)) sub.push(el('p', { class: 'reveal__sub' }, 'Nimm sie im Album ins Team – dann siehst du ihr Upgrade bei deinen Aufgaben.'));
+    } else if (star) {
+      const perk = STAR_PERKS[star - 1];
+      badge = `STERN ${'★'.repeat(star)}${'☆'.repeat(STAR_MAX - star)}`;
+      name = `${fig.name} ${perk.reveal} ${perk.icon}`;
+      sub.push(el('p', { class: 'reveal__sub' }, `Schon ${child.figures[fig.id]}× gewonnen – Stern ${star} von ${STAR_MAX}!`),
+        el('p', { class: 'reveal__extra' }, star < STAR_MAX ? `Als Nächstes: ${STAR_PERKS[star].icon} ${STAR_PERKS[star].label}.` : 'Alle Sterne gesammelt! 🌟'));
     } else {
       badge = rar.reveal;
       name = fig.name;
@@ -349,18 +361,22 @@ export function openWheel(child, { commit, onFinish, onCancel, settings, forceRa
         sub.push(el('p', { class: 'reveal__sub' }, `Schon ${count}× gewonnen`));
       }
     }
-    const box = el('div', { class: 'reveal', 'data-rarity': upgrade ? 'upgrade' : fig.rarity },
+    const figNode = figureView(fig, child, { className: 'reveal__figure' });
+    // Erst der alte Look, dann sichtbar der Wechsel – sonst merkt man das Upgrade nicht
+    if (gain?.upgrade) playUpgrade(figNode, gain.upgrade);
+    else if (star) playUpgrade(figNode, STAR_PERKS[star - 1].id, 900, 'perks');
+    const box = el('div', { class: 'reveal', 'data-rarity': upgrade || star ? 'upgrade' : fig.rarity },
       el('p', { class: 'reveal__badge' }, badge),
       el('div', { class: 'reveal__tile' },
         epic ? el('div', { class: 'reveal__rays', 'aria-hidden': 'true' }) : null,
-        figureView(fig, child, { className: 'reveal__figure' })),
+        figNode),
       el('h2', { class: 'reveal__name' }, name),
       ...sub, btn);
     stage.replaceChildren(box);
     setDismissible(true);
     btn.focus();
     autoPress(btn, epic ? REVEAL_EPIC_MS : REVEAL_MS);
-    revealSound(upgrade === 'verwandlung' ? 'mythisch' : upgrade ? 'legendaer' : fig.rarity, theme);
+    revealSound(upgrade === 'verwandlung' || star === STAR_MAX ? 'mythisch' : upgrade || star ? 'legendaer' : fig.rarity, theme);
     const cx = innerWidth / 2, cy = innerHeight * 0.38;
     if (upgrade === 'verwandlung') {
       flash('rgba(255, 211, 77, .55)');
@@ -369,7 +385,7 @@ export function openWheel(child, { commit, onFinish, onCancel, settings, forceRa
       confetti(140);
       burstAt(cx, cy, theme, 34);
       setTimeout(() => burstAt(cx, cy, 'zauber', 30), 450);
-    } else if (upgrade) {
+    } else if (upgrade || star) {
       fireworks(3, { delayStep: 300 });
       confetti(70);
       burstAt(cx, cy, theme, 26);
