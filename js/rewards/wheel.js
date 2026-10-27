@@ -1,6 +1,6 @@
 // Glücksrad: Ziehung zuerst (crypto), dann Animation auf den berechneten Zielwinkel; anschließend Reveal.
 import { el, svg, openOverlay, vibrate, autoPress } from '../ui.js';
-import { wheelOrder, figureWeights, withUpgradeSlot, drawIndex, segments, targetRotation, segmentAt, hasLuckBonus } from './draw.js';
+import { wheelOrder, figureWeights, splitUpgrade, wheelSlots, drawIndex, segments, targetRotation, segmentAt, hasLuckBonus } from './draw.js';
 import { RARITIES, RARITY_ORDER } from '../data/figures.js';
 import { THEMES } from '../data/themes.js';
 import { cryptoRandom } from '../util.js';
@@ -8,15 +8,15 @@ import { tickSound, whooshSound, revealSound } from '../audio.js';
 import { fireworks, confetti, shake, burstAt, flash, isReduced } from '../fx.js';
 import { figureView, playUpgrade } from '../figure-view.js';
 import { animationDone, bezier, isLite } from '../perf.js';
-import { focusOf, upgradeGuaranteed, UPGRADE_CHANCE, UPGRADE_PITY, EVO_STEPS, STAR_PERKS, STAR_MAX, starReady, nextStep, pathOf, stageOf, accessoryById } from '../data/progression.js';
+import { focusOf, upgradeGuaranteed, upgradeChance, UPGRADE_PITY, EVO_STEPS, STAR_PERKS, STAR_MAX, starReady, nextStep, pathOf, stageOf, accessoryById } from '../data/progression.js';
 
 /** So lange bleibt der Gewinn stehen, bevor es von selbst weitergeht (besondere Gewinne etwas länger). */
 const REVEAL_MS = 9000, REVEAL_EPIC_MS = 12000;
 
 const ACCESSORY_LABEL = id => { const a = accessoryById(id); return a ? `${a.icon} ${a.label}` : 'Ein Accessoire'; };
 
-const SPIN_EASE = bezier(0.12, 0.67, 0.1, 1);
-const POINTER_TICK = [
+export const SPIN_EASE = bezier(0.12, 0.67, 0.1, 1);
+export const POINTER_TICK = [
   { transform: 'translateX(-50%) rotate(0deg)' },
   { transform: 'translateX(-50%) rotate(-14deg)', offset: 0.5 },
   { transform: 'translateX(-50%) rotate(0deg)' },
@@ -47,7 +47,7 @@ function oklchToRgb(L, C, H) {
 }
 
 /** Löst var(--x) über die Design-Tokens auf und rechnet oklch in rgb um. */
-function paint(color) {
+export function paint(color) {
   const v = /^var\((--[\w-]+)\)$/.exec(color);
   if (v) color = getComputedStyle(document.documentElement).getPropertyValue(v[1]).trim();
   const o = /^oklch\(\s*([\d.]+)(%?)\s+([\d.]+)\s+([\d.]+)/.exec(color);
@@ -55,9 +55,9 @@ function paint(color) {
   return color || '#888';
 }
 
-const rad = deg => ((deg - 90) * Math.PI) / 180; // 0° = oben, im Uhrzeigersinn
+export const rad = deg => ((deg - 90) * Math.PI) / 180; // 0° = oben, im Uhrzeigersinn
 
-function pt(angleDeg, r) {
+export function pt(angleDeg, r) {
   const a = (angleDeg * Math.PI) / 180;
   return [r * Math.sin(a), -r * Math.cos(a)];
 }
@@ -88,7 +88,7 @@ function silhouette(img, px) {
  * Malt das Rad in ein Canvas. Ein einziges Bitmap, das sich nur noch dreht: keine SVG-Verweise (Verläufe, Filter),
  * die auf schwachen Geräten beim Drehen verloren gehen, und kein erneutes Rastern pro Frame.
  */
-function drawWheel(canvas, { theme, figures, segs, owned, upgradeFig, images }) {
+function drawWheel(canvas, { theme, slots, segs, owned, upgradeFig, images }) {
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
   const k = canvas.width / (2 * R);
@@ -124,22 +124,24 @@ function drawWheel(canvas, { theme, figures, segs, owned, upgradeFig, images }) 
     ctx.drawImage(sil ? silhouette(img, Math.ceil(size * k)) : img, -size / 2, -size / 2, size, size);
     ctx.restore();
   };
-  if (upgradeFig) {
-    // Goldenes Upgrade-Feld (Index 0) mit der Figur, deren Reise gerade läuft
-    const { start, end } = segs[0];
-    slice(start, end, radial(GOLD, GOLD_2));
-    figure(upgradeFig.svg, (start + end) / 2, R * 0.645, 26, false);
-    segs = segs.slice(1);
-  }
   let stdIdx = 0, magIdx = 0;
-  figures.forEach((fig, i) => {
+  slots.forEach((slot, i) => {
     const { start, end } = segs[i];
+    const mid = (start + end) / 2;
+    if (slot.kind === 'upgrade') {
+      // Goldenes Upgrade-Feld mit der Figur, deren Reise gerade läuft
+      slice(start, end, radial(GOLD, GOLD_2));
+      const rr = R * 0.7;
+      const arc = ((end - start) * Math.PI / 180) * rr;
+      figure(upgradeFig.svg, mid, rr, Math.max(10, Math.min(24, arc * 0.8)), false);
+      return;
+    }
+    const fig = slot.fig;
     const fill = fig.rarity === 'legendaer' ? paint(GOLD)
       : fig.rarity === 'mythisch' ? radial(MYTH[0], MYTH[1])
         : fig.rarity === 'geheim' ? radial(SECRET[0], SECRET[1])
           : fig.rarity === 'magisch' ? magic[magIdx++ % 2] : std[stdIdx++ % 2];
     slice(start, end, fill);
-    const mid = (start + end) / 2;
     // Sehr seltene, schmale Felder (Mythisch, Geheim): statt Figur ein Symbol am Rand
     if (fig.rarity === 'mythisch' || fig.rarity === 'geheim') {
       const [sx, sy] = pt(mid, R * 0.89);
@@ -158,13 +160,14 @@ function drawWheel(canvas, { theme, figures, segs, owned, upgradeFig, images }) 
 }
 
 /** Canvas fürs Rad: Felder sofort, Figuren, sobald ihre Bilder dekodiert sind. */
-function buildWheel(theme, figures, segs, owned, upgradeFig = null) {
-  const label = `Glücksrad mit ${figures.length} Figuren${upgradeFig ? ` und einem Upgrade-Feld für ${upgradeFig.name}` : ''}`;
+function buildWheel(theme, figures, slots, segs, owned, upgradeFig = null) {
+  const ups = slots.length - figures.length;
+  const label = `Glücksrad mit ${figures.length} Figuren${upgradeFig ? ` und ${ups} Upgrade-Feldern für ${upgradeFig.name}` : ''}`;
   const canvas = el('canvas', { role: 'img', 'aria-label': label });
   // Feste Auflösung passend zur größten Radgröße (310 px); CSS skaliert auf die tatsächliche Größe.
   canvas.width = canvas.height = Math.round(310 * Math.min(window.devicePixelRatio || 1, isLite() ? 1.5 : 2));
   const images = new Map();
-  const opts = { theme, figures, segs, owned, upgradeFig, images };
+  const opts = { theme, slots, segs, owned, upgradeFig, images };
   drawWheel(canvas, opts);
   const srcs = [...new Set([...figures.filter(f => f.rarity !== 'mythisch' && f.rarity !== 'geheim'), upgradeFig].filter(Boolean).map(f => f.svg))];
   Promise.all(srcs.map(src => loadImage(src).then(img => { if (img) images.set(src, img); })))
@@ -176,7 +179,7 @@ function buildWheel(theme, figures, segs, owned, upgradeFig = null) {
 /** Legendenfarbe je Rarität (passend zu den Feldern). */
 const legendColor = (r, hue) => ({ standard: standardColors(hue)[0], magisch: MAGIC[0], legendaer: GOLD_2, mythisch: MYTH[0], geheim: SECRET[1] }[r]);
 
-const pointerSvg = () => svg('svg', { class: 'wheel-pointer', viewBox: '0 0 28 26', 'aria-hidden': 'true' },
+export const pointerSvg = () => svg('svg', { class: 'wheel-pointer', viewBox: '0 0 28 26', 'aria-hidden': 'true' },
   svg('path', { d: 'M0 0 H28 L14 26 Z', style: 'fill:var(--color-text)' }));
 
 const pct = v => `${(v * 100).toLocaleString('de-DE', { maximumFractionDigits: 1 })} %`;
@@ -187,18 +190,21 @@ const pct = v => `${(v * 100).toLocaleString('de-DE', { maximumFractionDigits: 1
  * commit(result, luckUsed) wird SOFORT nach der Ziehung aufgerufen (Ergebnis speichern, Farm-Schutz) und liefert
  * den Gewinn für die Anzeige. onFinish(result) nach „Los, feiern!“.
  * forceRarity (nur Demo-Modus): Ergebnis dieser Rarität bzw. 'upgrade' statt Zufall.
+ * boost: Faktor des Eltern-Boosts (1 = keiner) – seltene Figuren und Upgrades werden wahrscheinlicher.
  */
-export function openWheel(child, { commit, onFinish, onCancel, settings, forceRarity = null }) {
+export function openWheel(child, { commit, onFinish, onCancel, settings, forceRarity = null, boost = 1 }) {
   const theme = child.theme;
   const figures = wheelOrder(theme);
   const upgradeFig = focusOf(child);
-  const upChance = upgradeFig ? UPGRADE_CHANCE : 0;
+  const upChance = upgradeFig ? upgradeChance(boost) : 0;
   const guaranteed = !!upgradeFig && upgradeGuaranteed(child);
-  const off = upgradeFig ? 1 : 0;
-  const visualWeights = withUpgradeSlot(figureWeights(figures), upChance);
-  const segs = segments(visualWeights);
+  // Die Upgrade-Chance verteilt sich bei jedem Dreh anders auf mehrere goldene Felder
+  const slots = wheelSlots(figures, figureWeights(figures, { boost }), splitUpgrade(upChance, cryptoRandom), cryptoRandom);
+  const segs = segments(slots.map(s => s.weight)); // Optik ohne Glücksbonus
   const luck = hasLuckBonus(child.sinceLegendary);
-  const drawWeights = withUpgradeSlot(figureWeights(figures, { luckBonus: luck }), upChance);
+  const luckWeights = figureWeights(figures, { luckBonus: luck, boost });
+  const drawWeights = slots.map(s => (s.kind === 'upgrade' ? s.weight : luckWeights[s.i] * (1 - upChance)));
+  const upgradeIdx = slots.flatMap((s, i) => (s.kind === 'upgrade' ? [i] : []));
 
   let rotation = 0;
   let spun = false;
@@ -206,14 +212,14 @@ export function openWheel(child, { commit, onFinish, onCancel, settings, forceRa
   let result = null;
   let gain = null; // Gewinn aus commit()
 
-  const rotor = el('div', { class: 'wheel-rotor' }, buildWheel(theme, figures, segs, child.figures, upgradeFig));
+  const rotor = el('div', { class: 'wheel-rotor' }, buildWheel(theme, figures, slots, segs, child.figures, upgradeFig));
   const pointer = pointerSvg();
   const wrap = el('div', { class: 'wheel-wrap' },
     el('div', { class: 'wheel-ring', 'aria-hidden': 'true' }), rotor, pointer,
     el('div', { class: 'wheel-hub', 'aria-hidden': 'true' }, child.avatar));
   const spinBtn = el('button', { type: 'button', class: 'btn btn--primary btn--cta wheel-spin', autofocus: true, onclick: spin }, 'DREHEN!');
   const hue = THEMES[theme].hue;
-  const share = r => (r === 'legendaer' && luck ? 0.1 : RARITIES[r].chance / 100) * (1 - upChance);
+  const share = r => slots.reduce((a, s, i) => a + (s.kind === 'figure' && s.fig.rarity === r ? drawWeights[i] : 0), 0);
   const legend = el('div', { class: 'legend', 'aria-hidden': 'true' },
     upgradeFig ? el('span', { style: { '--c': GOLD } }, `Upgrade ${pct(upChance)}`) : null,
     ...RARITY_ORDER.map(r => el('span', { style: { '--c': legendColor(r, hue) } }, `${RARITIES[r].label.replace(/\s.*$/, '')} ${pct(share(r))}`)));
@@ -226,16 +232,17 @@ export function openWheel(child, { commit, onFinish, onCancel, settings, forceRa
       ? `${step.icon} Diesmal ganz sicher: ${upgradeFig.name} bekommt ${step.label}!`
       : left === 1
         ? `${step.icon} Noch 1 Dreh – dann ganz sicher ein Upgrade für ${upgradeFig.name}`
-        : `${step.icon} Goldenes Feld: ${upgradeFig.name} bekommt ${step.label}!`;
+        : `${step.icon} Goldene Felder: ${upgradeFig.name} bekommt ${step.label}!`;
   }
   const stage = el('div', { class: 'wheel-stage' },
     el('div', { class: 'wheel-head' },
-      el('span', { class: 'wheel-kicker' }, `${THEMES[theme].avatars[0]} ${THEMES[theme].name} · ${figures.length} Figuren`),
+      el('span', { class: 'wheel-kicker' }, `${THEMES[theme].avatars[0]} ${THEMES[theme].name} · ${figures.length} Figuren${boost > 1 ? ` · 🚀 Eltern-Boost +${Math.round((boost - 1) * 100)} %` : ''}`),
       el('h2', { class: 'wheel-title' }, `${child.name}, dreh am Rad!`),
       hint ? el('span', { class: 'wheel-hint' }, hint) : el('span', { class: 'wheel-hint wheel-hint--plain' }, 'Tippe auf „DREHEN!“ oder wische über das Rad.')),
     wrap, legend, spinBtn);
 
-  document.querySelectorAll('.banner').forEach(b => b.remove()); // Champion-Banner nicht über dem Rad
+  // Champion-Banner und kurze Meldungen nicht über dem Rad
+  document.querySelectorAll('.banner, .toast:not(.toast--sticky)').forEach(b => b.remove());
   const { overlay, close, setDismissible } = openOverlay(stage, {
     label: `Glücksrad für ${child.name}`, className: 'wheel-overlay', theme, backdropClose: false,
     onClose: () => { if (!spun) onCancel?.(); else if (!finished) { finished = true; onFinish(result); } },
@@ -263,8 +270,9 @@ export function openWheel(child, { commit, onFinish, onCancel, settings, forceRa
     spinBtn.textContent = '…';
     setDismissible(false);
     // 1) Ziehung
-    const idx = forcedIndex() ?? (guaranteed ? 0 : drawIndex(drawWeights, cryptoRandom));
-    result = upgradeFig && idx === 0 ? { kind: 'upgrade', fig: upgradeFig } : { kind: 'figure', fig: figures[idx - off] };
+    const idx = forcedIndex() ?? (guaranteed ? anyUpgradeIdx() : drawIndex(drawWeights, cryptoRandom));
+    const slot = slots[idx];
+    result = slot.kind === 'upgrade' ? { kind: 'upgrade', fig: upgradeFig } : { kind: 'figure', fig: slot.fig };
     gain = commit(result, luck);
     // 2) Animation zum Zielsegment
     const turns = 5 + Math.floor(cryptoRandom() * 3);
@@ -311,15 +319,21 @@ export function openWheel(child, { commit, onFinish, onCancel, settings, forceRa
     setTimeout(done, dur + 1200); // Fallback, falls kein Ende-Ereignis kommt (z. B. Tab im Hintergrund)
   }
 
-  /** Demo: Feld der gewünschten Rarität (zufällig unter mehreren), das Upgrade-Feld oder eine Figur, die einen Stern bekommt. */
+  /** Eines der goldenen Felder, gewichtet nach Größe. */
+  function anyUpgradeIdx() {
+    const total = upgradeIdx.reduce((a, i) => a + drawWeights[i], 0);
+    return upgradeIdx[drawIndex(upgradeIdx.map(i => drawWeights[i] / total), cryptoRandom)];
+  }
+
+  /** Demo: Feld der gewünschten Rarität (zufällig unter mehreren), ein Upgrade-Feld oder eine Figur, die einen Stern bekommt. */
   function forcedIndex() {
     if (!forceRarity) return null;
-    if (forceRarity === 'upgrade') return upgradeFig ? 0 : null;
+    if (forceRarity === 'upgrade') return upgradeIdx.length ? anyUpgradeIdx() : null;
     if (forceRarity === 'stern') {
-      const i = figures.findIndex(f => starReady(child, f));
-      return i < 0 ? null : i + off;
+      const i = slots.findIndex(s => s.kind === 'figure' && starReady(child, s.fig));
+      return i < 0 ? null : i;
     }
-    const hits = figures.flatMap((f, i) => (f.rarity === forceRarity ? [i + off] : []));
+    const hits = slots.flatMap((s, i) => (s.kind === 'figure' && s.fig.rarity === forceRarity ? [i] : []));
     return hits.length ? hits[Math.floor(cryptoRandom() * hits.length)] : null;
   }
 

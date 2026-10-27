@@ -148,11 +148,23 @@ test('XP gibt es nur beim ersten Abschluss der Routine (Farm-Schutz)', () => {
   const today = s.progress.date;
   toggleTask(s, 'morning', 'c_a', 'umziehen', today);
   const r1 = toggleTask(s, 'morning', 'c_a', 'zaehne', today);
-  assert.deepEqual(r1.reward, { xp: 2 * XP_PER_TASK + XP_ROUTINE_BONUS, blitz: 0, levelBefore: 1, levelAfter: 1, gift: null });
+  assert.deepEqual(r1.reward, { xp: 2 * XP_PER_TASK + XP_ROUTINE_BONUS, blitz: 0, boostXp: 0, levelBefore: 1, levelAfter: 1, gift: null });
   toggleTask(s, 'morning', 'c_a', 'zaehne', today);
   const r2 = toggleTask(s, 'morning', 'c_a', 'zaehne', today);
   assert.equal(r2.reward, null);
   assert.equal(s.children[0].xp, 40);
+});
+
+test('Eltern-Boost: +20 % XP, nur solange er läuft; abgelaufene Boosts fallen beim Laden weg', () => {
+  const s = normalizeState({ setupDone: true, children: [child('c_a')], boost: { pct: 20, until: Date.now() + 60_000 } });
+  assert.equal(s.boost.pct, 20);
+  const today = s.progress.date;
+  toggleTask(s, 'morning', 'c_a', 'umziehen', today);
+  const r = toggleTask(s, 'morning', 'c_a', 'zaehne', today);
+  assert.equal(r.reward.xp, 48);
+  assert.equal(r.reward.boostXp, 8);
+  assert.equal(normalizeState({ setupDone: true, children: [child('c_a')], boost: { pct: 20, until: Date.now() - 1 } }).boost, null);
+  assert.equal(normalizeState({ setupDone: true, children: [child('c_a')], boost: { pct: 33, until: Date.now() + 60_000 } }).boost, null);
 });
 
 test('Level-Kurve, Level-Aufstieg schenkt ein Accessoire', () => {

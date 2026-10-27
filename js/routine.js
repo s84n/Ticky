@@ -2,7 +2,7 @@
 import { parseTime, minutesOfDay, localDate, formatTime } from './util.js';
 import { ROUTINES } from './data/task-catalog.js';
 import { ensureToday, spinKey } from './store.js';
-import { awardRoutine, BLITZ_XP } from './data/progression.js';
+import { awardRoutine, BLITZ_XP, boostFactor } from './data/progression.js';
 
 function inWindow(min, start, end) {
   return start <= end ? min >= start && min < end : min >= start || min < end;
@@ -170,7 +170,7 @@ function afterChange(state, routine, child, before, today, blitz = false) {
     if (!(key in state.spins)) {
       state.spins[key] = 'pending';
       newSpin = true;
-      reward = awardRoutine(child, stats.total, Math.random, blitz ? BLITZ_XP : 0); // Farm-Schutz: nur zusammen mit dem neuen Rad
+      reward = awardRoutine(child, stats.total, Math.random, blitz ? BLITZ_XP : 0, boostFactor(state.boost)); // Farm-Schutz: nur zusammen mit dem neuen Rad
     }
   }
   return { remaining: stats.total - stats.done, completedNow, newSpin, reward };

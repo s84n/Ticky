@@ -91,13 +91,39 @@ test('Zielwinkel landet immer im gezogenen Segment', () => {
   }
 });
 
-test('Upgrade-Feld: 35 % vorne, Figuren behalten ihr Verhältnis', async () => {
-  const { withUpgradeSlot } = await import('../js/rewards/draw.js');
-  const w = figureWeights(wheelOrder('pixel'));
-  assert.equal(withUpgradeSlot(w, 0), w);
-  const u = withUpgradeSlot(w, 0.35);
-  assert.equal(u.length, w.length + 1);
-  assert.equal(u[0], 0.35);
-  assert.ok(Math.abs(u.reduce((a, b) => a + b, 0) - 1) < 1e-9);
-  assert.ok(Math.abs(u[1] / u[2] - w[0] / w[1]) < 1e-9);
+test('Upgrade-Felder: 35 % auf 2–4 Felder verteilt, nie nebeneinander, Figuren behalten ihr Verhältnis', async () => {
+  const { splitUpgrade, wheelSlots } = await import('../js/rewards/draw.js');
+  const figs = wheelOrder('pixel');
+  const w = figureWeights(figs);
+  assert.deepEqual(splitUpgrade(0, Math.random), []);
+  assert.equal(wheelSlots(figs, w, [], Math.random).length, figs.length);
+  const rnd = seeded(3);
+  for (let n = 0; n < 2000; n++) {
+    const pieces = splitUpgrade(0.35, rnd);
+    assert.ok(pieces.length >= 2 && pieces.length <= 4);
+    assert.ok(Math.abs(pieces.reduce((a, b) => a + b, 0) - 0.35) < 1e-9);
+    const slots = wheelSlots(figs, w, pieces, rnd);
+    assert.equal(slots.length, figs.length + pieces.length);
+    assert.ok(Math.abs(slots.reduce((a, s) => a + s.weight, 0) - 1) < 1e-9);
+    const up = slots.flatMap((s, i) => (s.kind === 'upgrade' ? [i] : []));
+    assert.equal(up.length, pieces.length);
+    for (let k = 0; k < up.length; k++) {
+      const next = up[(k + 1) % up.length] + (k === up.length - 1 ? slots.length : 0);
+      assert.ok(next - up[k] > 1, 'zwei Upgrade-Felder nebeneinander');
+    }
+    const f = slots.filter(s => s.kind === 'figure');
+    assert.deepEqual(f.map(s => s.fig), figs);
+    assert.ok(Math.abs(f[0].weight / f[1].weight - w[0] / w[1]) < 1e-9);
+  }
+});
+
+test('Eltern-Boost macht seltene Figuren wahrscheinlicher, Summe bleibt 1', () => {
+  const figs = wheelOrder('dino');
+  const base = figureWeights(figs);
+  const w = figureWeights(figs, { boost: 1.2 });
+  assert.ok(Math.abs(w.reduce((a, b) => a + b, 0) - 1) < 1e-9);
+  const share = (ws, r) => figs.reduce((a, f, i) => a + (f.rarity === r ? ws[i] : 0), 0);
+  assert.ok(Math.abs(share(w, 'magisch') - 0.30) < 1e-9);
+  assert.ok(Math.abs(share(w, 'legendaer') - 0.06) < 1e-9);
+  assert.ok(share(w, 'standard') < share(base, 'standard'));
 });

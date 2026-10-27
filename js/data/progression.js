@@ -12,8 +12,10 @@ export const MAX_LEVEL = 99;
 /** So viele Figuren laufen auf dem Aufgaben-Bildschirm mit. */
 export const TEAM_MAX = 3;
 
-/** Anteil des goldenen Upgrade-Felds am Rad, solange eine Reise offen ist. */
+/** Anteil der goldenen Upgrade-Felder am Rad (zusammen), solange eine Reise offen ist. */
 export const UPGRADE_CHANCE = 0.35;
+/** Höchstens so viel Upgrade-Chance, auch mit Eltern-Boost. */
+export const UPGRADE_CHANCE_MAX = 0.6;
 /** Nach so vielen Drehs ohne Upgrade kommt das nächste sicher. */
 export const UPGRADE_PITY = 2;
 
@@ -60,6 +62,23 @@ export const ACCESSORIES = [
 export const ACCESSORY_IDS = ACCESSORIES.map(a => a.id);
 export const accessoryById = id => ACCESSORIES.find(a => a.id === id) ?? null;
 
+/** Eltern-Boost: wählbare Stärke (Prozent) und Dauer (Minuten). Wirkt auf XP, seltene Figuren und Upgrades. */
+export const BOOST_PCTS = [10, 20, 50];
+export const BOOST_MINUTES = [15, 30, 60];
+
+/** Faktor eines laufenden Boosts (1 = kein Boost). boost: { pct, until } oder null. */
+export function boostFactor(boost, now = Date.now()) {
+  return boost && boost.until > now ? 1 + boost.pct / 100 : 1;
+}
+
+/** Restzeit eines laufenden Boosts in Minuten (aufgerundet), 0 = keiner aktiv. */
+export function boostMinutesLeft(boost, now = Date.now()) {
+  return boost && boost.until > now ? Math.ceil((boost.until - now) / 60_000) : 0;
+}
+
+/** Upgrade-Chance am Rad mit Boost. */
+export const upgradeChance = factor => Math.min(UPGRADE_CHANCE_MAX, UPGRADE_CHANCE * factor);
+
 /** XP, die man von Level n auf n+1 braucht. */
 export function xpToNext(level) {
   return 100 + 50 * (level - 1);
@@ -93,15 +112,17 @@ function giftAccessory(child, rnd) {
 
 /**
  * Vergibt XP für eine fertige Routine (nur einmal pro Routine und Tag aufrufen).
- * Beim Level-Aufstieg gibt es ein Accessoire als Geschenk. Gibt { xp, levelBefore, levelAfter, gift } zurück.
+ * Beim Level-Aufstieg gibt es ein Accessoire als Geschenk. boost: Faktor des Eltern-Boosts (1 = keiner).
+ * Gibt { xp, blitz, boostXp, levelBefore, levelAfter, gift } zurück (boostXp: davon durch den Boost).
  */
-export function awardRoutine(child, taskCount, rnd = Math.random, blitz = 0) {
+export function awardRoutine(child, taskCount, rnd = Math.random, blitz = 0, boost = 1) {
   const before = levelInfo(child.xp).level;
-  const xp = taskCount * XP_PER_TASK + XP_ROUTINE_BONUS + blitz;
+  const base = taskCount * XP_PER_TASK + XP_ROUTINE_BONUS + blitz;
+  const xp = Math.round(base * boost);
   child.xp = (child.xp ?? 0) + xp;
   const after = levelInfo(child.xp).level;
   const gift = after > before ? giftAccessory(child, rnd) : null;
-  return { xp, blitz, levelBefore: before, levelAfter: after, gift };
+  return { xp, blitz, boostXp: xp - base, levelBefore: before, levelAfter: after, gift };
 }
 
 // ---------- Upgrade-Reisen ----------

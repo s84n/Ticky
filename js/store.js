@@ -3,7 +3,7 @@
 import { localDate, daysBetween, parseTime } from './util.js';
 import { THEME_IDS, THEMES } from './data/themes.js';
 import { TASK_CATALOG, ROUTINES } from './data/task-catalog.js';
-import { ACCESSORY_IDS, TEAM_MAX, STAR_MAX, pathOf, pickFocus, focusOf } from './data/progression.js';
+import { ACCESSORY_IDS, TEAM_MAX, STAR_MAX, BOOST_PCTS, BOOST_MINUTES, pathOf, pickFocus, focusOf } from './data/progression.js';
 import { RARITY_ORDER, figureById } from './data/figures.js';
 
 export const STORAGE_KEY = 'ticky_v1';
@@ -28,7 +28,10 @@ export function createDefaultState() {
       reducedMotion: 'auto',
       liteMode: 'auto',
       volume: 80,
+      boostPct: 20,
+      boostMinutes: 15,
     },
+    boost: null, // laufender Eltern-Boost: { pct, until (ms) }
     children: [],
     customTasks: {},
     progress: { date: localDate(), morning: {}, evening: {} },
@@ -65,6 +68,14 @@ export function normalizeState(raw, today = localDate()) {
   if (['auto', 'on', 'off'].includes(st.reducedMotion)) out.settings.reducedMotion = st.reducedMotion;
   if (['auto', 'on', 'off'].includes(st.liteMode)) out.settings.liteMode = st.liteMode;
   if (Number.isInteger(st.volume) && st.volume >= 0 && st.volume <= 100) out.settings.volume = st.volume;
+  if (BOOST_PCTS.includes(st.boostPct)) out.settings.boostPct = st.boostPct;
+  if (BOOST_MINUTES.includes(st.boostMinutes)) out.settings.boostMinutes = st.boostMinutes;
+  // Eltern-Boost nur übernehmen, solange er noch läuft (und nicht unplausibel lange)
+  const b = s.boost;
+  const now = Date.now();
+  if (isObj(b) && BOOST_PCTS.includes(b.pct) && Number.isFinite(b.until) && b.until > now && b.until <= now + Math.max(...BOOST_MINUTES) * 60_000) {
+    out.boost = { pct: b.pct, until: b.until };
+  }
 
   // Eigene Aufgaben
   if (isObj(s.customTasks)) {

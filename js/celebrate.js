@@ -11,7 +11,7 @@ import { completeSound, fanfareSound, levelUpSound } from './audio.js';
 import { openWheel } from './rewards/wheel.js';
 import { runParade } from './rewards/parade.js';
 import { isEpic, figureById } from './data/figures.js';
-import { addFigure, applyUpgrade, trackSpin, focusOf, levelInfo, levelTitle, accessoryById, ACCESSORY_IDS, TEAM_MAX } from './data/progression.js';
+import { addFigure, applyUpgrade, trackSpin, focusOf, levelInfo, levelTitle, accessoryById, boostFactor, ACCESSORY_IDS, TEAM_MAX } from './data/progression.js';
 
 // Nach dieser Zeit schließen sich Level-up und Gesamt-Feier von selbst (Tippen schließt sofort).
 const LEVELUP_MS = 8000, CELEBRATION_MS = 10000;
@@ -29,7 +29,7 @@ export function initCelebrate(h) { hooks = { ...hooks, ...h }; }
 /** Sofort-Feedback, wenn ein Kind alle Aufgaben erledigt hat. reward: XP-Gewinn (nur beim ersten Abschluss am Tag). */
 export function childCompleted(child, routine, reward = null) {
   const t = THEMES[child.theme];
-  toast(reward ? `Alles fertig! 🎉 +${reward.xp} XP` : 'Alles fertig! 🎉');
+  toast(reward ? `Alles fertig! 🎉 +${reward.xp} XP${reward.boostXp ? ` (🚀 +${reward.boostXp})` : ''}` : 'Alles fertig! 🎉');
   if (reward?.blitz) setTimeout(() => { toast(`⚡ Blitz-Bonus! +${reward.blitz} XP extra`); flash('rgba(255, 221, 87, .55)'); }, 900);
   if (reward && reward.levelAfter > reward.levelBefore) pendingLevelUps.set(child.id, reward);
   flash(t.flash);
@@ -132,6 +132,7 @@ function spinFlow(child, routine) {
       openWheel(child, {
         settings: state.settings,
         forceRarity: forcedRarity.get(child.id) ?? null,
+        boost: boostFactor(state.boost),
         commit(result) {
           // Ergebnis sofort speichern: Neustart während der Animation ergibt kein zweites Rad.
           const c = state.children.find(x => x.id === child.id);

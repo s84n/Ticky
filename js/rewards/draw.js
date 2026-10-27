@@ -15,8 +15,11 @@ export function wheelOrder(theme) {
   return out;
 }
 
-/** Wahrscheinlichkeiten (Summe 1) je Figur in Rad-Reihenfolge. */
-export function figureWeights(figures, { luckBonus = false } = {}) {
+/**
+ * Wahrscheinlichkeiten (Summe 1) je Figur in Rad-Reihenfolge.
+ * boost (Eltern-Boost, z. B. 1.2): alle Raritäten außer Standard werden um diesen Faktor wahrscheinlicher.
+ */
+export function figureWeights(figures, { luckBonus = false, boost = 1 } = {}) {
   const count = {};
   for (const fig of figures) count[fig.rarity] = (count[fig.rarity] ?? 0) + 1;
   const chance = {};
@@ -27,17 +30,40 @@ export function figureWeights(figures, { luckBonus = false } = {}) {
     const scale = (100 - boosted) / rest;
     for (const r of Object.keys(chance)) chance[r] = r === 'legendaer' ? boosted : chance[r] * scale;
   }
+  if (boost > 1 && chance.standard) {
+    let rare = 0;
+    for (const r of Object.keys(chance)) if (r !== 'standard') rare += (chance[r] *= boost);
+    chance.standard = Math.max(5, 100 - rare);
+  }
   const total = Object.values(chance).reduce((a, b) => a + b, 0);
   return figures.map(fig => chance[fig.rarity] / count[fig.rarity] / total);
 }
 
 /**
- * Fügt vorne das goldene Upgrade-Feld ein (Index 0). Die Figuren teilen sich den Rest im alten Verhältnis.
- * Ohne offene Reise (chance 0) bleiben die Gewichte unverändert.
+ * Teilt die Upgrade-Chance auf 2–4 unterschiedlich große Felder auf (z. B. 35 % → 15 + 12 + 8 %).
+ * Die Gesamtchance bleibt gleich, das Rad wird aber spannender. Ohne offene Reise (chance 0): keine Felder.
  */
-export function withUpgradeSlot(weights, chance) {
-  if (!chance) return weights;
-  return [chance, ...weights.map(w => w * (1 - chance))];
+export function splitUpgrade(chance, rnd) {
+  if (!chance) return [];
+  const parts = Array.from({ length: 2 + Math.floor(rnd() * 3) }, () => 1 + rnd());
+  const sum = parts.reduce((a, b) => a + b, 0);
+  return parts.map(p => (p / sum) * chance);
+}
+
+/**
+ * Rad-Felder: die Figuren in Rad-Reihenfolge, dazwischen gleichmäßig verteilt die Upgrade-Felder (nie nebeneinander).
+ * Die Figuren teilen sich den Rest im alten Verhältnis.
+ * Gibt [{ kind: 'figure', fig, i, weight } | { kind: 'upgrade', weight }] zurück (i = Index in figures).
+ */
+export function wheelSlots(figures, weights, pieces, rnd) {
+  const scale = 1 - pieces.reduce((a, b) => a + b, 0);
+  const slots = figures.map((fig, i) => ({ kind: 'figure', fig, i, weight: weights[i] * scale }));
+  if (!pieces.length) return slots;
+  const step = figures.length / pieces.length;
+  const shift = rnd() * step;
+  // Von hinten einfügen, damit die vorderen Positionen stimmen
+  for (let j = pieces.length - 1; j >= 0; j--) slots.splice(Math.floor(shift + j * step), 0, { kind: 'upgrade', weight: pieces[j] });
+  return slots;
 }
 
 export function hasLuckBonus(sinceLegendary) {

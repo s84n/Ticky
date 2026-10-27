@@ -15,6 +15,7 @@ import { speak, setSpeechEnabledGetter } from './speech.js';
 import { initPwa, showInstallHint } from './pwa.js';
 import { isLite, onLiteChange, setLiteMode } from './perf.js';
 import { enterDemo } from './demo.js';
+import { boostMinutesLeft } from './data/progression.js';
 
 let current = null;       // { routine, manual } | null
 let renderedKey = '';
@@ -84,6 +85,7 @@ function tick(force = false) {
       renderSky(evening);
     }
     updateTime(timeInfo(state.settings, cur, now), cur.routine, state.settings.routines[cur.routine]);
+    updateBoost(now);
     showScreen('main');
   } else {
     renderRest(state, now, openChildAlbum);
@@ -91,6 +93,17 @@ function tick(force = false) {
     showScreen('rest');
   }
   renderedKey = key;
+}
+
+/** Pille im Kopf, solange ein Eltern-Boost läuft (minutengenau über tick()). */
+function updateBoost(now = new Date()) {
+  const left = boostMinutesLeft(state.boost, now.getTime());
+  const pill = $('#boost-pill');
+  pill.hidden = !left;
+  if (left) {
+    pill.textContent = `🚀 +${state.boost.pct} % · ${left} Min`;
+    pill.setAttribute('aria-label', `Eltern-Boost: plus ${state.boost.pct} Prozent, noch ${left} Minuten`);
+  }
 }
 
 function startApp() {

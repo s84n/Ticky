@@ -7,70 +7,105 @@ import { validateTimes, goalOf } from './routine.js';
 import { basicsEditor, tasksEditor, newChildDraft, customTaskForm } from './child-editor.js';
 import { localDate, cryptoRandom, deepClone, parseTime } from './util.js';
 import { wrongSound, popSound, setVolume, unlockAudio } from './audio.js';
-import { toast } from './fx.js';
+import { toast, confetti } from './fx.js';
 import { VERSION, REPO_URL } from './config.js';
-import { levelInfo, BLITZ_XP } from './data/progression.js';
+import { pickQuestions } from './data/parent-quiz.js';
+import { levelInfo, BLITZ_XP, BOOST_PCTS, BOOST_MINUTES, boostMinutesLeft } from './data/progression.js';
+import { openPicker } from './rewards/picker.js';
 
 // ---------- Eltern-Sperre ----------
 
-/** Zeigt eine Einmaleins-Aufgabe mit zweistelligem Ergebnis. Promise<boolean>. */
+/** So viele Quizfragen hintereinander müssen stimmen. Nach LOCK_TRIES falschen Versuchen: LOCK_WAIT_MS warten. */
+const QUIZ_COUNT = 2, LOCK_TRIES = 2, LOCK_WAIT_MS = 30_000;
+const RECENT_KEY = 'ticky_quiz_recent', WAIT_KEY = 'ticky_lock_wait', RECENT_MAX = 24;
+
+/** Gerätelokale Kleinigkeiten (zuletzt gestellte Fragen, Wartezeit) – nicht Teil des Backups. */
+const local = {
+  get(key, fallback) { try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch { return fallback; } },
+  set(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* privat/voll: egal */ } },
+};
+
+/**
+ * Erwachsenen-Quiz: QUIZ_COUNT Fragen aus dem Erwachsenenalltag, je 4 Antworten. Promise<boolean>.
+ * Raten lohnt sich kaum (1 : 16) und wird nach LOCK_TRIES Fehlversuchen mit einer Wartezeit gebremst.
+ */
 export function parentLock() {
   return new Promise(resolve => {
     let ok = false;
-    let a, b, answer = '';
-    const q = el('span', { class: 'lock__question' });
-    const ans = el('span', { class: 'lock__answer', 'aria-label': 'Deine Antwort' });
+    let questions = [], step = 0, fails = 0, waitTimer = null;
+    const progress = el('span', { class: 'lock__kicker' });
+    const q = el('p', { class: 'lock__question' });
+    const answers = el('div', { class: 'quiz' });
     const msg = el('p', { class: 'lock__msg', 'aria-live': 'polite' });
-    const show = () => { ans.textContent = answer || '?'; };
-    function newQuestion() {
-      do {
-        a = 2 + Math.floor(cryptoRandom() * 8);
-        b = 2 + Math.floor(cryptoRandom() * 8);
-      } while (a * b < 10);
-      answer = '';
-      q.textContent = `${a} × ${b} =`;
+
+    function newRound() {
+      const recent = local.get(RECENT_KEY, []);
+      questions = pickQuestions(QUIZ_COUNT, Array.isArray(recent) ? recent : [], cryptoRandom);
+      local.set(RECENT_KEY, [...questions.map(x => x.id), ...recent].slice(0, RECENT_MAX));
+      step = 0;
       show();
     }
-    function press(d) {
-      if (answer.length >= 2) return;
-      answer += d;
-      msg.textContent = '';
-      show();
+    function show() {
+      const cur = questions[step];
+      progress.textContent = `⚙️ Nur für Erwachsene · Frage ${step + 1} von ${questions.length}`;
+      q.textContent = cur.q;
+      answers.replaceChildren(...cur.answers.map(text =>
+        el('button', { type: 'button', class: 'quiz__answer', onclick: e => choose(text, e.currentTarget) }, text)));
+      if (!waitTimer) answers.querySelector('button')?.focus({ preventScroll: true });
     }
-    function erase() {
-      answer = answer.slice(0, -1);
-      msg.textContent = '';
-      show();
-    }
-    function submit() {
-      if (!answer) return;
-      if (Number(answer) === a * b) { ok = true; msg.textContent = 'Richtig – Eltern-Bereich öffnet …'; close(); return; }
+    function choose(text, btn) {
+      if (waitTimer) return;
+      if (text === questions[step].correct) {
+        step++;
+        if (step < questions.length) { msg.textContent = 'Richtig! Noch eine Frage.'; show(); return; }
+        ok = true;
+        msg.textContent = 'Richtig – Eltern-Bereich öffnet …';
+        close();
+        return;
+      }
       wrongSound();
-      ans.classList.remove('is-wrong'); void ans.offsetWidth; ans.classList.add('is-wrong');
-      msg.textContent = 'Leider falsch – neue Aufgabe.';
-      setTimeout(newQuestion, 450);
+      btn.classList.add('is-wrong');
+      fails++;
+      if (fails >= LOCK_TRIES) {
+        fails = 0;
+        local.set(WAIT_KEY, Date.now() + LOCK_WAIT_MS);
+        startWait();
+      } else {
+        msg.textContent = 'Leider falsch – neue Fragen.';
+      }
+      setTimeout(newRound, 600);
     }
-    const keypad = el('div', { class: 'keypad' });
-    for (const d of ['1', '2', '3', '4', '5', '6', '7', '8', '9']) keypad.append(el('button', { type: 'button', onclick: () => press(d) }, d));
-    keypad.append(
-      el('button', { type: 'button', 'aria-label': 'Löschen', onclick: erase }, '⌫'),
-      el('button', { type: 'button', onclick: () => press('0') }, '0'),
-      el('button', { type: 'button', class: 'keypad__ok', 'aria-label': 'Bestätigen', onclick: submit }, 'OK'));
+    /** Wartezeit nach zu vielen Fehlversuchen (übersteht auch einen Neustart der App). */
+    function startWait() {
+      const until = Number(local.get(WAIT_KEY, 0)) || 0;
+      if (until <= Date.now()) return;
+      answers.classList.add('is-waiting');
+      const tickWait = () => {
+        const left = Math.ceil((until - Date.now()) / 1000);
+        if (left <= 0) {
+          clearInterval(waitTimer);
+          waitTimer = null;
+          answers.classList.remove('is-waiting');
+          msg.textContent = 'Neuer Versuch.';
+          answers.querySelector('button')?.focus({ preventScroll: true });
+          return;
+        }
+        msg.textContent = `Zu viele falsche Antworten – bitte ${left} Sekunden warten.`;
+      };
+      waitTimer = setInterval(tickWait, 1000);
+      tickWait();
+    }
     const box = el('div', { class: 'lock' },
       el('button', { type: 'button', class: 'icon-btn icon-btn--plain lock__close', 'aria-label': 'Abbrechen', onclick: () => close() }, '✕'),
       el('div', { class: 'lock__head' },
-        el('span', { class: 'lock__kicker' }, '⚙️ Nur für Erwachsene'),
-        el('h2', {}, 'Löse die Aufgabe, um den Eltern-Bereich zu öffnen')),
-      el('div', { class: 'lock__task' }, q, ans),
+        progress,
+        el('h2', {}, 'Beantworte die Fragen, um den Eltern-Bereich zu öffnen')),
+      q,
       msg,
-      keypad);
-    box.addEventListener('keydown', e => {
-      if (/^\d$/.test(e.key)) { press(e.key); e.preventDefault(); }
-      else if (e.key === 'Backspace') erase();
-      else if (e.key === 'Enter' && e.target.tagName !== 'BUTTON') submit();
-    });
-    newQuestion();
-    const { close } = openOverlay(box, { label: 'Eltern-Sperre', className: 'lock-overlay', onClose: () => resolve(ok) });
+      answers);
+    newRound();
+    startWait();
+    const { close } = openOverlay(box, { label: 'Eltern-Sperre', className: 'lock-overlay', onClose: () => { clearInterval(waitTimer); resolve(ok); } });
   });
 }
 
@@ -88,18 +123,76 @@ export function openSettings(hooks) {
       el('h2', {}, '⚙️ Eltern-Bereich'),
       el('button', { type: 'button', class: 'btn', onclick: () => close() }, 'Fertig')),
     body);
-  const { close } = openOverlay(box, { label: 'Eltern-Bereich' });
+  // Restzeit des Eltern-Boosts aktuell halten, solange der Bereich offen ist (nur der Schnellzugriff, Eingaben bleiben)
+  let quick = null;
+  const boostTimer = setInterval(() => { if (state.boost && quick?.isConnected) quick.replaceWith(quick = quickSection()); }, 20_000);
+  const { close } = openOverlay(box, { label: 'Eltern-Bereich', onClose: () => clearInterval(boostTimer) });
 
   function render() {
     clear(body);
     if (isDemo()) body.append(el('p', { class: 'demo-note' }, '🧪 Demo-Modus aktiv: Änderungen hier werden beim Beenden der Demo verworfen.'));
-    body.append(childrenSection(), customSection(), timesSection(), optionsSection(), demoSection(), dataSection(), infoSection());
+    quick = quickSection();
+    body.append(quick, childrenSection(), customSection(), timesSection(), optionsSection(), demoSection(), dataSection(), infoSection());
   }
 
   function changed() {
     save();
     hooks.onChange?.();
     render();
+  }
+
+  // 0. Schnellzugriff: Zufallsrad und Eltern-Boost
+  function quickSection() {
+    const sec = el('section', { class: 'settings-section' }, el('h3', {}, '✨ Für zwischendurch'));
+    const few = state.children.length < 2;
+    const picker = el('button', {
+      type: 'button', class: 'quick-btn quick-btn--picker', disabled: few,
+      onclick: () => openPicker(state.children, { settings: state.settings }),
+    },
+    el('span', { class: 'quick-btn__icon', 'aria-hidden': 'true' }, '🎲'),
+    el('span', { class: 'quick-btn__text' },
+      el('strong', {}, 'Zufallsrad'),
+      el('span', {}, few ? 'Ab 2 Kindern' : 'Wer ist zuerst dran? Das Rad entscheidet.')));
+
+    const left = boostMinutesLeft(state.boost);
+    const { boostPct: pct, boostMinutes: mins } = state.settings;
+    const boost = el('button', {
+      type: 'button', class: `quick-btn quick-btn--boost${left ? ' is-active' : ''}`,
+      onclick: async () => {
+        if (left) {
+          if (!(await confirmDialog('Eltern-Boost jetzt beenden?', { ok: 'Beenden' }))) return;
+          state.boost = null;
+          changed();
+          toast('Eltern-Boost beendet.');
+          return;
+        }
+        state.boost = { pct, until: Date.now() + mins * 60_000 };
+        changed();
+        popSound();
+        confetti(60);
+        toast(`🚀 Eltern-Boost: +${pct} % für ${mins} Minuten!`);
+      },
+    },
+    el('span', { class: 'quick-btn__icon', 'aria-hidden': 'true' }, '🚀'),
+    el('span', { class: 'quick-btn__text' },
+      el('strong', {}, left ? `Boost läuft: +${state.boost.pct} %` : 'Eltern-Boost starten'),
+      el('span', {}, left ? `Noch ${left} Min · Tippen zum Beenden` : `+${pct} % für ${mins} Minuten`)));
+
+    const choice = (label, values, key, unit) => {
+      const seg = el('div', { class: 'segmented', role: 'group', 'aria-label': label });
+      for (const v of values) {
+        seg.append(el('button', {
+          type: 'button', 'aria-pressed': String(state.settings[key] === v),
+          onclick: () => { state.settings[key] = v; save(); render(); },
+        }, `${key === 'boostPct' ? '+' : ''}${v}${unit}`));
+      }
+      return el('div', { class: 'switch' }, el('span', {}, label), seg);
+    };
+    sec.append(el('div', { class: 'quick-grid' }, picker, boost),
+      el('p', { class: 'muted' }, 'Eltern-Boost: Für Tage, an denen die Kinder besonders toll mitgemacht haben. Alle Kinder bekommen mehr XP und bessere Chancen am Glücksrad auf seltene Figuren und Upgrades.'),
+      choice('Boost-Stärke', BOOST_PCTS, 'boostPct', ' %'),
+      choice('Boost-Dauer', BOOST_MINUTES, 'boostMinutes', ' Min'));
+    return sec;
   }
 
   // 1. Kinder verwalten

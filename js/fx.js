@@ -280,7 +280,8 @@ export function banner(text, theme) {
 
 export function toast(text, { action = null, duration = 2600 } = {}) {
   const box = $('#toasts');
-  const node = el('div', { class: 'toast' }, el('span', {}, text));
+  // Bleibende Meldungen (z. B. „Neue Version“) überstehen das Glücksrad, kurze verschwinden davor
+  const node = el('div', { class: `toast${action ? ' toast--action' : ''}${duration > 0 ? '' : ' toast--sticky'}` }, el('span', {}, text));
   const remove = () => {
     node.classList.add('is-leaving');
     setTimeout(() => node.remove(), 300);
