@@ -1,4 +1,4 @@
-// Die Figuren (12 pro Style) + Raritäts-Konfiguration für das Glücksrad.
+// Die Figuren (15 pro Style) + Raritäts-Konfiguration für das Glücksrad.
 
 /** Gesamtchance pro Rarität in Prozent. Wird gleichmäßig auf die Figuren der Rarität verteilt. */
 export const RARITIES = {
@@ -39,6 +39,9 @@ export const FIGURES = [
   f('pixel', 10, 'Diamant-Drache', 'legendaer', 'fly', [82, 8]),
   f('pixel', 11, 'Obsidian-Phönix', 'mythisch', 'fly', [50, 14]),
   f('pixel', 12, 'Sternen-Axolotl', 'geheim', 'walk', [72, 30]),
+  f('pixel', 13, 'Lava-Salamander', 'magisch', 'walk', [80, 40]),
+  f('pixel', 14, 'Kristall-Wolf', 'legendaer', 'walk', [76, 22]),
+  f('pixel', 15, 'Gewitter-Greif', 'mythisch', 'fly', [74, 22]),
 
   f('neon', 1, 'Würfel-Robo', 'standard', 'walk', [50, 12]),
   f('neon', 2, 'Speed-Sneaker-Bot', 'standard', 'walk', [56, 22]),
@@ -52,6 +55,9 @@ export const FIGURES = [
   f('neon', 10, 'Goldener Mega-Mech', 'legendaer', 'walk', [50, 6]),
   f('neon', 11, 'Quanten-Drache', 'mythisch', 'fly', [84, 26]),
   f('neon', 12, 'Der Glitch', 'geheim', 'hop', [50, 22]),
+  f('neon', 13, 'Disco-Oktopus', 'magisch', 'hop', [50, 18]),
+  f('neon', 14, 'Chrom-Panther', 'legendaer', 'walk', [78, 32]),
+  f('neon', 15, 'Laser-Lindwurm', 'mythisch', 'fly', [82, 22]),
 
   f('zauber', 1, 'Zauber-Häschen', 'standard', 'hop', [52, 30]),
   f('zauber', 2, 'Blütenfee', 'standard', 'fly', [55, 12]),
@@ -65,6 +71,9 @@ export const FIGURES = [
   f('zauber', 10, 'Sternen-Pegasus', 'legendaer', 'fly', [83, 22]),
   f('zauber', 11, 'Mond-Drache', 'mythisch', 'fly', [82, 30]),
   f('zauber', 12, 'Polarlicht-Einhorn', 'geheim', 'walk', [84, 24]),
+  f('zauber', 13, 'Kristall-Igel', 'magisch', 'hop', [76, 46]),
+  f('zauber', 14, 'Feenkönigin', 'legendaer', 'fly', [50, 14]),
+  f('zauber', 15, 'Regenbogen-Kirin', 'mythisch', 'walk', [84, 18]),
 
   f('dino', 1, 'Baby-Triceratops', 'standard', 'walk', [80, 34]),
   f('dino', 2, 'Mini-Stegosaurus', 'standard', 'walk', [86, 48]),
@@ -78,6 +87,9 @@ export const FIGURES = [
   f('dino', 10, 'Feuer-T-Rex', 'legendaer', 'walk', [76, 14]),
   f('dino', 11, 'Vulkan-Spinosaurus', 'mythisch', 'walk', [90, 36]),
   f('dino', 12, 'Knochen-Rex', 'geheim', 'walk', [80, 12]),
+  f('dino', 13, 'Ammoniten-Krake', 'magisch', 'hop', [42, 18]),
+  f('dino', 14, 'Eis-Mammut', 'legendaer', 'walk', [78, 28]),
+  f('dino', 15, 'Sturm-Quetzal', 'mythisch', 'fly', [78, 28]),
 
   f('weltraum', 1, 'Mini-Alien', 'standard', 'hop', [56, 26]),
   f('weltraum', 2, 'Mondhase', 'standard', 'hop', [64, 30]),
@@ -91,6 +103,9 @@ export const FIGURES = [
   f('weltraum', 10, 'Kometen-Wal', 'legendaer', 'fly', [76, 26]),
   f('weltraum', 11, 'Supernova-Phönix', 'mythisch', 'fly', [50, 18]),
   f('weltraum', 12, 'Schwarzloch-Kätzchen', 'geheim', 'hop', [50, 22]),
+  f('weltraum', 13, 'Asteroiden-Igel', 'magisch', 'hop', [50, 26]),
+  f('weltraum', 14, 'Galaxie-Hirsch', 'legendaer', 'walk', [82, 24]),
+  f('weltraum', 15, 'Pulsar-Drache', 'mythisch', 'fly', [80, 20]),
 
   f('schatz', 1, 'Papagei', 'standard', 'fly', [66, 16]),
   f('schatz', 2, 'Krabbe', 'standard', 'walk', [50, 42]),
@@ -104,6 +119,9 @@ export const FIGURES = [
   f('schatz', 10, 'Geister-Schiff', 'legendaer', 'fly', [52, 8]),
   f('schatz', 11, 'Seeschlangen-König', 'mythisch', 'fly', [78, 12]),
   f('schatz', 12, 'Schatzkisten-Mimic', 'geheim', 'hop', [50, 10]),
+  f('schatz', 13, 'Perlen-Muschel', 'magisch', 'hop', [50, 22]),
+  f('schatz', 14, 'Gold-Rochen', 'legendaer', 'fly', [50, 26]),
+  f('schatz', 15, 'Sturm-Leviathan', 'mythisch', 'fly', [80, 20]),
 ];
 
 export function figuresOf(theme) {

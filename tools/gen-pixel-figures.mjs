@@ -1,4 +1,4 @@
-// Entwicklungswerkzeug (nicht zur Laufzeit nötig): erzeugt die 12 Pixel-Figuren aus 16×16-ASCII-Rastern.
+// Entwicklungswerkzeug (nicht zur Laufzeit nötig): erzeugt die 15 Pixel-Figuren aus 16×16-ASCII-Rastern.
 // Aufruf: node tools/gen-pixel-figures.mjs
 // Jede Zeichen-Farbe kann einer animierbaren Gruppe zugeordnet werden (leg-a, leg-b, wing, tail).
 import { writeFileSync, mkdirSync } from 'node:fs';
@@ -269,6 +269,63 @@ const FIGS = {
     '....AA..BB.AA.BB',
     '................',
   ], { N: '#2B3A9E', n: '#5B6CE0', Y: '#FFE14D', K: '#0B0F2E', M: '#FF6FD8', G: '#FF6FD8', g: '#FFC2F1', t: ['#5B6CE0', 'tail'], T: ['#2B3A9E', 'tail'], a: ['#2B3A9E', 'leg-a'], A: ['#FF6FD8', 'leg-a'], b: ['#1F2B80', 'leg-b'], B: ['#E055BE', 'leg-b'] }],
+
+  pixel_13: ['Lava-Salamander', [
+    '................',
+    '................',
+    '................',
+    '................',
+    '................',
+    '................',
+    '...........HHHH.',
+    '..........HHKHHh',
+    'tt.......HHHHHHH',
+    '.tT.RRRRRRRHHMM.',
+    '..TRRrRRrRRRR...',
+    '...RLRRLRRLRR...',
+    '...RRRRRRRRRR...',
+    '....aa.bb.aa.bb.',
+    '....aa.bb.aa.bb.',
+    '................',
+  ], { R: '#E2461F', r: '#FFB020', L: '#FFD54A', H: '#F2602A', h: '#B8321A', K: '#1A1A1A', M: '#FFE082', t: ['#FFB020', 'tail'], T: ['#E2461F', 'tail'], a: ['#B8321A', 'leg-a'], b: ['#8E2410', 'leg-b'] }],
+
+  pixel_14: ['Kristall-Wolf', [
+    '................',
+    '................',
+    '................',
+    '..........E..E..',
+    '..........EEEE..',
+    '.........WWKWWW.',
+    '.........WWWWWNN',
+    'TT.......WWWWW..',
+    '.TTWWWWWWWWWW...',
+    '..TWCWWWCWWWW...',
+    '...WWWWWWWWWW...',
+    '...wwwwwwwwww...',
+    '...aa.bb..aa.bb.',
+    '...aa.bb..aa.bb.',
+    '...AA.BB..AA.BB.',
+    '................',
+  ], { W: '#9BE7FF', w: '#5BC0EB', E: '#C9F6FF', K: '#0B2A33', N: '#2B4B5C', C: '#FFFFFF', T: ['#C9F6FF', 'tail'], a: ['#5BC0EB', 'leg-a'], A: ['#C9F6FF', 'leg-a'], b: ['#3A9BC4', 'leg-b'], B: ['#9BE7FF', 'leg-b'] }],
+
+  pixel_15: ['Gewitter-Greif', [
+    '.............Y..',
+    '............YY..',
+    '..w.........Y...',
+    '..wW......GGGG..',
+    '..wWW....GGKGGO.',
+    '..wWWW...GGGGOO.',
+    '..wWWWW..GGGG...',
+    '...wWWWWPPPP....',
+    'tt..wWWPPPPPP...',
+    '.tT..PPPLLPPP...',
+    '..TPPPPLLPPPP...',
+    '...PPPPPPPPP....',
+    '....aa..bb......',
+    '....AA..BB......',
+    '................',
+    '................',
+  ], { G: '#E5E7EB', K: '#111827', O: '#FBBF24', P: '#7C3AED', L: '#C4B5FD', Y: '#FDE047', w: ['#1E1B4B', 'wing'], W: ['#6366F1', 'wing'], t: ['#FDE047', 'tail'], T: ['#7C3AED', 'tail'], a: ['#FBBF24', 'leg-a'], A: ['#F59E0B', 'leg-a'], b: ['#D97706', 'leg-b'], B: ['#B45309', 'leg-b'] }],
 };
 
 mkdirSync(OUT, { recursive: true });

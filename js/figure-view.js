@@ -1,4 +1,5 @@
-// Darstellung einer Figur inkl. Upgrades (Farbe, Turbo, Wachstum, Trick, Verwandlung), Stern-Effekten und Accessoire –
+// Darstellung einer Figur inkl. Upgrades (Farbe, Turbo, Wachstum, Trick, Verwandlung, Aura, Schweif, Kristall, Kosmos),
+// Stern-Effekten und Accessoire –
 // für Team, Album, Reveal und Parade.
 import { el } from './ui.js';
 import { stepsOf, perksOf, accessoryOf, accessoryById } from './data/progression.js';
@@ -14,7 +15,7 @@ function hueOf(figId) {
  * Figuren mit kaum Farbe (gemessen: unter 40 % kräftige Pixel). Farbton drehen ändert an Weiß, Grau und Schwarz nichts:
  * Helle werden deshalb eingefärbt, dunkle bekommen zusätzlich einen farbigen Schein.
  */
-const PALE = new Set(['pixel_02', 'pixel_03', 'pixel_06', 'dino_03', 'dino_12', 'zauber_01', 'zauber_04', 'zauber_07', 'weltraum_02', 'neon_06', 'schatz_06']);
+const PALE = new Set(['pixel_02', 'pixel_03', 'pixel_06', 'dino_03', 'dino_12', 'zauber_01', 'zauber_04', 'zauber_07', 'weltraum_02', 'neon_06', 'schatz_06', 'neon_14']);
 const DARK = new Set(['neon_12', 'weltraum_12']);
 
 /**
@@ -23,14 +24,29 @@ const DARK = new Set(['neon_12', 'weltraum_12']);
  */
 const PERK_LAYERS = { glitzer: 'fig__twinkle', schimmer: 'fig__fx fig__shine', begleiter: 'fig__orbit', regenbogen: 'fig__fx fig__rainbow' };
 
+/**
+ * Ebenen für die seltenen Upgrades (nur legendäre und seltenere Figuren). Sie liegen immer im Container, sobald die Figur
+ * das Upgrade hat; base.css zeigt sie nur, wenn der Schritt in data-evo steht – so kann playUpgrade sie sichtbar einblenden.
+ */
+const EVO_LAYERS = {
+  aura: ['fig__aura'],
+  schweif: ['fig__fx fig__trail'],
+  kristall: ['fig__fx fig__crystal'],
+  kosmos: ['fig__halo', 'fig__fx fig__cosmos', 'fig__fx fig__stars'],
+};
+/** Diese Upgrades brauchen die Form der Figur als Maske. */
+const MASKED = ['schweif', 'kristall', 'kosmos'];
+
 /** Setzt Upgrades, Sterne, Rarität und Accessoire an einem Figuren-Container (der Container braucht die Klasse .fig). */
 export function decorateFigure(node, fig, child) {
-  node.dataset.evo = stepsOf(child, fig).join(' ');
+  const steps = stepsOf(child, fig);
+  node.dataset.evo = steps.join(' ');
   const perks = child ? perksOf(child, fig.id) : [];
   node.dataset.perks = perks.join(' ');
   // Absolut: Eine relative url() in einer CSS-Variablen würde relativ zu css/base.css aufgelöst
-  if (perks.length) node.style.setProperty('--mask', `url("${new URL(fig.svg, document.baseURI).href}")`);
+  if (perks.length || steps.some(st => MASKED.includes(st))) node.style.setProperty('--mask', `url("${new URL(fig.svg, document.baseURI).href}")`);
   node.querySelectorAll(':scope > .fig__perk').forEach(n => n.remove());
+  for (const st of steps) for (const cls of EVO_LAYERS[st] ?? []) node.append(el('span', { class: `fig__perk ${cls}`, 'aria-hidden': 'true' }));
   for (const id of perks) if (PERK_LAYERS[id]) node.append(el('span', { class: `fig__perk ${PERK_LAYERS[id]}`, 'aria-hidden': 'true' }));
   node.dataset.rarity = fig.rarity;
   if (PALE.has(fig.id)) node.dataset.tint = 'pale';

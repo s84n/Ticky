@@ -15,9 +15,12 @@ import { openPicker } from './rewards/picker.js';
 
 // ---------- Eltern-Sperre ----------
 
-/** So viele Quizfragen hintereinander müssen stimmen. Nach LOCK_TRIES falschen Versuchen: LOCK_WAIT_MS warten. */
-const QUIZ_COUNT = 2, LOCK_TRIES = 2, LOCK_WAIT_MS = 30_000;
-const RECENT_KEY = 'ticky_quiz_recent', WAIT_KEY = 'ticky_lock_wait', RECENT_MAX = 24;
+/**
+ * So viele Quizfragen hintereinander müssen stimmen. Nach je LOCK_TRIES falschen Antworten folgt eine Wartezeit,
+ * die jedes Mal länger wird (LOCK_WAITS_MS, danach bleibt es bei der letzten). Erst das Öffnen setzt alles zurück.
+ */
+const QUIZ_COUNT = 2, LOCK_TRIES = 2, LOCK_WAITS_MS = [30_000, 120_000, 600_000];
+const RECENT_KEY = 'ticky_quiz_recent', WAIT_KEY = 'ticky_lock_wait', FAILS_KEY = 'ticky_lock_fails', RECENT_MAX = 24;
 
 /** Gerätelokale Kleinigkeiten (zuletzt gestellte Fragen, Wartezeit) – nicht Teil des Backups. */
 const local = {
@@ -27,12 +30,13 @@ const local = {
 
 /**
  * Erwachsenen-Quiz: QUIZ_COUNT Fragen aus dem Erwachsenenalltag, je 4 Antworten. Promise<boolean>.
- * Raten lohnt sich kaum (1 : 16) und wird nach LOCK_TRIES Fehlversuchen mit einer Wartezeit gebremst.
+ * Raten lohnt sich kaum (1 : 16) und wird mit wachsenden Wartezeiten gebremst. Fehlversuche und Wartezeit liegen
+ * auf dem Gerät, Schließen oder Neustarten setzt sie also nicht zurück.
  */
 export function parentLock() {
   return new Promise(resolve => {
     let ok = false;
-    let questions = [], step = 0, fails = 0, waitTimer = null;
+    let questions = [], step = 0, waitTimer = null;
     const progress = el('span', { class: 'lock__kicker' });
     const q = el('p', { class: 'lock__question' });
     const answers = el('div', { class: 'quiz' });
@@ -59,18 +63,22 @@ export function parentLock() {
         step++;
         if (step < questions.length) { msg.textContent = 'Richtig! Noch eine Frage.'; show(); return; }
         ok = true;
+        local.set(FAILS_KEY, { count: 0, level: 0 });
         msg.textContent = 'Richtig – Eltern-Bereich öffnet …';
         close();
         return;
       }
       wrongSound();
       btn.classList.add('is-wrong');
-      fails++;
-      if (fails >= LOCK_TRIES) {
-        fails = 0;
-        local.set(WAIT_KEY, Date.now() + LOCK_WAIT_MS);
+      const fails = local.get(FAILS_KEY, {});
+      const count = (Number(fails.count) || 0) + 1;
+      const level = Number(fails.level) || 0;
+      if (count >= LOCK_TRIES) {
+        local.set(FAILS_KEY, { count: 0, level: level + 1 });
+        local.set(WAIT_KEY, Date.now() + LOCK_WAITS_MS[Math.min(level, LOCK_WAITS_MS.length - 1)]);
         startWait();
       } else {
+        local.set(FAILS_KEY, { count, level });
         msg.textContent = 'Leider falsch – neue Fragen.';
       }
       setTimeout(newRound, 600);
@@ -90,7 +98,8 @@ export function parentLock() {
           answers.querySelector('button')?.focus({ preventScroll: true });
           return;
         }
-        msg.textContent = `Zu viele falsche Antworten – bitte ${left} Sekunden warten.`;
+        const time = left > 90 ? `${Math.ceil(left / 60)} Minuten` : `${left} Sekunden`;
+        msg.textContent = `Zu viele falsche Antworten – bitte ${time} warten.`;
       };
       waitTimer = setInterval(tickWait, 1000);
       tickWait();

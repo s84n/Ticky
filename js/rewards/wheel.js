@@ -8,7 +8,7 @@ import { tickSound, whooshSound, revealSound } from '../audio.js';
 import { fireworks, confetti, shake, burstAt, flash, isReduced } from '../fx.js';
 import { figureView, playUpgrade } from '../figure-view.js';
 import { animationDone, bezier, isLite } from '../perf.js';
-import { focusOf, upgradeGuaranteed, upgradeChance, UPGRADE_PITY, EVO_STEPS, STAR_PERKS, STAR_MAX, starReady, nextStep, pathOf, stageOf, accessoryById } from '../data/progression.js';
+import { focusOf, upgradeGuaranteed, upgradeChance, UPGRADE_PITY, EVO_STEPS, STAR_PERKS, STAR_MAX, starReady, nextStep, pathOf, stageOf, accessoryById, isEpicStep } from '../data/progression.js';
 
 /** So lange bleibt der Gewinn stehen, bevor es von selbst weitergeht (besondere Gewinne etwas länger). */
 const REVEAL_MS = 9000, REVEAL_EPIC_MS = 12000;
@@ -342,13 +342,14 @@ export function openWheel(child, { commit, onFinish, onCancel, settings, forceRa
     const upgrade = result.kind === 'upgrade' ? gain?.upgrade : null;
     const star = gain?.star ?? null; // Duplikat nach fertiger Reise: neuer Stern
     const rar = RARITIES[fig.rarity];
-    const epic = upgrade === 'verwandlung' || star === STAR_MAX || ['legendaer', 'mythisch', 'geheim'].includes(fig.rarity);
+    const bigStep = isEpicStep(upgrade);
+    const epic = bigStep || star === STAR_MAX || ['legendaer', 'mythisch', 'geheim'].includes(fig.rarity);
     const btn = el('button', { type: 'button', class: 'btn btn--primary btn--cta reveal__btn', onclick: () => { if (finished) return; finished = true; close(); onFinish(result); } }, 'Los, feiern! 🎉');
     let badge, name;
     const sub = [];
     if (upgrade) {
       const step = EVO_STEPS[upgrade];
-      badge = upgrade === 'verwandlung' ? 'VERWANDLUNG!' : 'UPGRADE!';
+      badge = step.badge ?? 'UPGRADE!';
       name = `${fig.name} ${step.reveal} ${step.icon}`;
       sub.push(journeyLine(fig));
       if (!child.team?.includes(fig.id)) sub.push(el('p', { class: 'reveal__sub' }, 'Nimm sie im Album ins Team – dann siehst du ihr Upgrade bei deinen Aufgaben.'));
@@ -390,9 +391,19 @@ export function openWheel(child, { commit, onFinish, onCancel, settings, forceRa
     setDismissible(true);
     btn.focus();
     autoPress(btn, epic ? REVEAL_EPIC_MS : REVEAL_MS);
-    revealSound(upgrade === 'verwandlung' || star === STAR_MAX ? 'mythisch' : upgrade || star ? 'legendaer' : fig.rarity, theme);
+    revealSound(bigStep || star === STAR_MAX ? 'mythisch' : upgrade || star ? 'legendaer' : fig.rarity, theme);
     const cx = innerWidth / 2, cy = innerHeight * 0.38;
-    if (upgrade === 'verwandlung') {
+    if (upgrade === 'kosmos') {
+      // Höchste Stufe: noch eine Schippe drauf
+      flash('rgba(167, 139, 250, .6)');
+      shake();
+      setTimeout(shake, 700);
+      fireworks(9, { delayStep: 200 });
+      confetti(180);
+      burstAt(cx, cy, theme, 38);
+      setTimeout(() => burstAt(cx, cy, 'weltraum', 32), 450);
+      setTimeout(() => burstAt(cx, cy, 'zauber', 30), 900);
+    } else if (bigStep) {
       flash('rgba(255, 211, 77, .55)');
       shake();
       fireworks(6, { delayStep: 240 });

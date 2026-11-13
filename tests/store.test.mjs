@@ -6,7 +6,7 @@ import { toggleTask, toggleAll, autoRoutine, currentRoutine, nextRoutine, isNigh
 import {
   levelInfo, levelTitle, awardRoutine, addFigure, applyUpgrade, trackSpin, upgradeGuaranteed, hasStep, journeyOpen,
   toggleTeam, makeLeader, setFocus, focusOf, pickFocus, addStar, starsOf, perksOf, STAR_MAX, STAR_PERKS, equipAccessory, accessoryOf,
-  XP_PER_TASK, XP_ROUTINE_BONUS, BLITZ_XP, MAX_LEVEL, ACCESSORY_IDS, TEAM_MAX, EVO_PATHS, UPGRADE_PITY,
+  XP_PER_TASK, XP_ROUTINE_BONUS, BLITZ_XP, MAX_LEVEL, ACCESSORY_IDS, TEAM_MAX, EVO_PATHS, EVO_STEPS, UPGRADE_PITY, isEpicStep,
 } from '../js/data/progression.js';
 import { figureById } from '../js/data/figures.js';
 
@@ -213,16 +213,21 @@ test('Reise: Figuren im Team gehen vor, eine seltene Figur im Album löst sie ni
 
 test('Upgrade-Reise: Länge je Rarität, Reihenfolge, danach nächste Reise', () => {
   assert.deepEqual(EVO_PATHS.standard, ['farbe', 'tempo']);
-  assert.equal(EVO_PATHS.legendaer.at(-1), 'verwandlung');
-  assert.equal(EVO_PATHS.geheim.length, 5);
+  // Die seltenen Upgrades hängen hinten an, damit gespeicherte Stufen ihre Bedeutung behalten
+  assert.deepEqual(EVO_PATHS.legendaer, ['farbe', 'tempo', 'groesse', 'verwandlung', 'aura']);
+  assert.deepEqual(EVO_PATHS.mythisch.slice(0, 5), ['farbe', 'tempo', 'groesse', 'trick', 'verwandlung']);
+  assert.deepEqual(EVO_PATHS.geheim.slice(-4), ['aura', 'schweif', 'kristall', 'kosmos']);
+  for (const path of Object.values(EVO_PATHS)) assert.ok(path.every(st => EVO_STEPS[st]), path.join());
+  assert.ok(!EVO_PATHS.mythisch.includes('kosmos')); // höchste Stufe nur für geheime Figuren
+  assert.ok(isEpicStep('kosmos') && isEpicStep('verwandlung') && !isEpicStep('aura'));
   const c = kid();
   const leg = figureById('neon_10'), std = figureById('neon_01');
   addFigure(c, std); addFigure(c, leg);
   assert.equal(c.focus, 'neon_10');
   const got = [];
-  for (let i = 0; i < 4; i++) got.push(applyUpgrade(c, leg));
-  assert.deepEqual(got, ['farbe', 'tempo', 'groesse', 'verwandlung']);
-  assert.ok(hasStep(c, leg, 'verwandlung'));
+  for (let i = 0; i < 5; i++) got.push(applyUpgrade(c, leg));
+  assert.deepEqual(got, ['farbe', 'tempo', 'groesse', 'verwandlung', 'aura']);
+  assert.ok(hasStep(c, leg, 'verwandlung') && hasStep(c, leg, 'aura'));
   assert.equal(journeyOpen(c, leg), false);
   assert.equal(applyUpgrade(c, leg), null);
   assert.equal(c.focus, 'neon_01'); // nächste offene Reise

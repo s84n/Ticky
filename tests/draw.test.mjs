@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { wheelOrder, figureWeights, drawIndex, segments, targetRotation, segmentAt, hasLuckBonus } from '../js/rewards/draw.js';
-import { LUCK_THRESHOLD, RARITIES, RARITY_ORDER, FIGURES } from '../js/data/figures.js';
+import { LUCK_THRESHOLD, RARITIES, RARITY_ORDER, FIGURES, isEpic } from '../js/data/figures.js';
 import { THEME_IDS } from '../js/data/themes.js';
 import { existsSync } from 'node:fs';
 
@@ -18,8 +18,11 @@ function seeded(seed) {
 for (const theme of THEME_IDS) {
   test(`${theme}: 200.000 Ziehungen ≈ 68/25/5/1,5/0,5 % und jede Figur wird erreicht`, () => {
     const figs = wheelOrder(theme);
-    assert.equal(figs.length, 12);
-    assert.deepEqual(RARITY_ORDER.map(r => figs.filter(f => f.rarity === r).length), [6, 3, 1, 1, 1]);
+    assert.equal(figs.length, 15);
+    assert.deepEqual(RARITY_ORDER.map(r => figs.filter(f => f.rarity === r).length), [6, 4, 2, 2, 1]);
+    // Seltene Felder liegen nie nebeneinander (auch nicht über das Rad-Ende hinweg)
+    const rare = f => isEpic(f.rarity);
+    figs.forEach((f, i) => assert.ok(!(rare(f) && rare(figs[(i + 1) % figs.length])), `${f.id} neben ${figs[(i + 1) % figs.length].id}`));
     const w = figureWeights(figs);
     assert.ok(Math.abs(w.reduce((a, b) => a + b, 0) - 1) < 1e-9);
     const rnd = seeded(42);
@@ -48,7 +51,7 @@ test('Jede Figur hat eine SVG-Datei, eindeutige ID und eine Hut-Position', () =>
     assert.ok(['walk', 'hop', 'fly'].includes(f.motion));
     assert.ok(f.head.every(v => v >= 0 && v <= 100));
   }
-  assert.equal(FIGURES.length, THEME_IDS.length * 12);
+  assert.equal(FIGURES.length, THEME_IDS.length * 15);
 });
 
 test('Glücksbonus verdoppelt Legendär-Chance nach 15 Fehlversuchen', () => {
@@ -71,7 +74,7 @@ test('Segmente sind proportional zur Wahrscheinlichkeit und decken 360° ab', ()
   assert.equal(segs[0].start, 0);
   assert.equal(segs.at(-1).end, 360);
   const li = figs.findIndex(f => f.rarity === 'legendaer');
-  assert.ok(Math.abs(segs[li].end - segs[li].start - 18) < 1e-9); // 5 % von 360°
+  assert.ok(Math.abs(segs[li].end - segs[li].start - 9) < 1e-9); // 5 % von 360°, geteilt auf 2 legendäre Figuren
   const gi = figs.findIndex(f => f.rarity === 'geheim');
   assert.ok(Math.abs(segs[gi].end - segs[gi].start - 1.8) < 1e-9); // 0,5 % von 360°
 });

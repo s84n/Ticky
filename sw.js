@@ -1,6 +1,6 @@
 // Service Worker: Offline-Betrieb. Bei jedem Release CACHE_VERSION (und VERSION in js/config.js) erhöhen.
 // Die Dateiliste kann mit `node tools/update-sw-assets.mjs` aktualisiert werden.
-const CACHE_VERSION = 'ticky-v1.8.0';
+const CACHE_VERSION = 'ticky-v1.9.0';
 const NETWORK_TIMEOUT_MS = 3000; // danach App-Shell aus dem Cache (schlechtes WLAN)
 
 const ASSETS = [
@@ -51,6 +51,9 @@ const ASSETS = [
   './assets/figures/dino/dino_10.svg',
   './assets/figures/dino/dino_11.svg',
   './assets/figures/dino/dino_12.svg',
+  './assets/figures/dino/dino_13.svg',
+  './assets/figures/dino/dino_14.svg',
+  './assets/figures/dino/dino_15.svg',
   './assets/figures/neon/neon_01.svg',
   './assets/figures/neon/neon_02.svg',
   './assets/figures/neon/neon_03.svg',
@@ -63,6 +66,9 @@ const ASSETS = [
   './assets/figures/neon/neon_10.svg',
   './assets/figures/neon/neon_11.svg',
   './assets/figures/neon/neon_12.svg',
+  './assets/figures/neon/neon_13.svg',
+  './assets/figures/neon/neon_14.svg',
+  './assets/figures/neon/neon_15.svg',
   './assets/figures/pixel/pixel_01.svg',
   './assets/figures/pixel/pixel_02.svg',
   './assets/figures/pixel/pixel_03.svg',
@@ -75,6 +81,9 @@ const ASSETS = [
   './assets/figures/pixel/pixel_10.svg',
   './assets/figures/pixel/pixel_11.svg',
   './assets/figures/pixel/pixel_12.svg',
+  './assets/figures/pixel/pixel_13.svg',
+  './assets/figures/pixel/pixel_14.svg',
+  './assets/figures/pixel/pixel_15.svg',
   './assets/figures/schatz/schatz_01.svg',
   './assets/figures/schatz/schatz_02.svg',
   './assets/figures/schatz/schatz_03.svg',
@@ -87,6 +96,9 @@ const ASSETS = [
   './assets/figures/schatz/schatz_10.svg',
   './assets/figures/schatz/schatz_11.svg',
   './assets/figures/schatz/schatz_12.svg',
+  './assets/figures/schatz/schatz_13.svg',
+  './assets/figures/schatz/schatz_14.svg',
+  './assets/figures/schatz/schatz_15.svg',
   './assets/figures/weltraum/weltraum_01.svg',
   './assets/figures/weltraum/weltraum_02.svg',
   './assets/figures/weltraum/weltraum_03.svg',
@@ -99,6 +111,9 @@ const ASSETS = [
   './assets/figures/weltraum/weltraum_10.svg',
   './assets/figures/weltraum/weltraum_11.svg',
   './assets/figures/weltraum/weltraum_12.svg',
+  './assets/figures/weltraum/weltraum_13.svg',
+  './assets/figures/weltraum/weltraum_14.svg',
+  './assets/figures/weltraum/weltraum_15.svg',
   './assets/figures/zauber/zauber_01.svg',
   './assets/figures/zauber/zauber_02.svg',
   './assets/figures/zauber/zauber_03.svg',
@@ -111,6 +126,9 @@ const ASSETS = [
   './assets/figures/zauber/zauber_10.svg',
   './assets/figures/zauber/zauber_11.svg',
   './assets/figures/zauber/zauber_12.svg',
+  './assets/figures/zauber/zauber_13.svg',
+  './assets/figures/zauber/zauber_14.svg',
+  './assets/figures/zauber/zauber_15.svg',
   './assets/fonts/inter-latin-var.woff2',
   './assets/icons/apple-touch-icon.png',
   './assets/icons/icon-192.png',

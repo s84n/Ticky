@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <title>Ammoniten-Krake</title>
+  <defs><radialGradient id="d13-s" cx=".4" cy=".35" r=".7"><stop offset="0" stop-color="#FDE68A"/><stop offset="1" stop-color="#D97706"/></radialGradient></defs>
+  <ellipse cx="66" cy="122" rx="42" ry="4" fill="#000" opacity=".2"/>
+  <g class="leg-b" stroke-linecap="round" fill="none"><path d="M88 96 Q94 112 84 117" stroke="#3B2A16" stroke-width="9"/><path d="M88 96 Q94 112 84 117" stroke="#2DD4BF" stroke-width="4.5"/><path d="M104 94 Q116 106 110 116" stroke="#3B2A16" stroke-width="9"/><path d="M104 94 Q116 106 110 116" stroke="#2DD4BF" stroke-width="4.5"/></g>
+  <g class="body" stroke="#3B2A16" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round">
+    <circle cx="54" cy="62" r="40" fill="url(#d13-s)"/>
+    <path d="M48 62 a6 6 0 1 1 12 0 a12 12 0 1 1 -24 0 a18 18 0 1 1 36 0 a26 26 0 1 1 -52 0" fill="none" stroke="#92400E" stroke-width="3"/>
+    <path d="M54 22 l0 8 M24 36 l6 6 M86 36 l-6 6 M16 70 l8 0" fill="none" stroke="#92400E" stroke-width="2.5"/>
+    <path d="M74 82 Q96 64 114 80 Q122 94 108 100 L82 100 Q70 94 74 82 Z" fill="#5EEAD4"/>
+    <circle cx="92" cy="80" r="6" fill="#fff"/><circle cx="93.5" cy="81" r="3" fill="#3B2A16" stroke="none"/>
+    <circle cx="106" cy="82" r="5" fill="#fff"/><circle cx="107.2" cy="83" r="2.5" fill="#3B2A16" stroke="none"/>
+    <path d="M94 92 q6 4 12 0" fill="none"/>
+  </g>
+  <g class="leg-a" stroke-linecap="round" fill="none"><path d="M78 98 Q72 114 60 114" stroke="#3B2A16" stroke-width="9"/><path d="M78 98 Q72 114 60 114" stroke="#5EEAD4" stroke-width="4.5"/><path d="M114 90 Q126 98 122 112" stroke="#3B2A16" stroke-width="9"/><path d="M114 90 Q126 98 122 112" stroke="#5EEAD4" stroke-width="4.5"/></g>
+  <g fill="#FCD34D"><circle cx="108" cy="30" r="3"/><circle cx="118" cy="46" r="2"/><circle cx="12" cy="104" r="2.4"/></g>
+</svg>

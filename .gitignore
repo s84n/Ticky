@@ -20,3 +20,6 @@ ideen.pdf
 
 # Design-Vorlage von Claude Design (Referenz, nicht veröffentlichen)
 design_handoff/
+
+# Lokale Claude-Code-Einstellungen und Hooks (Doku-Pflege-Prüfung)
+.claude/

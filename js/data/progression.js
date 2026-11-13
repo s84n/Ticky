@@ -19,23 +19,34 @@ export const UPGRADE_CHANCE_MAX = 0.6;
 /** Nach so vielen Drehs ohne Upgrade kommt das nächste sicher. */
 export const UPGRADE_PITY = 2;
 
-/** Die Upgrade-Stufen. Jede Figur durchläuft einen Teil davon, immer in dieser Reihenfolge. */
+/**
+ * Die Upgrade-Stufen. Jede Figur durchläuft einen Teil davon, immer in dieser Reihenfolge.
+ * epic: große Feier beim Freischalten (badge = Text über der Figur). Aura, Kometenschweif, Kristall und Kosmos gibt es
+ * nur für die seltensten Figuren; sie hängen hinten an der Reise, damit gespeicherte Stufen ihre Bedeutung behalten.
+ */
 export const EVO_STEPS = {
   farbe: { icon: '🎨', label: 'Neue Farbe', short: 'Farbe', reveal: 'bekommt eine neue Farbe!' },
   tempo: { icon: '⚡', label: 'Turbo', short: 'Turbo', reveal: 'wird superschnell!' },
   groesse: { icon: '📏', label: 'Wachstum', short: 'Wachstum', reveal: 'ist gewachsen!' },
   trick: { icon: '💃', label: 'Trick', short: 'Trick', reveal: 'hat einen Trick gelernt!' },
-  verwandlung: { icon: '🌟', label: 'Verwandlung', short: 'Verwandl.', reveal: 'hat sich verwandelt!' },
+  verwandlung: { icon: '🌟', label: 'Verwandlung', short: 'Verwandl.', reveal: 'hat sich verwandelt!', epic: true, badge: 'VERWANDLUNG!' },
+  aura: { icon: '🔮', label: 'Aura', short: 'Aura', reveal: 'strahlt jetzt eine magische Aura aus!' },
+  schweif: { icon: '☄️', label: 'Kometenschweif', short: 'Schweif', reveal: 'zieht einen Kometenschweif hinter sich her!' },
+  kristall: { icon: '💎', label: 'Kristallform', short: 'Kristall', reveal: 'ist zu funkelndem Kristall geworden!', epic: true, badge: 'KRISTALLFORM!' },
+  kosmos: { icon: '🌌', label: 'Sternenform', short: 'Kosmos', reveal: 'trägt jetzt das ganze Weltall in sich!', epic: true, badge: 'STERNENFORM!!' },
 };
 
-/** Je seltener die Figur, desto länger die Reise. */
+/** Je seltener die Figur, desto länger die Reise (und desto seltener die Upgrades am Ende). */
 export const EVO_PATHS = {
   standard: ['farbe', 'tempo'],
   magisch: ['farbe', 'tempo', 'groesse'],
-  legendaer: ['farbe', 'tempo', 'groesse', 'verwandlung'],
-  mythisch: ['farbe', 'tempo', 'groesse', 'trick', 'verwandlung'],
-  geheim: ['farbe', 'tempo', 'groesse', 'trick', 'verwandlung'],
+  legendaer: ['farbe', 'tempo', 'groesse', 'verwandlung', 'aura'],
+  mythisch: ['farbe', 'tempo', 'groesse', 'trick', 'verwandlung', 'aura', 'schweif', 'kristall'],
+  geheim: ['farbe', 'tempo', 'groesse', 'trick', 'verwandlung', 'aura', 'schweif', 'kristall', 'kosmos'],
 };
+
+/** Upgrade mit großer Feier? */
+export const isEpicStep = step => !!EVO_STEPS[step]?.epic;
 
 /**
  * Sterne: Nach der fertigen Reise bringt jedes weitere Duplikat einen Stern (bis STAR_MAX).

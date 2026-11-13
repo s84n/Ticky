@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <title>Regenbogen-Kirin</title>
+  <defs><linearGradient id="z15-m" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F87171"/><stop offset=".25" stop-color="#FBBF24"/><stop offset=".5" stop-color="#A3E635"/><stop offset=".75" stop-color="#38BDF8"/><stop offset="1" stop-color="#A78BFA"/></linearGradient></defs>
+  <ellipse cx="64" cy="122" rx="46" ry="4" fill="#000" opacity=".18"/>
+  <g class="tail" stroke="#3B3A6B" stroke-width="3" stroke-linejoin="round"><path d="M30 64 Q8 54 6 72 Q4 88 18 94 Q12 82 22 78 Q16 92 28 96 Q26 82 34 74 Z" fill="url(#z15-m)"/></g>
+  <g class="leg-b" stroke="#3B3A6B" stroke-width="3.5" stroke-linejoin="round"><rect x="44" y="80" width="10" height="30" rx="4" fill="#A7E3D3"/><rect x="82" y="80" width="10" height="30" rx="4" fill="#A7E3D3"/><rect x="43" y="106" width="12" height="7" rx="2" fill="#F59E0B"/><rect x="81" y="106" width="12" height="7" rx="2" fill="#F59E0B"/></g>
+  <g class="body" stroke="#3B3A6B" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M28 70 Q30 54 52 54 L82 54 Q96 54 96 70 Q96 88 80 88 L46 88 Q28 88 28 70 Z" fill="#D1FAE5"/>
+    <g fill="#A7F3D0" stroke="none"><circle cx="44" cy="66" r="3.2"/><circle cx="56" cy="62" r="3.2"/><circle cx="68" cy="66" r="3.2"/><circle cx="52" cy="76" r="2.6"/><circle cx="64" cy="76" r="2.6"/></g>
+    <path d="M80 62 Q86 42 92 32 L106 38 Q100 52 96 72 Z" fill="#D1FAE5"/>
+    <path d="M90 30 Q96 18 110 22 Q124 26 124 38 Q124 46 114 46 L104 46 Q92 44 90 30 Z" fill="#D1FAE5"/>
+    <path d="M90 26 Q78 30 80 44 Q72 50 78 62 Q86 54 88 46 Q94 40 93 32 Z" fill="url(#z15-m)"/>
+    <path d="M98 22 Q94 10 100 3 M97 13 l-6 -2 M105 22 Q107 10 115 7" fill="none" stroke="#F59E0B" stroke-width="3.5"/>
+    <circle cx="108" cy="32" r="3.2" fill="#1E1B4B" stroke="none"/><circle cx="109.2" cy="30.8" r="1.2" fill="#fff" stroke="none"/>
+    <circle cx="120" cy="38" r="1.5" fill="#3B3A6B" stroke="none"/>
+    <path d="M118 45 Q125 52 118 59" fill="none" stroke="#F472B6" stroke-width="2.5"/>
+  </g>
+  <g class="leg-a" stroke="#3B3A6B" stroke-width="3.5" stroke-linejoin="round"><rect x="32" y="80" width="11" height="32" rx="4" fill="#D1FAE5"/><rect x="70" y="80" width="11" height="32" rx="4" fill="#D1FAE5"/><rect x="31" y="108" width="13" height="7" rx="2" fill="#FBBF24"/><rect x="69" y="108" width="13" height="7" rx="2" fill="#FBBF24"/></g>
+  <g><path d="M60 18 l2 6 6 2 -6 2 -2 6 -2 -6 -6 -2 6 -2z" fill="#FBBF24"/><path d="M18 34.4 l1.4 4.199999999999999 4.199999999999999 1.4 -4.199999999999999 1.4 -1.4 4.199999999999999 -1.4 -4.199999999999999 -4.199999999999999 -1.4 4.199999999999999 -1.4z" fill="#F472B6"/><circle cx="44" cy="12" r="2" fill="#A78BFA"/></g>
+</svg>

@@ -2,9 +2,9 @@
 import { RARITIES, RARITY_ORDER, LUCK_THRESHOLD, LUCK_FACTOR, figuresOf } from '../data/figures.js';
 
 /** Rad-Reihenfolge: Raritäten verteilt, damit die seltenen Felder nicht nebeneinander liegen. */
-const ORDER = ['standard', 'magisch', 'standard', 'legendaer', 'standard', 'magisch', 'standard', 'mythisch', 'standard', 'magisch', 'standard', 'geheim'];
+const ORDER = ['standard', 'magisch', 'standard', 'legendaer', 'magisch', 'standard', 'mythisch', 'magisch', 'standard', 'legendaer', 'standard', 'magisch', 'mythisch', 'standard', 'geheim'];
 
-/** Ordnet die 12 Figuren eines Styles in Rad-Reihenfolge an. */
+/** Ordnet die 15 Figuren eines Styles in Rad-Reihenfolge an. */
 export function wheelOrder(theme) {
   const pools = Object.fromEntries(RARITY_ORDER.map(r => [r, []]));
   for (const fig of figuresOf(theme)) pools[fig.rarity].push(fig);

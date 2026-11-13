@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <title>Feenkönigin</title>
+  <defs>
+    <linearGradient id="z14-w" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F9A8D4"/><stop offset="1" stop-color="#FDE68A"/></linearGradient>
+    <linearGradient id="z14-d" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E879F9"/><stop offset="1" stop-color="#9333EA"/></linearGradient>
+  </defs>
+  <ellipse cx="64" cy="124" rx="30" ry="3.5" fill="#000" opacity=".15"/>
+  <g class="wing" stroke="#7E2A72" stroke-width="3" stroke-linejoin="round">
+    <path d="M60 56 Q40 14 12 22 Q4 44 30 58 Q8 70 20 90 Q42 92 60 66 Z" fill="url(#z14-w)" fill-opacity=".9"/>
+    <path d="M68 56 Q88 14 116 22 Q124 44 98 58 Q120 70 108 90 Q86 92 68 66 Z" fill="url(#z14-w)" fill-opacity=".9"/>
+    <circle cx="26" cy="36" r="4" fill="#fff" stroke="none" opacity=".8"/><circle cx="102" cy="36" r="4" fill="#fff" stroke="none" opacity=".8"/>
+    <circle cx="28" cy="76" r="3" fill="#fff" stroke="none" opacity=".7"/><circle cx="100" cy="76" r="3" fill="#fff" stroke="none" opacity=".7"/>
+  </g>
+  <g class="body" stroke="#7E2A72" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M46 44 Q44 70 52 76 L76 76 Q84 70 82 44 Z" fill="#FBBF24"/>
+    <path d="M56 58 Q40 100 44 112 L84 112 Q88 100 72 58 Z" fill="url(#z14-d)"/>
+    <g fill="#FDE68A" stroke="none"><circle cx="52" cy="104" r="2.4"/><circle cx="64" cy="96" r="2"/><circle cx="76" cy="104" r="2.4"/><circle cx="60" cy="80" r="1.6"/><circle cx="70" cy="86" r="1.6"/></g>
+    <circle cx="64" cy="42" r="15" fill="#FDE2CF"/>
+    <path d="M49 41 Q50 25 64 25 Q78 25 79 41 Q72 32 64 34 Q56 32 49 41 Z" fill="#FBBF24"/>
+    <path d="M52 27 L55 14 L60 22 L64 9 L68 22 L73 14 L76 27 Z" fill="#FDE047"/>
+    <circle cx="64" cy="20" r="2.4" fill="#F472B6" stroke="none"/>
+    <circle cx="58" cy="44" r="2.6" fill="#4C1D3D" stroke="none"/><circle cx="70" cy="44" r="2.6" fill="#4C1D3D" stroke="none"/>
+    <path d="M60 51 q4 3 8 0" fill="none"/>
+    <path d="M78 66 L94 56" fill="none" stroke-width="5"/><path d="M78 66 L94 56" fill="none" stroke="#FDE2CF" stroke-width="2"/>
+    <path d="M94 56 L103 42" fill="none" stroke="#FDE047" stroke-width="3"/>
+    <path d="M104 29 l3 6 6.5 1 -4.8 4.4 1.3 6.6 -6 -3.2 -6 3.2 1.3 -6.6 -4.8 -4.4 6.5 -1z" fill="#FDE047" stroke-width="2.5"/>
+  </g>
+  <g><path d="M16 98.4 l1.4 4.199999999999999 4.199999999999999 1.4 -4.199999999999999 1.4 -1.4 4.199999999999999 -1.4 -4.199999999999999 -4.199999999999999 -1.4 4.199999999999999 -1.4z" fill="#F9A8D4"/><path d="M116 97.6 l1.6 4.800000000000001 4.800000000000001 1.6 -4.800000000000001 1.6 -1.6 4.800000000000001 -1.6 -4.800000000000001 -4.800000000000001 -1.6 4.800000000000001 -1.6z" fill="#FDE68A"/><circle cx="40" cy="10" r="2" fill="#fff"/></g>
+</svg>

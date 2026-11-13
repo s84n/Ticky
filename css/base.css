@@ -730,7 +730,7 @@ body.day .sky { background: linear-gradient(180deg, color-mix(in oklch, var(--ti
 .install-banner__text strong { display: block; font-size: 16px; color: var(--color-text); }
 
 /* ---------- Figuren-Darstellung (Upgrades + Accessoire) ---------- */
-.fig { position: relative; aspect-ratio: 1; container-type: inline-size; }
+.fig { position: relative; isolation: isolate; aspect-ratio: 1; container-type: inline-size; }
 .fig > .fig__img, .fig > svg { display: block; width: 100%; height: 100%; }
 .fig.is-silhouette > .fig__img { filter: brightness(0) opacity(.4); }
 .fig__acc { position: absolute; left: var(--hx, 50%); top: var(--hy, 10%); transform: translate(-50%, -70%); font-family: var(--emoji); font-size: 1.4em; font-size: 30cqw; line-height: 1; pointer-events: none; z-index: 2; }
@@ -787,12 +787,68 @@ body.day .sky { background: linear-gradient(180deg, color-mix(in oklch, var(--ti
   background: repeating-conic-gradient(from 0deg, color-mix(in oklch, var(--ticky-gold) 55%, transparent) 0 12deg, transparent 12deg 30deg);
   mask: radial-gradient(circle, #000 25%, transparent 70%); -webkit-mask: radial-gradient(circle, #000 25%, transparent 70%);
 }
+/* Seltene Upgrades (figure-view.js legt die Ebenen an, sichtbar nur, wenn der Schritt in data-evo steht) */
+/* 🔮 Aura: pulsierender Ring und Leuchten im Farbton der Figur hinter ihr */
+.fig[data-evo~="aura"] > .fig__aura {
+  display: block; inset: -18%; z-index: -1; border-radius: 50%;
+  background:
+    radial-gradient(circle, transparent 50%, oklch(0.88 0.2 var(--hue, 280deg)) 56%, oklch(0.72 0.24 var(--hue, 280deg) / .6) 61%, transparent 68%),
+    radial-gradient(circle, oklch(0.75 0.22 var(--hue, 280deg) / .7) 0 28%, oklch(0.65 0.22 var(--hue, 280deg) / .3) 46%, transparent 62%);
+  animation: aura-pulse 2.4s ease-in-out infinite;
+}
+/* ☄️ Kometenschweif: zwei leuchtende Nachbilder der Figur ziehen hinter ihr her */
+.fig[data-evo~="schweif"] > .fig__trail {
+  display: block; z-index: -1; translate: -18% 0; opacity: .65;
+  background: linear-gradient(90deg, transparent 5%, #A5F3FC 45%, #F0ABFC 90%);
+  filter: blur(1.5px); animation: trail-flicker 1.1s ease-in-out infinite;
+}
+.herd-actor.is-left .fig__trail, .parade-actor.is-flipped .fig__trail { translate: 16% 0; background: linear-gradient(270deg, transparent 5%, #A5F3FC 45%, #F0ABFC 90%); }
+/* 💎 Kristallform: funkelnde Facetten über der Figur */
+.fig[data-evo~="kristall"] > .fig__crystal {
+  display: block; opacity: .6; mix-blend-mode: screen;
+  background:
+    linear-gradient(125deg, transparent 30%, rgb(255 255 255 / .85) 34%, transparent 38%, transparent 58%, rgb(255 255 255 / .6) 61%, transparent 64%) 0 0 / 250% 250%,
+    conic-gradient(from 30deg at 40% 40%, #67E8F9 0 60deg, #C4B5FD 60deg 140deg, #F9A8D4 140deg 200deg, #A7F3D0 200deg 280deg, #67E8F9 280deg) center / 100% 100%;
+  animation: crystal-glint 2.6s ease-in-out infinite;
+}
+/* 🌌 Sternenform (höchste Stufe): Galaxie-Farben und funkelnde Sterne in der Figur, dazu ein kreisender Sternenkranz */
+.fig[data-evo~="kosmos"] > .fig__cosmos {
+  display: block; opacity: .9; mix-blend-mode: multiply;
+  background: linear-gradient(135deg, #4338CA, #7E22CE, #DB2777, #0891B2, #4338CA) 0 0 / 300% 300%;
+  animation: cosmos-drift 6s linear infinite;
+}
+.fig[data-evo~="kosmos"] > .fig__stars {
+  display: block; z-index: 2;
+  background:
+    radial-gradient(circle at 30% 35%, #fff 0 2cqw, transparent 3cqw), radial-gradient(circle at 62% 28%, #FDE68A 0 1.6cqw, transparent 2.6cqw),
+    radial-gradient(circle at 48% 60%, #fff 0 2.2cqw, transparent 3.2cqw), radial-gradient(circle at 72% 70%, #C4B5FD 0 1.6cqw, transparent 2.6cqw),
+    radial-gradient(circle at 22% 72%, #fff 0 1.5cqw, transparent 2.4cqw), radial-gradient(circle at 80% 45%, #fff 0 1.4cqw, transparent 2.2cqw),
+    radial-gradient(circle at 40% 85%, #A5F3FC 0 1.4cqw, transparent 2.2cqw), radial-gradient(circle at 55% 45%, #fff 0 1cqw, transparent 1.8cqw);
+  animation: star-blink 2.2s ease-in-out infinite;
+}
+.fig[data-evo~="kosmos"] > .fig__halo {
+  display: block; inset: -22%; z-index: -2; border-radius: 50%;
+  background: repeating-conic-gradient(from 0deg, rgb(196 181 253 / .55) 0 6deg, transparent 6deg 20deg, rgb(103 232 249 / .45) 20deg 26deg, transparent 26deg 40deg);
+  mask: radial-gradient(circle, transparent 30%, #000 42%, transparent 70%); -webkit-mask: radial-gradient(circle, transparent 30%, #000 42%, transparent 70%);
+  animation: orbit 14s linear infinite;
+}
+.fig[data-evo~="tempo"].is-dashing > :is(.fig__crystal, .fig__cosmos, .fig__stars) { animation-name: crystal-glint, dash-bob; animation-duration: 2.6s, .22s; animation-iteration-count: infinite; }
+.fig[data-evo~="tempo"].is-dashing > .fig__cosmos { animation-name: cosmos-drift, dash-bob; animation-duration: 6s, .22s; }
+.fig[data-evo~="tempo"].is-dashing > .fig__stars { animation-name: star-blink, dash-bob; animation-duration: 2.2s, .22s; }
+.lite :is(.fig__aura, .fig__trail, .fig__crystal, .fig__cosmos, .fig__stars, .fig__halo),
+body.reduce-motion :is(.fig__aura, .fig__trail, .fig__halo) { animation: none !important; }
+.lite .fig__trail { filter: none; }
 .fig.is-silhouette::before, .fig.is-silhouette::after { content: none; }
 
 /* ---------- Keyframes ---------- */
 @keyframes twinkle { 0%, 100% { opacity: 0; transform: scale(.6); } 50% { opacity: 1; transform: scale(1); } }
 @keyframes shine { 0% { background-position: 100% 0; } 55%, 100% { background-position: 0 0; } }
 @keyframes orbit { to { transform: rotate(1turn); } }
+@keyframes aura-pulse { 0%, 100% { opacity: .65; transform: scale(.92); } 50% { opacity: 1; transform: scale(1.06); } }
+@keyframes trail-flicker { 0%, 100% { opacity: .65; } 50% { opacity: .35; } }
+@keyframes crystal-glint { 0% { background-position: 100% 100%, center; } 60%, 100% { background-position: 0 0, center; } }
+@keyframes cosmos-drift { to { background-position: 300% 300%; } }
+@keyframes star-blink { 0%, 100% { opacity: .45; } 50% { opacity: 1; } }
 @keyframes rainbow-slide { to { background-position: -200% 0; } }
 @keyframes speed-lines { from { transform: translateX(20%); opacity: 1; } to { transform: translateX(-30%); opacity: .2; } }
 @keyframes dash-bob { 0%, 100% { translate: 0 0; rotate: -4deg; } 50% { translate: 0 -6%; rotate: 2deg; } }

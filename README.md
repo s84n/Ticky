@@ -5,16 +5,16 @@ Ticky ist eine installierbare Web-App (PWA), mit der Kinder ihre Morgen- und Abe
 - 1–5 Kinder, jedes mit eigenem Style: **Pixel-Abenteuer**, **Neon-Arcade**, **Einhorn-Zauber**, **Dino-Expedition**, **Sternenreise** oder **Schatzinsel**
 - Aufgaben aus einem Katalog wählen, eigene Aufgaben anlegen, Reihenfolge festlegen
 - Morgen- und Abendroutine starten automatisch nach Uhrzeit. Außerhalb der Zeiten erscheint ein Ruhe-Bildschirm mit Countdown
-- 72 eigene Figuren in fünf Raritäten (Standard 68 %, Magisch 25 %, Legendär 5 %, Mythisch 1,5 %, Geheim 0,5 %)
+- 90 eigene Figuren (15 pro Style) in fünf Raritäten (Standard 68 %, Magisch 25 %, Legendär 5 %, Mythisch 1,5 %, Geheim 0,5 %)
 - **Team:** Bis zu 3 Figuren laufen unten auf der Karte des Kindes herum, flitzen zur abgehakten Aufgabe und feiern, wenn alles fertig ist. Nachts schlafen sie auf dem Ruhe-Bildschirm
-- **Upgrade-Reise:** Jede neue Figur bringt eine Reise mit (Standard 2, Magisch 3, Legendär 4, Mythisch/Geheim 5 Stufen): 🎨 neue Farbe → ⚡ Turbo → 📏 Wachstum → 💃 Trick → 🌟 Verwandlung. Solange eine Reise läuft, hat das Rad goldene Upgrade-Felder (zusammen 35 %, bei jedem Dreh anders auf 2–4 Felder verteilt), spätestens beim 3. Dreh kommt das Upgrade sicher. Doppelte Figuren geben ein Upgrade für sich selbst. Figuren im Team bekommen ihre Reise bevorzugt, damit man die Upgrades bei den Aufgaben auch sieht
+- **Upgrade-Reise:** Jede neue Figur bringt eine Reise mit (Standard 2, Magisch 3, Legendär 5, Mythisch 8, Geheim 9 Stufen): 🎨 neue Farbe → ⚡ Turbo → 📏 Wachstum → 💃 Trick → 🌟 Verwandlung → 🔮 Aura → ☄️ Kometenschweif → 💎 Kristallform → 🌌 Sternenform. Die letzten vier gibt es nur für die seltensten Figuren, die 🌌 Sternenform als höchste Stufe nur für geheime. Solange eine Reise läuft, hat das Rad goldene Upgrade-Felder (zusammen 35 %, bei jedem Dreh anders auf 2–4 Felder verteilt), spätestens beim 3. Dreh kommt das Upgrade sicher. Doppelte Figuren geben ein Upgrade für sich selbst. Figuren im Team bekommen ihre Reise bevorzugt, damit man die Upgrades bei den Aufgaben auch sieht
 - **Sterne:** Ist die Reise geschafft, bringt jedes weitere Duplikat einen Stern (bis 5), jeder mit eigenem Effekt: ✨ Glitzer und Glitzerspur → 🖼️ Goldrahmen im Album → 💫 Goldschimmer → 🌠 Sternbegleiter → 🌈 Regenbogen. Danach gibt es Accessoires
 - **Album:** Alle Figuren, Team zusammenstellen, Anführer und verfolgte Reise wählen, Accessoires anziehen
 - **Spieler-Level:** Jede fertige Routine bringt XP. Das Level bleibt dauerhaft, mit Titeln je Style und einem Accessoire (Krone, Zylinder …) als Geschenk beim Aufstieg
 - **Alle fertig:** Wenn alle Kinder fertig sind, feiern ihre Teams gemeinsam auf dem ganzen Bildschirm. Gewinn-, Level-up- und Feier-Anzeigen gehen nach ein paar Sekunden von selbst zu
 - **Zufallsrad:** Im Eltern-Bereich lost ein Rad mit den Namen der Kinder aus, wer zuerst dran ist – auf Wunsch auch die ganze Reihenfolge
 - **Eltern-Boost:** Für besonders gute Tage: +10/20/50 % auf XP und auf die Chancen für seltene Figuren und Upgrades, für 15, 30 oder 60 Minuten. Solange er läuft, zeigt der Kopf eine 🚀-Anzeige
-- Eltern-Bereich mit Erwachsenen-Quiz als Sperre (2 Fragen aus einem Katalog von 60, nach Fehlversuchen kurze Wartezeit), Lautstärke-Regler, Sparmodus für schwächere Tablets, Backup-Export und -Import
+- Eltern-Bereich mit Erwachsenen-Quiz als Sperre (2 Fragen aus einem Katalog von 60, nach je 2 Fehlversuchen Wartezeit: 30 Sekunden, 2 Minuten, dann 10 Minuten), Lautstärke-Regler, Sparmodus für schwächere Tablets, Backup-Export und -Import
 - **Demo-Modus:** Glücksrad (auch mit festem Ergebnis), Level-up und Feiern ausprobieren, ohne dass sich Level, Figuren oder Fortschritt ändern. Beim Beenden ist alles wie vorher
 - Funktioniert vollständig offline
 
