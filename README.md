@@ -14,7 +14,7 @@ Ticky ist eine installierbare Web-App (PWA), mit der Kinder ihre Morgen- und Abe
 - **Alle fertig:** Wenn alle Kinder fertig sind, feiern ihre Teams gemeinsam auf dem ganzen Bildschirm. Gewinn-, Level-up- und Feier-Anzeigen gehen nach ein paar Sekunden von selbst zu
 - **Zufallsrad:** Im Eltern-Bereich lost ein Rad mit den Namen der Kinder aus, wer zuerst dran ist – auf Wunsch auch die ganze Reihenfolge
 - **Eltern-Boost:** Für besonders gute Tage: +10/20/50 % auf XP und auf die Chancen für seltene Figuren und Upgrades, für 15, 30 oder 60 Minuten. Solange er läuft, zeigt der Kopf eine 🚀-Anzeige
-- Eltern-Bereich mit Erwachsenen-Quiz als Sperre (2 Fragen aus einem Katalog von 60, nach je 2 Fehlversuchen Wartezeit: 30 Sekunden, 2 Minuten, dann 10 Minuten), Lautstärke-Regler, Sparmodus für schwächere Tablets, Backup-Export und -Import
+- Eltern-Bereich mit Erwachsenen-Quiz als Sperre (4 Fragen aus einem Katalog von 60, 2 davon müssen stimmen; sonst Wartezeit: 10 Sekunden, 30 Sekunden, 2 Minuten, dann 30 Minuten), Lautstärke-Regler, Sparmodus für schwächere Tablets, Backup-Export und -Import
 - **Demo-Modus:** Glücksrad (auch mit festem Ergebnis), Level-up und Feiern ausprobieren, ohne dass sich Level, Figuren oder Fortschritt ändern. Beim Beenden ist alles wie vorher
 - Funktioniert vollständig offline
 

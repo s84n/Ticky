@@ -16,10 +16,11 @@ import { openPicker } from './rewards/picker.js';
 // ---------- Eltern-Sperre ----------
 
 /**
- * So viele Quizfragen hintereinander müssen stimmen. Nach je LOCK_TRIES falschen Antworten folgt eine Wartezeit,
- * die jedes Mal länger wird (LOCK_WAITS_MS, danach bleibt es bei der letzten). Erst das Öffnen setzt alles zurück.
+ * Eine Runde hat QUIZ_COUNT Fragen, davon müssen QUIZ_NEEDED stimmen. Ist das nicht mehr zu schaffen, ist die Runde
+ * verloren und es folgt eine Wartezeit, die jedes Mal länger wird (LOCK_WAITS_MS, danach bleibt es bei der letzten).
+ * Erst das Öffnen setzt die Stufe zurück.
  */
-const QUIZ_COUNT = 2, LOCK_TRIES = 2, LOCK_WAITS_MS = [30_000, 120_000, 600_000];
+const QUIZ_COUNT = 4, QUIZ_NEEDED = 2, LOCK_WAITS_MS = [10_000, 30_000, 120_000, 1_800_000];
 const RECENT_KEY = 'ticky_quiz_recent', WAIT_KEY = 'ticky_lock_wait', FAILS_KEY = 'ticky_lock_fails', RECENT_MAX = 24;
 
 /** Gerätelokale Kleinigkeiten (zuletzt gestellte Fragen, Wartezeit) – nicht Teil des Backups. */
@@ -29,14 +30,14 @@ const local = {
 };
 
 /**
- * Erwachsenen-Quiz: QUIZ_COUNT Fragen aus dem Erwachsenenalltag, je 4 Antworten. Promise<boolean>.
- * Raten lohnt sich kaum (1 : 16) und wird mit wachsenden Wartezeiten gebremst. Fehlversuche und Wartezeit liegen
+ * Erwachsenen-Quiz: QUIZ_COUNT Fragen aus dem Erwachsenenalltag, je 4 Antworten, QUIZ_NEEDED davon richtig.
+ * Promise<boolean>. Raten (ca. 1 : 4 pro Runde) wird mit wachsenden Wartezeiten gebremst. Wartezeit und Stufe liegen
  * auf dem Gerät, Schließen oder Neustarten setzt sie also nicht zurück.
  */
 export function parentLock() {
   return new Promise(resolve => {
     let ok = false;
-    let questions = [], step = 0, waitTimer = null;
+    let questions = [], step = 0, right = 0, waitTimer = null;
     const progress = el('span', { class: 'lock__kicker' });
     const q = el('p', { class: 'lock__question' });
     const answers = el('div', { class: 'quiz' });
@@ -47,11 +48,12 @@ export function parentLock() {
       questions = pickQuestions(QUIZ_COUNT, Array.isArray(recent) ? recent : [], cryptoRandom);
       local.set(RECENT_KEY, [...questions.map(x => x.id), ...recent].slice(0, RECENT_MAX));
       step = 0;
+      right = 0;
       show();
     }
     function show() {
       const cur = questions[step];
-      progress.textContent = `⚙️ Nur für Erwachsene · Frage ${step + 1} von ${questions.length}`;
+      progress.textContent = `⚙️ Nur für Erwachsene · Frage ${step + 1} von ${questions.length} · ${right} von ${QUIZ_NEEDED} richtig`;
       q.textContent = cur.q;
       answers.replaceChildren(...cur.answers.map(text =>
         el('button', { type: 'button', class: 'quiz__answer', onclick: e => choose(text, e.currentTarget) }, text)));
@@ -59,29 +61,30 @@ export function parentLock() {
     }
     function choose(text, btn) {
       if (waitTimer) return;
-      if (text === questions[step].correct) {
-        step++;
-        if (step < questions.length) { msg.textContent = 'Richtig! Noch eine Frage.'; show(); return; }
+      const correct = text === questions[step].correct;
+      step++;
+      if (correct) right++;
+      if (right >= QUIZ_NEEDED) {
         ok = true;
-        local.set(FAILS_KEY, { count: 0, level: 0 });
+        local.set(FAILS_KEY, { level: 0 });
         msg.textContent = 'Richtig – Eltern-Bereich öffnet …';
         close();
         return;
       }
+      if (correct) { msg.textContent = 'Richtig!'; show(); return; }
       wrongSound();
       btn.classList.add('is-wrong');
-      const fails = local.get(FAILS_KEY, {});
-      const count = (Number(fails.count) || 0) + 1;
-      const level = Number(fails.level) || 0;
-      if (count >= LOCK_TRIES) {
-        local.set(FAILS_KEY, { count: 0, level: level + 1 });
+      // Runde verloren, sobald die nötigen richtigen Antworten nicht mehr zu schaffen sind
+      if (QUIZ_NEEDED - right > questions.length - step) {
+        const level = Number(local.get(FAILS_KEY, {}).level) || 0;
+        local.set(FAILS_KEY, { level: level + 1 });
         local.set(WAIT_KEY, Date.now() + LOCK_WAITS_MS[Math.min(level, LOCK_WAITS_MS.length - 1)]);
         startWait();
-      } else {
-        local.set(FAILS_KEY, { count, level });
-        msg.textContent = 'Leider falsch – neue Fragen.';
+        setTimeout(newRound, 600);
+        return;
       }
-      setTimeout(newRound, 600);
+      msg.textContent = 'Leider falsch – nächste Frage.';
+      setTimeout(show, 600);
     }
     /** Wartezeit nach zu vielen Fehlversuchen (übersteht auch einen Neustart der App). */
     function startWait() {
